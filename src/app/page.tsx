@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { FileDrop } from "@/components/file-drop";
 import Image from "next/image";
 import Link from "next/link";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
@@ -29,8 +28,12 @@ export default function Home() {
           className="absolute top-0 left-0 w-full h-full object-cover -z-10"
           src="https://assets.mixkit.co/videos/preview/mixkit-a-girl-looking-at-the-ocean-from-a-cliff-4527-large.mp4"
         />
-        <div className="w-full max-w-lg mx-auto p-4 md:max-w-2xl">
-          <FileDrop />
+        <div className="w-full max-w-lg mx-auto p-4 md:max-w-2xl text-center text-white">
+            <h1 className="text-5xl font-bold mb-4">Send files, securely.</h1>
+            <p className="text-xl mb-8">HapoHub is the simplest way to send big files.</p>
+            <Link href="/auth/client/signup">
+                <Button size="lg">Get Started</Button>
+            </Link>
         </div>
       </div>
 
