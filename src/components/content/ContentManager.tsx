@@ -33,6 +33,7 @@ export function ContentManager({
     const [viewMode, setViewMode] = useState<ViewMode>('grid');
     const [groupingMode, setGroupingMode] = useState<GroupingMode>(defaultView);
     const [filter, setFilter] = useState('');
+    const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
 
     useEffect(() => {
         const loadContent = async () => {
@@ -52,12 +53,10 @@ export function ContentManager({
 
     const filteredItems = useMemo(() => {
         return items.filter(item =>
-            item.name.toLowerCase().includes(filter.toLowerCase()) ||
-            (isAdminView && (
-                item.userEmail.toLowerCase().includes(filter.toLowerCase()) ||
-                item.companyName.toLowerCase().includes(filter.toLowerCase()) ||
-                item.storeName.toLowerCase().includes(filter.toLowerCase())
-            ))
+            item.title.toLowerCase().includes(filter.toLowerCase()) ||
+            (isAdminView && item.user_email && item.user_email.toLowerCase().includes(filter.toLowerCase())) ||
+            (isAdminView && item.stores?.brand_company && item.stores.brand_company.toLowerCase().includes(filter.toLowerCase())) ||
+            (isAdminView && item.stores?.name && item.stores.name.toLowerCase().includes(filter.toLowerCase()))
         );
     }, [items, filter, isAdminView]);
 
@@ -65,9 +64,9 @@ export function ContentManager({
         if (groupingMode === 'none') {
             return { 'All Content': filteredItems };
         }
-        const key = groupingMode === 'company' ? 'companyName' : 'storeName';
+        const key = groupingMode === 'company' ? 'brand_company' : 'name';
         return filteredItems.reduce((acc, item) => {
-            const groupKey = item[key] || 'Uncategorized';
+            const groupKey = item.stores?.[key] || 'Uncategorized';
             if (!acc[groupKey]) {
                 acc[groupKey] = [];
             }
@@ -76,6 +75,11 @@ export function ContentManager({
         }, {} as Record<string, ContentItem[]>);
     }, [filteredItems, groupingMode]);
 
+    const handleCardClick = (item: ContentItem) => {
+        setSelectedItem(item);
+        // Here you would open a modal or a side panel with the item details
+        console.log("Selected item:", item);
+    };
 
     const ContentCard = isAdminView ? AdminContentCard : ClientContentCard;
 
@@ -109,7 +113,7 @@ export function ContentManager({
                     viewMode === 'grid' ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4" : "grid-cols-1"
                 )}>
                     {Array.from({ length: 8 }).map((_, i) => (
-                        <Skeleton key={i} className={cn(viewMode === 'grid' ? "h-56" : "h-24")} />
+                        <Skeleton key={i} className={cn(viewMode === 'grid' ? "h-64" : "h-24")} />
                     ))}
                 </div>
             ) : error ? (
@@ -131,7 +135,7 @@ export function ContentManager({
                                     viewMode === 'grid' ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4" : "grid-cols-1"
                                 )}>
                                     {groupItems.map(item => (
-                                        <ContentCard key={item.id} item={item} viewMode={viewMode} />
+                                        <AdminContentCard key={item.id} item={item} onClick={handleCardClick} />
                                     ))}
                                 </div>
                             </div>

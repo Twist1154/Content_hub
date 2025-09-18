@@ -3,7 +3,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
-import type { ContentItem } from '@/lib/types';
+import type { ContentItem, ContentType } from '@/lib/types';
 
 const storeSchema = z.object({
   name: z.string().min(1, 'Store name is required.'),
@@ -51,6 +51,14 @@ export async function addStore(storeData: StoreData, userId: string) {
   };
 }
 
+function getContentType(mimeType: string): ContentType {
+    if (mimeType.startsWith('image/')) return 'image';
+    if (mimeType.startsWith('video/')) return 'video';
+    if (mimeType.startsWith('audio/')) return 'audio';
+    if (mimeType.startsWith('application/pdf') || mimeType.startsWith('application/msword')) return 'document';
+    return 'other';
+}
+
 export async function fetchAllContent(): Promise<ContentItem[]> {
   const supabase = await createClient({ useServiceRole: true });
 
@@ -58,7 +66,7 @@ export async function fetchAllContent(): Promise<ContentItem[]> {
     .storage
     .from('files')
     .list('public', {
-      limit: 100, // Adjust as needed
+      limit: 100,
       offset: 0,
       sortBy: { column: 'created_at', order: 'desc' },
     });
@@ -72,11 +80,6 @@ export async function fetchAllContent(): Promise<ContentItem[]> {
     return [];
   }
 
-  // Extract user IDs from file metadata if available (or from path if structured that way)
-  // This example assumes we can't get user ID directly from storage metadata easily.
-  // A more robust solution might involve storing user/store IDs in file metadata on upload.
-  // For now, we fetch all profiles and stores and map them.
-
   const { data: profiles, error: profilesError } = await supabase
     .from('profiles')
     .select('id, email, stores(id, name, brand_company)');
@@ -86,42 +89,35 @@ export async function fetchAllContent(): Promise<ContentItem[]> {
     return [];
   }
 
-  // Create a map for easy lookup
-  const userMap = new Map();
-  profiles?.forEach(p => {
-    userMap.set(p.id, {
-      email: p.email,
-      // @ts-ignore
-      storeName: p.stores[0]?.name || 'N/A',
-      // @ts-ignore
-      companyName: p.stores[0]?.brand_company || 'N/A'
-    });
-  });
-
-  // This is a placeholder for mapping files to users.
-  // In a real app, the user/store ID would be part of the file's path or metadata.
-  // Here, we'll randomly assign files to users for demonstration purposes.
   const contentItems: ContentItem[] = files
-  .filter(file => file.name !== '.emptyFolderPlaceholder') // Filter out placeholder
+  .filter(file => file.name !== '.emptyFolderPlaceholder')
   .map((file, index) => {
     const { data: publicUrlData } = supabase.storage.from('files').getPublicUrl(`public/${file.name}`);
-    const randomProfile = profiles?.[index % profiles.length]; // Assign cyclically
+    const randomProfile = profiles?.[index % profiles.length];
+    
+    // Simulate status
+    const statuses: ContentItem['status'][] = ['active', 'archived', 'draft', 'scheduled'];
+    const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
 
     return {
       id: file.id,
-      name: file.name,
-      url: publicUrlData.publicUrl,
+      title: file.name,
+      file_url: publicUrlData.publicUrl,
       // @ts-ignore
-      type: file.metadata?.mimetype || 'application/octet-stream',
+      type: getContentType(file.metadata?.mimetype || 'other'),
       // @ts-ignore
-      size: file.metadata?.size || 0,
-      createdAt: file.created_at,
-      userId: randomProfile?.id || 'unknown-user',
-      userEmail: randomProfile?.email || 'Unknown',
-      // @ts-ignore
-      storeName: randomProfile?.stores[0]?.name || 'N/A',
-      // @ts-ignore
-      companyName: randomProfile?.stores[0]?.brand_company || 'N/A',
+      file_size: file.metadata?.size || 0,
+      created_at: file.created_at,
+      status: randomStatus,
+      user_id: randomProfile?.id || 'unknown-user',
+      user_email: randomProfile?.email || 'Unknown',
+      stores: randomProfile?.stores[0] ? {
+        // @ts-ignore
+        name: randomProfile.stores[0].name,
+        // @ts-ignore
+        brand_company: randomProfile.stores[0].brand_company
+      } : null,
+      campaigns: null, // Placeholder
     };
   });
 
