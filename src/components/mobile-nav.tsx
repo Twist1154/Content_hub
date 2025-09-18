@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/sheet";
 import { signOut } from "@/app/actions/auth-actions";
 import { Logo } from "./logo";
+import { ThemeSwitcher } from "./ui/ThemeSwitcher";
 
 interface MobileNavProps {
   user: User | null;
@@ -32,7 +33,7 @@ export function MobileNav({ user }: MobileNavProps) {
         </Button>
       </SheetTrigger>
       <SheetContent side="left">
-        <SheetHeader>
+        <SheetHeader className="flex flex-row justify-between items-center">
           <SheetTitle>
             <Link
               href="/"
@@ -43,6 +44,7 @@ export function MobileNav({ user }: MobileNavProps) {
               <span className="font-bold text-foreground">HapoHub</span>
             </Link>
           </SheetTitle>
+           <ThemeSwitcher />
         </SheetHeader>
         <div className="mt-8 flex flex-col gap-4">
           {user ? (

@@ -5,6 +5,7 @@ import { Logo } from './logo';
 import { createClient } from '@/lib/supabase/server';
 import { UserNav } from './user-nav';
 import { MobileNav } from './mobile-nav';
+import { ThemeSwitcher } from './ui/ThemeSwitcher';
 
 export default async function Header() {
   const supabase = await createClient();
@@ -19,20 +20,27 @@ export default async function Header() {
           <Logo className="h-8 w-8 text-primary" />
           <span className="text-xl font-bold text-foreground">HapoHub</span>
         </Link>
-        {user ? (
-          <UserNav user={user} />
-        ) : (
-          <nav className="hidden md:flex items-center gap-2">
-            <Link href="/auth/client/signin">
-              <Button variant="ghost">Sign in</Button>
-            </Link>
-            <Link href="/auth/client/signup">
-              <Button>Sign up</Button>
-            </Link>
-          </nav>
-        )}
-        <div className="md:hidden">
-          <MobileNav user={user} />
+        
+        <div className="flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-2">
+            {user ? (
+              <UserNav user={user} />
+            ) : (
+              <nav className="flex items-center gap-2">
+                <Link href="/auth/client/signin">
+                  <Button variant="ghost">Sign in</Button>
+                </Link>
+                <Link href="/auth/client/signup">
+                  <Button>Sign up</Button>
+                </Link>
+              </nav>
+            )}
+             <ThemeSwitcher />
+          </div>
+
+          <div className="md:hidden">
+            <MobileNav user={user} />
+          </div>
         </div>
       </div>
     </header>
