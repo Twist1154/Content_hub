@@ -15,6 +15,7 @@ import {
   Trash2,
   Send,
   Loader2,
+  PlusCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,10 +43,10 @@ import { useToast } from "@/hooks/use-toast";
 import FileIcon from "./file-icon";
 
 const formSchema = z.object({
-  emailTo: z.string().email("Invalid email address.").min(1, "Recipient's email is required."),
-  emailFrom: z.string().email("Invalid email address.").min(1, "Your email is required."),
+  emailTo: z.string().email("Invalid email address.").optional(),
+  emailFrom: z.string().email("Invalid email address.").optional(),
+  title: z.string().min(1, "Title is required."),
   message: z.string().optional(),
-  expiry: z.enum(["1d", "7d", "30d"]).default("7d"),
 });
 
 type UploadStatus = "idle" | "uploading" | "success" | "error";
@@ -65,8 +66,8 @@ export function FileDrop() {
     defaultValues: {
       emailTo: "",
       emailFrom: "",
+      title: "",
       message: "",
-      expiry: "7d",
     },
   });
 
@@ -77,6 +78,9 @@ export function FileDrop() {
         (newFile) => !files.some((existingFile) => existingFile.name === newFile.name && existingFile.size === newFile.size)
       );
       setFiles((prevFiles) => [...prevFiles, ...uniqueNewFiles]);
+      if(uniqueNewFiles.length > 0 && !form.getValues('title')) {
+        form.setValue('title', uniqueNewFiles.map(f => f.name).join(', '));
+      }
     }
   };
 
@@ -98,18 +102,13 @@ export function FileDrop() {
   };
   const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
     handleFiles(e.target.files);
+    // reset input to allow selecting the same file again
+    e.target.value = '';
   };
 
   const removeFile = (fileName: string) => {
     setFiles((prevFiles) => prevFiles.filter((file) => file.name !== fileName));
   };
-  
-  const clearFiles = () => {
-    setFiles([]);
-    setUploadProgress({});
-    setUploadStatus("idle");
-    form.reset();
-  }
 
   const simulateUpload = (file: File): Promise<void> => {
     return new Promise((resolve) => {
@@ -184,10 +183,12 @@ export function FileDrop() {
     setIsPasswordProtected(null);
     form.reset();
   };
+  
+  const totalSize = files.reduce((acc, file) => acc + file.size, 0);
 
   if (uploadStatus === "success") {
     return (
-      <Card className="w-full">
+      <Card className="w-full bg-background/80 backdrop-blur-sm">
         <CardContent className="p-8 text-center">
           <CheckCircle className="mx-auto h-16 w-16 text-green-500" />
           <h2 className="mt-4 text-2xl font-bold">Transfer complete!</h2>
@@ -211,24 +212,20 @@ export function FileDrop() {
   }
   
   if (uploadStatus === "uploading") {
+    const overallProgress = files.length > 0 ? files.reduce((acc, file) => acc + (uploadProgress[file.name] || 0), 0) / files.length : 0;
     return (
-      <Card className="w-full">
+      <Card className="w-full bg-background/80 backdrop-blur-sm">
         <CardContent className="p-8">
             <div className="text-center">
                 <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
                 <h2 className="mt-4 text-2xl font-bold">Transferring...</h2>
-                <p className="mt-2 text-muted-foreground">Please keep this window open.</p>
+                <p className="mt-2 text-muted-foreground">
+                  {files.length} {files.length === 1 ? 'file' : 'files'} • {formatBytes(totalSize)}
+                </p>
             </div>
-            <div className="mt-6 space-y-4">
-                {files.map((file) => (
-                    <div key={file.name} className="space-y-1">
-                        <div className="flex justify-between text-sm text-muted-foreground">
-                            <p className="truncate max-w-[70%]">{file.name}</p>
-                            <p>{formatBytes(file.size)}</p>
-                        </div>
-                        <Progress value={uploadProgress[file.name] || 0} />
-                    </div>
-                ))}
+            <div className="mt-6 space-y-1">
+                <Progress value={overallProgress} />
+                <p className="text-center text-sm text-muted-foreground">{Math.round(overallProgress)}%</p>
             </div>
         </CardContent>
       </Card>
@@ -236,108 +233,100 @@ export function FileDrop() {
   }
 
 
-  if (files.length > 0) {
-    return (
-      <Card className="w-full">
-        <CardContent className="p-4 md:p-6 lg:p-8">
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Your Files</h2>
-                <Button variant="ghost" size="sm" onClick={clearFiles}>Clear all</Button>
-            </div>
-          <div className="max-h-48 overflow-y-auto pr-2 space-y-2 mb-6">
-            {files.map((file) => (
-              <div key={file.name} className="flex items-center justify-between rounded-lg border p-3">
-                <div className="flex items-center gap-3">
-                  <FileIcon fileType={file.type} className="h-6 w-6 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">{file.name}</p>
-                    <p className="text-xs text-muted-foreground">{formatBytes(file.size)}</p>
-                  </div>
-                </div>
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeFile(file.name)}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="emailTo"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email to</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input placeholder="recipient@example.com" {...field} className="pl-10" />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="emailFrom"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Your email</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input placeholder="you@example.com" {...field} className="pl-10" />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <FormField
-                control={form.control}
-                name="message"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Message</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <MessageSquare className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Textarea placeholder="Add a message..." {...field} className="pl-10" />
+  return (
+    <Card 
+        className="w-full bg-background/80 backdrop-blur-sm"
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+    >
+      <CardContent className="p-6">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className={cn("flex gap-4", files.length > 0 && "items-start")}>
+                <div
+                    className={cn(
+                        "relative w-28 h-28 rounded-lg border-2 border-dashed flex flex-col items-center justify-center text-center transition-colors duration-300 shrink-0",
+                        isDragging ? "border-primary bg-primary/10" : "border-muted-foreground/30 hover:border-primary"
+                    )}
+                    >
+                    <input
+                        type="file"
+                        multiple
+                        onChange={handleFileSelect}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        id="file-upload"
+                    />
+                    {files.length > 0 ? (
+                      <div className="flex flex-col items-center justify-center text-muted-foreground">
+                          <PlusCircle className="h-8 w-8 mb-1" />
+                          <span className="text-sm font-medium">Add more</span>
                       </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="expiry"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Expires in</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <div className="relative">
-                          <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <SelectTrigger className="pl-10">
-                            <SelectValue placeholder="Select expiry" />
-                          </SelectTrigger>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center p-2 text-muted-foreground">
+                          <UploadCloud className="h-8 w-8 mb-1" />
+                          <p className="text-sm font-semibold">Upload files</p>
+                      </div>
+                    )}
+                </div>
+
+                {files.length > 0 && (
+                    <div className="flex-grow min-w-0">
+                        <div className="max-h-28 overflow-y-auto pr-2 space-y-2">
+                        {files.map((file) => (
+                        <div key={file.name} className="flex items-center justify-between rounded-lg border p-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                                <FileIcon fileType={file.type} className="h-5 w-5 text-muted-foreground shrink-0" />
+                                <div className="min-w-0">
+                                    <p className="text-sm font-medium truncate">{file.name}</p>
+                                    <p className="text-xs text-muted-foreground">{formatBytes(file.size)}</p>
+                                </div>
+                            </div>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => removeFile(file.name)}>
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
                         </div>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="1d">1 Day</SelectItem>
-                        <SelectItem value="7d">1 Week</SelectItem>
-                        <SelectItem value="30d">1 Month</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
+                        ))}
+                    </div>
+                  </div>
                 )}
-              />
-              <Button type="submit" disabled={isPending} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
+            </div>
+            
+            <p className="text-xs text-muted-foreground">
+              {files.length > 0 ? `${files.length} ${files.length === 1 ? 'file' : 'files'}, ${formatBytes(totalSize)}` : 'You can upload up to 2GB.'}
+            </p>
+
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Title</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Descriptive title for your files" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="message"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Message</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Add a message..." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="pt-2">
+                <Button type="submit" disabled={isPending || files.length === 0} className="w-full">
                 {isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -350,40 +339,10 @@ export function FileDrop() {
                   </>
                 )}
               </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <div
-      onDragEnter={handleDragEnter}
-      onDragLeave={handleDragLeave}
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
-      className={cn(
-        "relative w-full h-80 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center text-center transition-colors duration-300",
-        isDragging ? "border-primary bg-primary/10" : "border-muted-foreground/30 hover:border-primary"
-      )}
-    >
-      <input
-        type="file"
-        multiple
-        onChange={handleFileSelect}
-        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-        id="file-upload"
-      />
-      <div className="flex flex-col items-center justify-center p-6 text-muted-foreground">
-        <UploadCloud className={cn("h-16 w-16 mb-4 transition-transform duration-300", isDragging && "scale-110 text-primary")} />
-        <p className="text-2xl font-semibold">Drag & Drop your files here</p>
-        <p className="mt-2">or</p>
-        <Button asChild className="mt-4 bg-accent hover:bg-accent/90 text-accent-foreground">
-            <label htmlFor="file-upload">Select Files</label>
-        </Button>
-        <p className="text-xs mt-4">Maximum file size: 2GB</p>
-      </div>
-    </div>
+            </div>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 }
