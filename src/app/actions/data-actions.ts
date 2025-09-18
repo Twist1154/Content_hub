@@ -127,3 +127,56 @@ export async function fetchAllContent(): Promise<ContentItem[]> {
 
   return contentItems;
 }
+
+export async function fetchStoresByUserId(userId: string) {
+    if (!userId) return { success: false, error: 'User ID is required.' };
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+        .from('stores')
+        .select('*')
+        .eq('user_id', userId);
+    
+    if (error) {
+        console.error("Error fetching stores:", error.message);
+        return { success: false, error: error.message };
+    }
+
+    return { success: true, stores: data };
+}
+
+export async function fetchContentStatsByUserId(userId: string) {
+    if (!userId) return { success: false, error: 'User ID is required.' };
+    const supabase = await createClient();
+
+    // NOTE: This is a placeholder implementation.
+    // We are generating random stats. In a real application, you would
+    // query your 'content' or 'files' table with a where clause for the userId.
+    const stats = {
+        total: Math.floor(Math.random() * 200),
+        active: Math.floor(Math.random() * 100),
+        scheduled: Math.floor(Math.random() * 50),
+        thisMonth: Math.floor(Math.random() * 30),
+    };
+
+    return { success: true, stats };
+}
+
+export async function fetchClientProfileById(clientId: string) {
+    if (!clientId) return { success: false, error: 'Client ID is required' };
+    const supabase = await createClient({ useServiceRole: true });
+
+    const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', clientId)
+        .eq('role', 'client')
+        .single();
+    
+    if (error) {
+        console.error(`Error fetching client profile for ${clientId}:`, error.message);
+        return { success: false, error: error.message };
+    }
+    
+    return { success: true, profile };
+}
