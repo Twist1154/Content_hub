@@ -1,7 +1,6 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { cookies } from 'next/headers';
 import { z } from 'zod';
 
 const signInSchema = z.object({
@@ -10,7 +9,6 @@ const signInSchema = z.object({
 });
 
 export async function signInUser(formData: FormData) {
-  const cookieStore = cookies();
   const supabase = await createClient();
 
   const validatedFields = signInSchema.safeParse({
@@ -71,6 +69,8 @@ export async function registerUser(formData: FormData) {
 
   const { email, password, role } = validatedFields.data;
 
+  // The handle_new_user trigger in the DB will create the profile.
+  // We just need to create the auth user and set their role in metadata.
   const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
     email,
     password,
@@ -85,29 +85,13 @@ export async function registerUser(formData: FormData) {
       error: authError.message,
     };
   }
-
-  const userId = authData.user.id;
-
-  const { error: profileError } = await supabaseAdmin.from('profiles').upsert({
-    id: userId,
-    email: email,
-    role: role,
-  });
-
-  if (profileError) {
-    console.error('Profile creation error:', profileError.message);
-    // Best effort to clean up auth user if profile creation fails
-    await supabaseAdmin.auth.admin.deleteUser(userId);
-    return {
-      success: false,
-      error: 'Failed to create user profile.',
-    };
-  }
+  
+  // The trigger 'on_auth_user_created' will now handle inserting into the profiles table.
 
   return {
     success: true,
     message: 'User registered successfully. Please sign in.',
-    userId: userId,
+    userId: authData.user.id,
   };
 }
 

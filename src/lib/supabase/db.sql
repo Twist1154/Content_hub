@@ -1,111 +1,183 @@
--- 1. Create Profiles table
-CREATE TABLE profiles (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  email TEXT UNIQUE,
-  role TEXT CHECK (role IN ('client', 'admin')),
-  created_at TIMESTAMPTZ DEFAULT NOW()
+/*
+  ================================================================
+  == HAPO MEDIA CONTENT HUB - COMPLETE HYBRID SETUP SCRIPT (V3)
+  ================================================================
+  This script combines the best of both previous versions. It:
+  1. Creates all necessary tables (`profiles`, `stores`, `content`) with the `expiration_date` field.
+  2. Sets up Supabase Storage.
+  3. Creates trigger functions to automatically sync user profiles and JWT roles.
+  4. Applies performant, non-recursive RLS policies using JWT claims.
+  5. Creates and schedules a daily job to automatically delete expired content.
+*/
+
+-- =====================================================
+-- STEP 1: CREATE TABLES
+-- =====================================================
+
+-- Create the `profiles` table
+CREATE TABLE IF NOT EXISTS public.profiles (
+    id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    email text UNIQUE NOT NULL,
+    role text NOT NULL DEFAULT 'client' CHECK (role IN ('client', 'admin')),
+    created_at timestamptz DEFAULT now()
 );
+COMMENT ON TABLE public.profiles IS 'Stores user-specific metadata and roles.';
 
--- 2. Create Stores table
-CREATE TABLE stores (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  brand_company TEXT,
-  address TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+-- Create the `stores` table
+CREATE TABLE IF NOT EXISTS public.stores (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    name text NOT NULL,
+    brand_company text NOT NULL,
+    address text NOT NULL,
+    latitude numeric,
+    longitude numeric,
+    created_at timestamptz DEFAULT now()
 );
+COMMENT ON TABLE public.stores IS 'Stores information about client-specific store locations.';
 
--- 3. Create Content table
-CREATE TABLE content (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  store_id UUID REFERENCES stores(id) ON DELETE CASCADE,
-  title TEXT NOT NULL,
-  type TEXT CHECK (type IN ('image', 'video', 'music')),
-  file_url TEXT NOT NULL,
-  file_size BIGINT,
-  start_date TIMESTAMPTZ,
-  end_date TIMESTAMPTZ,
-  recurrence_type TEXT,
-  recurrence_days TEXT[],
-  expiration_date TIMESTAMPTZ,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+-- Create the `content` table with the expiration_date field
+CREATE TABLE IF NOT EXISTS public.content (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    store_id uuid NOT NULL REFERENCES public.stores(id) ON DELETE CASCADE,
+    user_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    title text NOT NULL,
+    type text NOT NULL CHECK (type IN ('image', 'video', 'music')),
+    file_url text NOT NULL,
+    file_size bigint NOT NULL DEFAULT 0,
+    start_date date NOT NULL,
+    end_date date NOT NULL,
+    recurrence_type text NOT NULL DEFAULT 'none' CHECK (recurrence_type IN ('none', 'daily', 'weekly', 'monthly', 'custom')),
+    recurrence_days text[],
+    expiration_date timestamptz, -- ADDED BACK: The date when this content record should be auto-deleted.
+    created_at timestamptz DEFAULT now()
 );
+COMMENT ON TABLE public.content IS 'Stores metadata for uploaded digital signage content, including an auto-deletion date.';
 
--- 4. Set up Row Level Security (RLS)
+-- =====================================================
+-- STEP 2: SET UP STORAGE
+-- =====================================================
 
--- PROFILES
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('content', 'content', true)
+ON CONFLICT (id) DO NOTHING;
 
--- Admins can see all profiles. Users can only see their own.
-CREATE POLICY "Allow admin to view all profiles"
-  ON profiles FOR SELECT
-  TO authenticated
-  USING (
-    (SELECT role FROM profiles WHERE id = auth.uid()) = 'admin'
-  );
+-- =====================================================
+-- STEP 3: CREATE TRIGGER FUNCTIONS FOR DATA SYNC
+-- =====================================================
 
-CREATE POLICY "Allow user to view their own profile"
-  ON profiles FOR SELECT
-  TO authenticated
-  USING (id = auth.uid());
-  
--- STORES
-ALTER TABLE stores ENABLE ROW LEVEL SECURITY;
+-- This function creates a user profile and syncs the role to the JWT.
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
+AS $$
+BEGIN
+    -- This now only creates the profile. The role is set on user creation in the app code.
+    INSERT INTO public.profiles (id, email, role)
+    VALUES (new.id, new.email, COALESCE(new.raw_app_meta_data->>'role', 'client')::text);
+    RETURN new;
+END;
+$$;
 
--- Admins can manage all stores. Users can manage their own.
-CREATE POLICY "Allow admin full access to stores"
-  ON stores FOR ALL
-  TO authenticated
-  USING (
-    (SELECT role FROM profiles WHERE id = auth.uid()) = 'admin'
-  )
-  WITH CHECK (
-    (SELECT role FROM profiles WHERE id = auth.uid()) = 'admin'
-  );
-  
-CREATE POLICY "Allow user to manage their own stores"
-  ON stores FOR ALL
-  TO authenticated
-  USING (user_id = auth.uid())
-  WITH CHECK (user_id = auth.uid());
+CREATE OR REPLACE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
--- CONTENT
-ALTER TABLE content ENABLE ROW LEVEL SECURITY;
+-- This function keeps the JWT role in sync if an admin changes a user's role.
+CREATE OR REPLACE FUNCTION public.sync_user_role()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
+AS $$
+BEGIN
+    IF (TG_OP = 'UPDATE' AND OLD.role <> NEW.role) THEN
+        UPDATE auth.users SET raw_app_meta_data = raw_app_meta_data || jsonb_build_object('role', NEW.role)
+        WHERE id = NEW.id;
+    END IF;
+    RETURN NEW;
+END;
+$$;
 
--- Admins can manage all content. Users can manage their own.
-CREATE POLICY "Allow admin full access to content"
-  ON content FOR ALL
-  TO authenticated
-  USING (
-    (SELECT role FROM profiles WHERE id = auth.uid()) = 'admin'
-  )
-  WITH CHECK (
-    (SELECT role FROM profiles WHERE id = auth.uid()) = 'admin'
-  );
+CREATE OR REPLACE TRIGGER trg_sync_user_role
+    AFTER UPDATE ON public.profiles FOR EACH ROW EXECUTE PROCEDURE public.sync_user_role();
 
-CREATE POLICY "Allow user to manage their own content"
-  ON content FOR ALL
-  TO authenticated
-  USING (user_id = auth.uid())
-  WITH CHECK (user_id = auth.uid());
-  
--- 5. Create Storage bucket and policies
--- In your Supabase dashboard, go to Storage and create a new bucket named "content"
--- Add the following storage policies:
+-- =====================================================
+-- STEP 4: APPLY ROW LEVEL SECURITY (RLS) POLICIES
+-- =====================================================
 
--- Policy: Allow authenticated users to upload to their own folder
--- Target roles: authenticated
--- Allowed operations: INSERT
--- WITH CHECK: bucket_id = 'content' AND (storage.foldername(name))[1] = auth.uid()::text
+--- PROFILES TABLE RLS ---
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can read own profile" ON public.profiles;
+CREATE POLICY "Users can read own profile" ON public.profiles FOR SELECT USING (auth.uid() = id);
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
+CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
+DROP POLICY IF EXISTS "Admins can manage any profile" ON public.profiles;
+CREATE POLICY "Admins can manage any profile" ON public.profiles FOR ALL USING ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
 
--- Policy: Allow users to view their own content
--- Target roles: authenticated
--- Allowed operations: SELECT
--- USING: bucket_id = 'content' AND (storage.foldername(name))[1] = auth.uid()::text
+--- STORES TABLE RLS ---
+ALTER TABLE public.stores ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can manage their own stores" ON public.stores;
+CREATE POLICY "Users can manage their own stores" ON public.stores FOR ALL USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Admins can manage all stores" ON public.stores;
+CREATE POLICY "Admins can manage all stores" ON public.stores FOR ALL USING ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
 
--- Policy: Allow admins to view all content
--- Target roles: authenticated
--- Allowed operations: SELECT
--- USING: bucket_id = 'content' AND (SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin'
+--- CONTENT TABLE RLS ---
+ALTER TABLE public.content ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can manage their own content" ON public.content;
+CREATE POLICY "Users can manage their own content" ON public.content FOR ALL USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Admins can manage all content" ON public.content;
+CREATE POLICY "Admins can manage all content" ON public.content FOR ALL USING ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+
+--- STORAGE RLS ---
+ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can manage their own files" ON storage.objects;
+CREATE POLICY "Users can manage their own files" ON storage.objects FOR ALL
+    USING ( bucket_id = 'content' AND owner = auth.uid() );
+DROP POLICY IF EXISTS "Admins can manage all files" ON storage.objects;
+CREATE POLICY "Admins can manage all files" ON storage.objects FOR ALL
+    USING ( bucket_id = 'content' AND (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin' );
+
+-- =====================================================
+-- STEP 5: AUTOMATE DELETION OF EXPIRED CONTENT
+-- =====================================================
+-- NOTE: This requires the `pg_cron` extension to be enabled on your Supabase project.
+-- Go to Dashboard -> Database -> Extensions and enable `pg_cron`.
+
+-- This function will be called by the cron job to delete content.
+-- It also attempts to delete the associated file from Storage.
+CREATE OR REPLACE FUNCTION public.delete_expired_content()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER -- Allows the function to bypass RLS to delete any user's content.
+AS $$
+DECLARE
+    expired_record RECORD;
+    storage_path text;
+BEGIN
+    -- Loop through each expired content record
+    FOR expired_record IN
+        SELECT id, file_url, user_id FROM public.content WHERE expiration_date IS NOT NULL AND expiration_date <= now()
+    LOOP
+        -- Construct the storage path from the user_id and file name
+        storage_path := expired_record.user_id || '/' || substring(expired_record.file_url from '[^/]+$');
+        
+        -- Attempt to delete the associated file from Supabase Storage
+        BEGIN
+            PERFORM storage.delete_object('content', storage_path);
+        EXCEPTION WHEN OTHERS THEN
+            -- Log or handle the error if the file deletion fails, but don't stop the process.
+            RAISE NOTICE 'Could not delete file from storage: %', storage_path;
+        END;
+
+        -- Delete the database record
+        DELETE FROM public.content WHERE id = expired_record.id;
+
+    END LOOP;
+END;
+$$;
+
+-- Schedule the function to run once every day at midnight UTC.
+-- The job is named 'daily_content_cleanup' to be identifiable.
+-- It will be unscheduled if it already exists, then scheduled again, making this script re-runnable.
+SELECT cron.unschedule('daily_content_cleanup');
+SELECT cron.schedule('daily_content_cleanup', '0 0 * * *', 'SELECT public.delete_expired_content()');
+
+-- =====================================================
+-- SCRIPT COMPLETE
+-- =====================================================
