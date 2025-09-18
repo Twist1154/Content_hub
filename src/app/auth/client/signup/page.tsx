@@ -1,7 +1,7 @@
 
 'use client';
 
-import { RegistrationForm } from '@/components/registration-form';
+import { AuthForm } from '@/components/auth/AuthForm';
 import { BackButton } from '@/components/ui/back-button';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
 import Link from 'next/link';
@@ -28,7 +28,7 @@ export default function ClientSignUp() {
                 <CardDescription className="text-muted-foreground mt-2">Join our content management platform</CardDescription>
             </CardHeader>
             <CardContent>
-                <RegistrationForm userType="client" />
+                <AuthForm mode="signup" userType="client" />
                 <div className="text-center mt-6">
                     <p className="text-sm text-muted-foreground">
                         Already have an account?{' '}
