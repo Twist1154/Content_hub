@@ -3,14 +3,14 @@
 import { useActionState, useEffect } from 'react';
 import { useFormStatus } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { signInUser } from '@/app/actions/auth-actions';
+import { registerUser } from '@/app/actions/auth-actions';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
 
-interface AuthFormProps {
+interface RegistrationFormProps {
   userType: 'client' | 'admin';
 }
 
@@ -19,22 +19,22 @@ function SubmitButton() {
   return (
     <Button type="submit" className="w-full" disabled={pending}>
       {pending && <Loader2 className="mr-2 animate-spin" />}
-      Sign In
+      Sign Up
     </Button>
   );
 }
 
-export function AuthForm({ userType }: AuthFormProps) {
+export function RegistrationForm({ userType }: RegistrationFormProps) {
   const router = useRouter();
   const { toast } = useToast();
   
-  const [state, formAction] = useActionState(signInUser, null);
+  const [state, formAction] = useActionState(registerUser, null);
 
   useEffect(() => {
     if (!state) return;
     if (state.success) {
-      toast({ title: 'Success', description: 'Signed in successfully.' });
-      router.push(userType === 'admin' ? '/admin' : '/dashboard');
+      toast({ title: 'Success', description: 'Registration successful! Please sign in.' });
+      router.push(`/auth/${userType}/signin`);
     } else {
       toast({
         title: 'Error',
@@ -54,6 +54,7 @@ export function AuthForm({ userType }: AuthFormProps) {
         <Label htmlFor="password">Password</Label>
         <Input id="password" name="password" type="password" required />
       </div>
+      <input type="hidden" name="role" value={userType} />
       <SubmitButton />
     </form>
   );

@@ -36,7 +36,7 @@ export default function ClientSignIn() {
                 <CardDescription className="mt-2">Access your content management dashboard</CardDescription>
             </CardHeader>
             <CardContent>
-                <AuthForm mode="signin" userType="client" />
+                <AuthForm userType="client" />
 
                 {/* Sign up link */}
                 <div className="text-center mt-6">
