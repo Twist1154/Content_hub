@@ -21,13 +21,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Form,
   FormControl,
   FormField,
@@ -41,6 +34,7 @@ import { cn, formatBytes } from "@/lib/utils";
 import { generateLinkAction } from "@/app/actions";
 import { useToast } from "@/hooks/use-toast";
 import FileIcon from "./file-icon";
+import { createClient } from "@/lib/supabase/client";
 
 const formSchema = z.object({
   emailTo: z.string().email("Invalid email address.").optional(),
@@ -60,6 +54,7 @@ export function FileDrop() {
   const [isPasswordProtected, setIsPasswordProtected] = useState<boolean | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  const supabase = createClient();
   const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -110,25 +105,20 @@ export function FileDrop() {
     setFiles((prevFiles) => prevFiles.filter((file) => file.name !== fileName));
   };
 
-  const simulateUpload = (file: File): Promise<void> => {
-    return new Promise((resolve) => {
-      const interval = setInterval(() => {
-        setUploadProgress((prev) => {
-          const newProgress = { ...prev };
-          const currentProgress = newProgress[file.name] || 0;
-          const nextProgress = Math.min(currentProgress + 10, 100);
-          newProgress[file.name] = nextProgress;
-
-          if (nextProgress === 100) {
-            clearInterval(interval);
-            resolve();
-          }
-
-          return newProgress;
-        });
-      }, 100);
+  const uploadFile = async (file: File): Promise<string> => {
+    const filePath = `public/${Date.now()}-${file.name}`;
+    const { error } = await supabase.storage.from("files").upload(filePath, file, {
+      cacheControl: "3600",
+      upsert: false,
+      contentType: file.type,
     });
+
+    if (error) {
+      throw error;
+    }
+    return filePath;
   };
+
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     if (files.length === 0) {
@@ -144,21 +134,22 @@ export function FileDrop() {
 
     startTransition(async () => {
       try {
-        await Promise.all(files.map(simulateUpload));
-
+        const uploadPaths = await Promise.all(files.map(uploadFile));
+        setUploadProgress(files.reduce((acc, file) => ({...acc, [file.name]: 100}), {}));
+        
         const firstFileType = files[0]?.type.split('/')[1] || 'unknown';
         const fileNames = files.map((f) => f.name);
 
-        const result = await generateLinkAction({ fileType: firstFileType, fileNames });
+        const result = await generateLinkAction({ fileType: firstFileType, fileNames, uploadPaths });
 
         setShareableLink(result.shareableLink);
         setIsPasswordProtected(result.isPasswordProtected);
         setUploadStatus("success");
-      } catch (error) {
+      } catch (error: any) {
         setUploadStatus("error");
         toast({
           title: "Upload Failed",
-          description: "Something went wrong while generating the link. Please try again.",
+          description: error.message || "Something went wrong. Please try again.",
           variant: "destructive",
         });
       }
