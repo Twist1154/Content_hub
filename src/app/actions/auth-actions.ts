@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
+import { headers } from 'next/headers';
 
 const signInSchema = z.object({
   email: z.string().email(),
@@ -95,4 +96,48 @@ export async function registerUser(prevState: any, formData: FormData) {
 export async function signOut() {
     const supabase = await createClient();
     await supabase.auth.signOut();
+}
+
+
+const magicLinkSchema = z.object({
+  email: z.string().email('Please enter a valid email address.'),
+});
+
+export async function sendMagicLink(prevState: any, formData: FormData) {
+    const supabase = await createClient();
+    const origin = headers().get('origin');
+
+    const validatedFields = magicLinkSchema.safeParse(
+        Object.fromEntries(formData.entries())
+    );
+
+    if (!validatedFields.success) {
+        return {
+        success: false,
+        error: 'Invalid email address.',
+        };
+    }
+
+    const { email } = validatedFields.data;
+
+    const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+            // The user will be redirected to this URL after clicking the magic link.
+            emailRedirectTo: `${origin}/auth/callback`,
+        },
+    });
+
+    if (error) {
+        console.error('Magic link error:', error.message);
+        return {
+            success: false,
+            error: error.message,
+        };
+    }
+
+    return {
+        success: true,
+        message: 'A magic link has been sent to your email address.',
+    };
 }

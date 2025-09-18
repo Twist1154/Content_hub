@@ -1,44 +1,41 @@
+
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { MagicLinkForm } from '@/components/auth/MagicLinkForm';
+import { BackButton } from '@/components/ui/back-button';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 
-export default function MagicLinkPage() {
+
+export default function ClientMagicLinkSignIn() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Passwordless Sign-In</CardTitle>
-          <CardDescription>
-            Enter your email to receive a magic link to sign in.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="m@example.com"
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full">
-              Send Magic Link
-            </Button>
-          </form>
-           <div className="mt-4 text-center text-sm">
-                <Link href="/auth/client/signin" className="underline">
-                Back to Sign In
-                </Link>
-            </div>
-        </CardContent>
-      </Card>
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="mb-4">
+          <BackButton href="/auth/client/signin" label="Back to Sign In" />
+          <Breadcrumb
+            items={[
+              { label: 'Home', href: '/' },
+              { label: 'Client Sign In', href: '/auth/client/signin' },
+              { label: 'Magic Link', current: true },
+            ]}
+            className="mt-2"
+          />
+        </div>
+        <Card>
+            <CardHeader className="text-center">
+                <CardTitle className="text-3xl font-bold text-foreground">Passwordless Sign-In</CardTitle>
+                <CardDescription className="text-muted-foreground mt-2">
+                    Enter your email to receive a magic link to sign in.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <MagicLinkForm />
+            </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
