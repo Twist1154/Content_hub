@@ -12,18 +12,9 @@ export async function middleware(request: NextRequest) {
   const userRole = session?.user?.user_metadata?.role;
   const { pathname } = request.nextUrl;
 
-  // Handle auth callback
+  // Let the dedicated /auth/callback route handle the code exchange
   if (pathname === '/auth/callback') {
-    const code = request.nextUrl.searchParams.get('code');
-    if (code) {
-      await supabase.auth.exchangeCodeForSession(code);
-    }
-    // Redirect to the appropriate dashboard after login
-    const { data } = await supabase.auth.getUser();
-    if (data.user?.user_metadata?.role === 'admin') {
-      return NextResponse.redirect(new URL('/admin', request.url));
-    }
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    return response;
   }
 
 
