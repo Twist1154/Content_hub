@@ -16,6 +16,13 @@ export async function middleware(request: NextRequest) {
   if (pathname === '/auth/callback') {
     return response;
   }
+  
+  if (session && !session.user.user_metadata.store_id && pathname !== '/auth/setup-store' && userRole === 'client') {
+      const { data: stores } = await supabase.from('stores').select('id').eq('user_id', session.user.id);
+      if(!stores || stores.length === 0) {
+        return NextResponse.redirect(new URL('/auth/setup-store', request.url));
+      }
+  }
 
 
   // Protect dashboard routes
