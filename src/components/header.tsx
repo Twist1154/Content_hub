@@ -1,8 +1,10 @@
+
 import Link from 'next/link';
 import { Button } from './ui/button';
 import { Logo } from './logo';
 import { createClient } from '@/lib/supabase/server';
 import { UserNav } from './user-nav';
+import { MobileNav } from './mobile-nav';
 
 export default async function Header() {
   const supabase = await createClient();
@@ -29,7 +31,9 @@ export default async function Header() {
             </Link>
           </nav>
         )}
-        <Button variant="outline" className="md:hidden">Menu</Button>
+        <div className="md:hidden">
+          <MobileNav user={user} />
+        </div>
       </div>
     </header>
   );

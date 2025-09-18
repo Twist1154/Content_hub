@@ -1,10 +1,90 @@
+
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { Logo } from "@/components/logo";
 
-export default function Home() {
+// Reusable component for feature sections
+function FeatureSection({
+  imageUrl,
+  imageAlt,
+  imageHint,
+  badgeText,
+  title,
+  description,
+  buttonText,
+  imagePosition = "left",
+}: {
+  imageUrl: string;
+  imageAlt: string;
+  imageHint: string;
+  badgeText: string;
+  title: string;
+  description: string;
+  buttonText: string;
+  imagePosition?: "left" | "right";
+}) {
+  const imageWidth = imageUrl.split("/")[imageUrl.split("/").length - 2];
+  const imageHeight = imageUrl.split("/").pop();
+
+  const imageEl = (
+    <Image
+      alt={imageAlt}
+      className={`mx-auto aspect-video overflow-hidden rounded-xl object-cover object-center sm:w-full ${
+        imagePosition === "right" ? "lg:order-2" : "lg:order-1"
+      }`}
+      data-ai-hint={imageHint}
+      height={imageHeight ? parseInt(imageHeight) : 400}
+      src={imageUrl}
+      width={imageWidth ? parseInt(imageWidth) : 600}
+    />
+  );
+
+  const textEl = (
+    <div
+      className={`space-y-4 ${
+        imagePosition === "right" ? "lg:order-1" : "lg:order-2"
+      }`}
+    >
+      <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm">
+        {badgeText}
+      </div>
+      <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
+        {title}
+      </h2>
+      <p className="max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed text-justify">
+        {description}
+      </p>
+      <Button>{buttonText}</Button>
+    </div>
+  );
+
+  return (
+    <section
+      className={`w-full py-12 md:py-24 lg:py-32 ${
+        imagePosition === "right" ? "bg-muted" : "bg-background"
+      }`}
+    >
+      <div className="container grid items-center gap-6 px-4 md:px-6 lg:grid-cols-2 lg:gap-10">
+        {imagePosition === "left" ? (
+          <>
+            {imageEl}
+            {textEl}
+          </>
+        ) : (
+          <>
+            {textEl}
+            {imageEl}
+          </>
+        )}
+      </div>
+    </section>
+  );
+}
+
+// Reusable component for brand logos
+function BrandLogos() {
   const logos = [
     "google",
     "spotify",
@@ -13,6 +93,33 @@ export default function Home() {
     "facebook",
     "samsung",
   ];
+  return (
+    <section className="w-full py-12 md:py-24 lg:py-32 bg-background">
+      <div className="container px-4 md:px-6">
+        <div className="flex flex-col items-center justify-center space-y-4 text-center">
+          <div className="space-y-2">
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
+              Trusted by the world’s biggest brands
+            </h2>
+            <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed text-justify">
+              Our platform helps creatives and brands of all sizes to connect
+              with a global audience.
+            </p>
+          </div>
+        </div>
+        <div className="mx-auto grid max-w-5xl grid-cols-2 items-center gap-6 py-12 sm:grid-cols-3 lg:grid-cols-6 lg:gap-12">
+          {logos.map((logo) => (
+            <div key={logo} className="flex justify-center">
+              <Logo className="h-9 w-24 text-muted-foreground" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export default function Home() {
   const featureImage1 = PlaceHolderImages[0];
   const featureImage2 = PlaceHolderImages[1];
   const featureImage3 = PlaceHolderImages[2];
@@ -29,121 +136,50 @@ export default function Home() {
           src="https://assets.mixkit.co/videos/preview/mixkit-a-girl-looking-at-the-ocean-from-a-cliff-4527-large.mp4"
         />
         <div className="w-full max-w-lg mx-auto p-4 md:max-w-2xl text-center text-white">
-            <h1 className="text-5xl font-bold mb-4">Send files, securely.</h1>
-            <p className="text-xl mb-8">HapoHub is the simplest way to send big files.</p>
-            <Link href="/auth/client/signup">
-                <Button size="lg">Get Started</Button>
-            </Link>
+          <h1 className="text-5xl font-bold mb-4">Send files, securely.</h1>
+          <p className="text-xl mb-8">
+            HapoHub is the simplest way to send big files.
+          </p>
+          <Link href="/auth/client/signup">
+            <Button size="lg">Get Started</Button>
+          </Link>
         </div>
       </div>
 
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-background">
-        <div className="container px-4 md:px-6">
-          <div className="flex flex-col items-center justify-center space-y-4 text-center">
-            <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
-                Trusted by the world’s biggest brands
-              </h2>
-              <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed text-justify">
-                Our platform helps creatives and brands of all sizes to connect
-                with a global audience.
-              </p>
-            </div>
-          </div>
-          <div className="mx-auto grid max-w-5xl grid-cols-2 items-center gap-6 py-12 sm:grid-cols-3 lg:grid-cols-6 lg:gap-12">
-            {logos.map((logo) => (
-              <div key={logo} className="flex justify-center">
-                <Logo className="h-9 w-24 text-muted-foreground" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <BrandLogos />
 
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-background">
-        <div className="container grid items-center gap-6 px-4 md:px-6 lg:grid-cols-2 lg:gap-10">
-          <Image
-            alt="Image"
-            className="mx-auto aspect-video overflow-hidden rounded-xl object-cover object-center sm:w-full"
-            data-ai-hint="office creative team"
-            height={featureImage1.imageUrl.split("/").pop()!}
-            src={featureImage1.imageUrl}
-            width={featureImage1.imageUrl.split("/")[
-              featureImage1.imageUrl.split("/").length - 2
-            ]!}
-          />
-          <div className="space-y-4">
-            <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm">
-              Creative Tools
-            </div>
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
-              Showcase your work
-            </h2>
-            <p className="max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed text-justify">
-              Our platform offers a beautiful and intuitive way to present your
-              creative projects. Customize layouts, add context, and bring your
-              work to life.
-            </p>
-            <Button>Learn More</Button>
-          </div>
-        </div>
-      </section>
+      <FeatureSection
+        imageUrl={featureImage1.imageUrl}
+        imageAlt="Creative Tools Feature"
+        imageHint={featureImage1.imageHint}
+        badgeText="Creative Tools"
+        title="Showcase your work"
+        description="Our platform offers a beautiful and intuitive way to present your creative projects. Customize layouts, add context, and bring your work to life."
+        buttonText="Learn More"
+        imagePosition="left"
+      />
 
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-muted">
-        <div className="container grid items-center gap-6 px-4 md:px-6 lg:grid-cols-2 lg:gap-10">
-          <div className="space-y-4 lg:order-2">
-            <div className="inline-block rounded-lg bg-background px-3 py-1 text-sm">
-              Collaboration
-            </div>
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
-              Work together, seamlessly
-            </h2>
-            <p className="max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed text-justify">
-              Invite team members, share feedback, and manage versions—all in
-              one place. Streamline your creative workflow and get more done.
-            </p>
-            <Button>Learn More</Button>
-          </div>
-          <Image
-            alt="Image"
-            className="mx-auto aspect-video overflow-hidden rounded-xl object-cover object-center sm:w-full lg:order-1"
-            data-ai-hint="team working on laptops"
-            height={featureImage2.imageUrl.split("/").pop()!}
-            src={featureImage2.imageUrl}
-            width={featureImage2.imageUrl.split("/")[
-              featureImage2.imageUrl.split("/").length - 2
-            ]!}
-          />
-        </div>
-      </section>
+      <FeatureSection
+        imageUrl={featureImage2.imageUrl}
+        imageAlt="Collaboration Feature"
+        imageHint={featureImage2.imageHint}
+        badgeText="Collaboration"
+        title="Work together, seamlessly"
+        description="Invite team members, share feedback, and manage versions—all in one place. Streamline your creative workflow and get more done."
+        buttonText="Learn More"
+        imagePosition="right"
+      />
 
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-background">
-        <div className="container grid items-center gap-6 px-4 md:px-6 lg:grid-cols-2 lg:gap-10">
-          <Image
-            alt="Image"
-            className="mx-auto aspect-video overflow-hidden rounded-xl object-cover object-center sm:w-full"
-            data-ai-hint="brand advertisement display"
-            height={featureImage3.imageUrl.split("/").pop()!}
-            src={featureImage3.imageUrl}
-            width={featureImage3.imageUrl.split("/")[
-              featureImage3.imageUrl.split("/").length - 2
-            ]!}
-          />
-          <div className="space-y-4">
-            <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm">
-              Audience Engagement
-            </div>
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
-              Connect with your audience
-            </h2>
-            <p className="max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed text-justify">
-              Share your work with the world. Our platform makes it easy to
-              distribute your content and track its performance.
-            </p>
-            <Button>Learn More</Button>
-          </div>
-        </div>
-      </section>
+      <FeatureSection
+        imageUrl={featureImage3.imageUrl}
+        imageAlt="Audience Engagement Feature"
+        imageHint={featureImage3.imageHint}
+        badgeText="Audience Engagement"
+        title="Connect with your audience"
+        description="Share your work with the world. Our platform makes it easy to distribute your content and track its performance."
+        buttonText="Learn More"
+        imagePosition="left"
+      />
 
       <section className="w-full py-12 md:py-24 lg:py-32 border-t">
         <div className="container grid items-center justify-center gap-4 px-4 text-center md:px-6">
@@ -152,7 +188,8 @@ export default function Home() {
               Ready to get started?
             </h2>
             <p className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed text-justify">
-              Sign up today and start sharing your creative work with the world.
+              Sign up today and start sharing your creative work with the
+              world.
             </p>
           </div>
           <div className="mx-auto w-full max-w-sm space-x-2 flex">

@@ -1,3 +1,4 @@
+
 "use client"
 
 import type { User } from "@supabase/supabase-js"
@@ -56,6 +57,11 @@ export function UserNav({ user }: UserNavProps) {
             </DropdownMenuItem>
           </Link>
           <Link href="/profile">
+            <DropdownMenuItem>
+                Profile
+            </DropdownMenuItem>
+          </Link>
+           <Link href="/settings">
             <DropdownMenuItem>
                 Settings
             </DropdownMenuItem>
