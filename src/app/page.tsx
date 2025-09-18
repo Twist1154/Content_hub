@@ -44,7 +44,7 @@ export default function Home() {
               <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
                 Trusted by the world’s biggest brands
               </h2>
-              <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+              <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed text-justify">
                 Our platform helps creatives and brands of all sizes to connect
                 with a global audience.
               </p>
@@ -79,7 +79,7 @@ export default function Home() {
             <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
               Showcase your work
             </h2>
-            <p className="max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+            <p className="max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed text-justify">
               Our platform offers a beautiful and intuitive way to present your
               creative projects. Customize layouts, add context, and bring your
               work to life.
@@ -98,7 +98,7 @@ export default function Home() {
             <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
               Work together, seamlessly
             </h2>
-            <p className="max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+            <p className="max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed text-justify">
               Invite team members, share feedback, and manage versions—all in
               one place. Streamline your creative workflow and get more done.
             </p>
@@ -136,7 +136,7 @@ export default function Home() {
             <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
               Connect with your audience
             </h2>
-            <p className="max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+            <p className="max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed text-justify">
               Share your work with the world. Our platform makes it easy to
               distribute your content and track its performance.
             </p>
@@ -151,7 +151,7 @@ export default function Home() {
             <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight">
               Ready to get started?
             </h2>
-            <p className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+            <p className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed text-justify">
               Sign up today and start sharing your creative work with the world.
             </p>
           </div>
