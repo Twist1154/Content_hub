@@ -10,38 +10,43 @@ const signInSchema = z.object({
 });
 
 export async function signInUser(prevState: any, formData: FormData) {
-  const supabase = await createClient();
+  try {
+    const supabase = await createClient();
 
-  const validatedFields = signInSchema.safeParse(
-    Object.fromEntries(formData.entries())
-  );
+    const validatedFields = signInSchema.safeParse(
+      Object.fromEntries(formData.entries())
+    );
 
-  if (!validatedFields.success) {
+    if (!validatedFields.success) {
+      return {
+        success: false,
+        error: 'Invalid email or password.',
+      };
+    }
+
+    const { email, password } = validatedFields.data;
+
+    const { error, data } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      console.error('Sign-in error:', error.message);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+    
     return {
-      success: false,
-      error: 'Invalid email or password.',
+      success: true,
+      user: data.user,
     };
+  } catch (error: any) {
+    console.error('Unexpected error signing in user:', error);
+    return { success: false, error: error.message };
   }
-
-  const { email, password } = validatedFields.data;
-
-  const { error, data } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-
-  if (error) {
-    console.error('Sign-in error:', error.message);
-    return {
-      success: false,
-      error: error.message,
-    };
-  }
-  
-  return {
-    success: true,
-    user: data.user,
-  };
 }
 
 const registerSchema = z.object({
@@ -51,51 +56,85 @@ const registerSchema = z.object({
 });
 
 export async function registerUser(prevState: any, formData: FormData) {
-  const supabaseAdmin = await createClient({ useServiceRole: true });
-  
-  const validatedFields = registerSchema.safeParse(
-    Object.fromEntries(formData.entries())
-  );
+  try {
+    const supabaseAdmin = await createClient({ useServiceRole: true });
+    
+    const validatedFields = registerSchema.safeParse(
+      Object.fromEntries(formData.entries())
+    );
 
-  if (!validatedFields.success) {
-    console.log('Registration validation failed:', validatedFields.error.flatten().fieldErrors);
+    if (!validatedFields.success) {
+      console.log('Registration validation failed:', validatedFields.error.flatten().fieldErrors);
+      return {
+        success: false,
+        error: 'Invalid registration data.',
+      };
+    }
+
+    const { email, password, role } = validatedFields.data;
+
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { role },
+      app_metadata: { role },
+    });
+
+    if (authError) {
+      console.error('Auth user creation error:', authError.message);
+      return {
+        success: false,
+        error: authError.message,
+      };
+    }
+
+    if (!authData.user) {
+        return {
+            success: false,
+            error: 'User creation failed with no error',
+        };
+    }
+
+    const { error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .insert({
+            id: authData.user.id,
+            email: authData.user.email!,
+            role: role
+        });
+    
+    if (profileError) {
+        console.error('Error creating profile:', profileError);
+        // If profile creation fails, we should ideally delete the auth user to avoid orphaned accounts
+        await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
+        return {
+            success: false,
+            error: 'Failed to create user profile. Please try again.',
+        };
+    }
+
     return {
-      success: false,
-      error: 'Invalid registration data.',
+      success: true,
+      message: 'User registered successfully. Please sign in.',
+      userId: authData.user.id,
+    };
+  } catch (error: any) {
+    console.error('Unexpected error in registerUser:', error);
+    return {
+        success: false,
+        error: 'An unexpected error occurred during registration.',
     };
   }
-
-  const { email, password, role } = validatedFields.data;
-
-  // The handle_new_user trigger in the DB will create the profile.
-  // We just need to create the auth user and set their role in metadata.
-  const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true, // Auto-confirm email for simplicity
-    user_metadata: { role },
-  });
-
-  if (authError) {
-    console.error('Auth user creation error:', authError.message);
-    return {
-      success: false,
-      error: authError.message,
-    };
-  }
-  
-  // The trigger 'on_auth_user_created' will now handle inserting into the profiles table.
-
-  return {
-    success: true,
-    message: 'User registered successfully. Please sign in.',
-    userId: authData.user.id,
-  };
 }
 
 export async function signOut() {
-    const supabase = await createClient();
-    await supabase.auth.signOut();
+    try {
+        const supabase = await createClient();
+        await supabase.auth.signOut();
+    } catch (error: any) {
+        console.error('Unexpected error during sign out:', error);
+    }
 }
 
 
@@ -104,61 +143,82 @@ const magicLinkSchema = z.object({
 });
 
 export async function sendMagicLink(prevState: any, formData: FormData) {
-    const supabase = await createClient();
-    const origin = headers().get('origin');
+    try {
+        const supabase = await createClient();
+        const origin = headers().get('origin');
 
-    const validatedFields = magicLinkSchema.safeParse(
-        Object.fromEntries(formData.entries())
-    );
+        const validatedFields = magicLinkSchema.safeParse(
+            Object.fromEntries(formData.entries())
+        );
 
-    if (!validatedFields.success) {
-        return {
-        success: false,
-        error: 'Invalid email address.',
-        };
-    }
-
-    const { email } = validatedFields.data;
-
-    const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-            // The user will be redirected to this URL after clicking the magic link.
-            emailRedirectTo: `${origin}/auth/callback`,
-        },
-    });
-
-    if (error) {
-        console.error('Magic link error:', error.message);
-        return {
+        if (!validatedFields.success) {
+            return {
             success: false,
-            error: error.message,
-        };
-    }
+            error: 'Invalid email address.',
+            };
+        }
 
-    return {
-        success: true,
-        message: 'A magic link has been sent to your email address.',
-    };
+        const { email } = validatedFields.data;
+
+        // Determine user role to construct the correct redirect URL
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('email', email)
+            .single();
+        
+        const redirectTo = profile?.role === 'admin' 
+            ? `${origin}/auth/callback?next=/admin`
+            : `${origin}/auth/callback?next=/dashboard`;
+
+
+        const { error } = await supabase.auth.signInWithOtp({
+            email,
+            options: {
+                emailRedirectTo: redirectTo,
+            },
+        });
+
+        if (error) {
+            console.error('Magic link error:', error.message);
+            return {
+                success: false,
+                error: error.message,
+            };
+        }
+
+        return {
+            success: true,
+            message: 'A magic link has been sent to your email address.',
+        };
+    } catch (error: any) {
+        console.error('Unexpected error sending magic link:', error);
+        return { success: false, error: 'An unexpected error occurred.' };
+    }
 }
 
 export async function getUserAndProfile(userId: string) {
-  const supabase = await createClient({ useServiceRole: true });
-  const { data: user, error: userError } = await supabase.auth.admin.getUserById(userId);
+  try {
+    const supabase = await createClient({ useServiceRole: true });
+    const { data: user, error: userError } = await supabase.auth.admin.getUserById(userId);
 
-  if (userError) {
-    return { success: false, error: userError.message };
+    if (userError) {
+      return { success: false, error: userError.message };
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (profileError) {
+      return { success: false, error: profileError.message };
+    }
+
+    return { success: true, user: { ...user.user, profile } };
+  } catch (error: any) {
+    console.error('Unexpected error getting user and profile:', error);
+    return { success: false, error: error.message };
   }
-
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single();
-
-  if (profileError) {
-    return { success: false, error: profileError.message };
-  }
-
-  return { success: true, user: { ...user.user, profile } };
 }
