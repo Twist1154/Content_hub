@@ -141,3 +141,24 @@ export async function sendMagicLink(prevState: any, formData: FormData) {
         message: 'A magic link has been sent to your email address.',
     };
 }
+
+export async function getUserAndProfile(userId: string) {
+  const supabase = await createClient({ useServiceRole: true });
+  const { data: user, error: userError } = await supabase.auth.admin.getUserById(userId);
+
+  if (userError) {
+    return { success: false, error: userError.message };
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .single();
+
+  if (profileError) {
+    return { success: false, error: profileError.message };
+  }
+
+  return { success: true, user: { ...user.user, profile } };
+}
