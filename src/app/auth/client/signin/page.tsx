@@ -1,73 +1,73 @@
-'use client';
+'use client'; // --- NEW: This page must be a client component to use the hook ---
 
-import { signInUser } from '@/app/actions/auth-actions';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { AuthForm } from '@/components/auth-form';
+import { BackButton } from '@/components/ui/back-button';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
+import { useGoogleOneTap } from '@/hooks/use-google-one-tap'; // --- NEW: Import the hook ---
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useEffect, useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" className="w-full" disabled={pending}>
-      {pending && <Loader2 className="mr-2 animate-spin" />}
-      Sign In
-    </Button>
-  );
-}
+// Note: The ToastProvider should ideally be in your root layout (app/layout.tsx)
+// to be available on all pages. If it's only needed here, this is fine.
 
-export default function ClientSignInPage() {
-  const router = useRouter();
-  const { toast } = useToast();
-  const [state, formAction] = useActionState(signInUser, null);
-
-  useEffect(() => {
-    if (!state) return;
-    if (state.success) {
-      toast({ title: 'Success', description: 'Signed in successfully.' });
-      router.push('/dashboard');
-    } else {
-      toast({
-        title: 'Error',
-        description: state.error,
-        variant: 'destructive',
-      });
-    }
-  }, [state, router, toast]);
+export default function ClientSignIn() {
+  // --- NEW: Call the hook to activate Google One Tap on this page ---
+  useGoogleOneTap();
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Client Sign In</CardTitle>
-          <CardDescription>Enter your credentials to access your dashboard.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form action={formAction} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" name="email" type="email" placeholder="m@example.com" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" name="password" type="password" required />
-            </div>
-            <SubmitButton />
-          </form>
-          <div className="mt-4 text-center text-sm">
-            Don&apos;t have an account?{' '}
-            <Link href="/auth/client/signup" className="underline">
-              Sign up
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
+    // THEME: Use theme variables for the background.
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="mb-4">
+          <BackButton href="/" label="Back to home" />
+          <Breadcrumb 
+            items={[
+              // Breadcrumb is already themed, no changes needed here
+              { label: 'Home', href: '/' },
+              { label: 'Client Sign In', current: true }
+            ]} 
+            className="mt-2"
+          />
+        </div>
+        
+        <Card className="w-full">
+            <CardHeader className="text-center">
+                <CardTitle className="text-3xl">Client Sign In</CardTitle>
+                <CardDescription className="mt-2">Access your content management dashboard</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <AuthForm mode="signin" userType="client" />
+
+                {/* Sign up link */}
+                <div className="text-center mt-6">
+                {/* THEME: Use theme text colors */}
+                <p className="text-sm text-muted-foreground">
+                    Don&#39;t have an account?{' '}
+                    <Link
+                    href="/auth/client/signup"
+                    // THEME: Use theme primary color for the link
+                    className="font-medium text-primary hover:underline"
+                    >
+                    Sign up here
+                    </Link>
+                </p>
+                </div>
+
+                {/* Or use magic link */}
+                <div className="text-center mt-2">
+                <p className="text-sm text-muted-foreground">
+                    Prefer passwordless?{' '}
+                    <Link
+                    href="/auth/client/magic-link"
+                    className="font-medium text-primary hover:underline"
+                    >
+                    Use a magic link
+                    </Link>
+                </p>
+                </div>
+            </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
