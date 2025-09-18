@@ -8,8 +8,8 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useEffect, useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -25,7 +25,7 @@ export default function AdminSignInPage() {
   const router = useRouter();
   const { toast } = useToast();
   
-  const [state, formAction] = useFormState(signInUser, null);
+  const [state, formAction] = useActionState(signInUser, null);
 
   useEffect(() => {
     if (!state) return;
