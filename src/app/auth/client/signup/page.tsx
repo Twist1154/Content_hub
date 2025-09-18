@@ -9,32 +9,40 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useTransition } from 'react';
+import { useEffect } from 'react';
+import { useFormState, useFormStatus } from 'react-dom';
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" className="w-full" disabled={pending}>
+      {pending && <Loader2 className="mr-2 animate-spin" />}
+      Sign Up
+    </Button>
+  );
+}
 
 export default function ClientSignUpPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const [isPending, startTransition] = useTransition();
+  const [state, formAction] = useFormState(registerUser, null);
 
-  const handleSignUp = (formData: FormData) => {
-    formData.append('role', 'client'); // Ensure role is set for client registration
-    startTransition(async () => {
-      const result = await registerUser(formData);
-      if (result.success) {
-        toast({
-          title: 'Success',
-          description: 'Registration successful! Please sign in.',
-        });
-        router.push('/auth/client/signin');
-      } else {
-        toast({
-          title: 'Error',
-          description: result.error,
-          variant: 'destructive',
-        });
-      }
-    });
-  };
+  useEffect(() => {
+    if (!state) return;
+    if (state.success) {
+      toast({
+        title: 'Success',
+        description: 'Registration successful! Please sign in.',
+      });
+      router.push('/auth/client/signin');
+    } else {
+      toast({
+        title: 'Error',
+        description: state.error,
+        variant: 'destructive',
+      });
+    }
+  }, [state, router, toast]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -44,7 +52,7 @@ export default function ClientSignUpPage() {
           <CardDescription>Enter your details to get started.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={handleSignUp} className="space-y-4">
+          <form action={formAction} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input id="email" name="email" type="email" placeholder="m@example.com" required />
@@ -53,10 +61,9 @@ export default function ClientSignUpPage() {
               <Label htmlFor="password">Password</Label>
               <Input id="password" name="password" type="password" required />
             </div>
-            <Button type="submit" className="w-full" disabled={isPending}>
-              {isPending && <Loader2 className="mr-2 animate-spin" />}
-              Sign Up
-            </Button>
+            {/* Add hidden role input for client sign-up */}
+            <input type="hidden" name="role" value="client" />
+            <SubmitButton />
           </form>
           <div className="mt-4 text-center text-sm">
             Already have an account?{' '}

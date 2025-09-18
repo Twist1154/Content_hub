@@ -8,13 +8,12 @@ const signInSchema = z.object({
   password: z.string().min(6),
 });
 
-export async function signInUser(formData: FormData) {
+export async function signInUser(prevState: any, formData: FormData) {
   const supabase = await createClient();
 
-  const validatedFields = signInSchema.safeParse({
-    email: formData.get('email'),
-    password: formData.get('password'),
-  });
+  const validatedFields = signInSchema.safeParse(
+    Object.fromEntries(formData.entries())
+  );
 
   if (!validatedFields.success) {
     return {
@@ -50,14 +49,12 @@ const registerSchema = z.object({
   role: z.enum(['client', 'admin']).default('client'),
 });
 
-export async function registerUser(formData: FormData) {
+export async function registerUser(prevState: any, formData: FormData) {
   const supabaseAdmin = await createClient({ useServiceRole: true });
-
-  const validatedFields = registerSchema.safeParse({
-    email: formData.get('email'),
-    password: formData.get('password'),
-    role: formData.get('role') || 'client',
-  });
+  
+  const validatedFields = registerSchema.safeParse(
+    Object.fromEntries(formData.entries())
+  );
 
   if (!validatedFields.success) {
     console.log('Registration validation failed:', validatedFields.error.flatten().fieldErrors);
