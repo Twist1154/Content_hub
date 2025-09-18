@@ -2,7 +2,6 @@
 
 import { generateShareableLink, GenerateShareableLinkInput, GenerateShareableLinkOutput } from "@/ai/flows/generate-shareable-link";
 import { createClient } from '@/lib/supabase/server';
-import { cookies } from 'next/headers';
 
 export async function generateLinkAction(
   input: GenerateShareableLinkInput & { uploadPaths: string[] }
@@ -10,8 +9,7 @@ export async function generateLinkAction(
   
   console.log("Generating link for:", input.fileNames.join(", "));
   
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
+  const supabase = await createClient();
 
   // In a real app, you might want to associate the files with a user or a record in your database.
   // For now, we just pass the info to the AI flow.
