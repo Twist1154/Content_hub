@@ -10,7 +10,7 @@ interface CreateClientOptions {
 // A cache for the service role client so we don't create it on every call
 let serviceRoleClient: SupabaseClient | undefined;
   
-export const createClient = (options?: CreateClientOptions) => {
+export const createClient = async (options?: CreateClientOptions) => {
   // If the service role is requested, create a pure, admin-level client.
   // This client does not need cookies and is cached.
   if (options?.useServiceRole) {
@@ -35,7 +35,7 @@ export const createClient = (options?: CreateClientOptions) => {
   }
 
   // --- For all other cases, create a standard, user-session client ---
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
     
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
