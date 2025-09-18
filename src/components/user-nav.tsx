@@ -55,9 +55,11 @@ export function UserNav({ user }: UserNavProps) {
               Dashboard
             </DropdownMenuItem>
           </Link>
-          <DropdownMenuItem>
-            Settings
-          </DropdownMenuItem>
+          <Link href="/profile">
+            <DropdownMenuItem>
+                Settings
+            </DropdownMenuItem>
+          </Link>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <form action={signOut}>

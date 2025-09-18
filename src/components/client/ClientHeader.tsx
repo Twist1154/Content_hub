@@ -10,13 +10,14 @@ import { Eye, ChevronLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface ClientHeaderProps {
-  user: User;
+  user: User & { profile?: any }; // Allow profile to be on user object from useUser hook
   isAdminView: boolean;
   viewingClientProfile: any; // The profile of the client being viewed
 }
 
 export function ClientHeader({ user, isAdminView, viewingClientProfile }: ClientHeaderProps) {
   const router = useRouter();
+  const title = user.profile?.role === 'admin' ? 'Admin Profile' : 'My Profile';
 
   return (
     <>
@@ -25,7 +26,7 @@ export function ClientHeader({ user, isAdminView, viewingClientProfile }: Client
           <div className="flex items-center justify-between h-16">
             <div className="flex flex-col">
               <h1 className="text-xl font-semibold text-foreground">
-                {isAdminView ? `Viewing: ${viewingClientProfile?.email}` : 'My Dashboard'}
+                {isAdminView ? `Viewing: ${viewingClientProfile?.email}` : (router.pathname === '/profile' ? title : 'My Dashboard')}
               </h1>
               <p className="text-sm text-muted-foreground">
                 {isAdminView ? 'You are viewing this client\'s dashboard.' : 'Welcome to your content hub.'}
