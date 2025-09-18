@@ -1,3 +1,22 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "1",
+      "description": "A creative team collaborates in a modern office.",
+      "imageUrl": "https://picsum.photos/seed/1/600/400",
+      "imageHint": "office creative team"
+    },
+    {
+      "id": "2",
+      "description": "A diverse team works together on laptops in a bright workspace.",
+      "imageUrl": "https://picsum.photos/seed/2/600/400",
+      "imageHint": "team working on laptops"
+    },
+    {
+      "id": "3",
+      "description": "A digital advertisement is displayed on a large screen in a city.",
+      "imageUrl": "https://picsum.photos/seed/3/600/400",
+      "imageHint": "brand advertisement display"
+    }
+  ]
 }
