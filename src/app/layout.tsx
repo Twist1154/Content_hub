@@ -4,8 +4,8 @@ import { Toaster } from "@/components/ui/toaster";
 import Header from '@/components/header';
 
 export const metadata: Metadata = {
-  title: 'File Drop',
-  description: 'Effortlessly share your files.',
+  title: 'HapoHub',
+  description: 'A Digital Marketing Content Hub.',
 };
 
 export default function RootLayout({
