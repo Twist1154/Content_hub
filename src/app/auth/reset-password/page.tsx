@@ -4,11 +4,9 @@
 import { usePasswordResetFlow } from '@/hooks/usePasswordResetFlow';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { FormField } from '@/components/ui/form-field';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { Lock, Eye, EyeOff, CheckCircle, AlertTriangle } from 'lucide-react';
-import { useState } from 'react';
+import { CheckCircle, AlertTriangle } from 'lucide-react';
+import { PasswordForm } from '@/components/auth/PasswordForm';
 
 export default function ResetPasswordPage() {
     const {
@@ -21,7 +19,6 @@ export default function ResetPasswordPage() {
         handleSubmit,
     } = usePasswordResetFlow();
     
-    const [showPassword, setShowPassword] = useState(false);
 
     if (status === 'validating') {
         return (
@@ -64,7 +61,7 @@ export default function ResetPasswordPage() {
                         <CheckCircle className="w-12 h-12 mx-auto text-chart-2" />
                         <CardTitle>Password Updated!</CardTitle>
                         <CardDescription>
-                            Your password has been changed successfully. Redirecting you to the dashboard...
+                            Your password has been changed successfully. You will be redirected to sign in.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -86,41 +83,13 @@ export default function ResetPasswordPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <FormField label="New Password" icon={Lock}>
-                           <Input
-                                type={showPassword ? 'text' : 'password'}
-                                placeholder="Enter your new password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                                className="pl-10 pr-10"
-                            />
-                             <button
-                                type="button"
-                                aria-label={showPassword ? 'Hide password' : 'Show password'}
-                                onClick={() => setShowPassword(v => !v)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                            >
-                                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                            </button>
-                        </FormField>
-                        
-                         <FormField label="Confirm New Password" icon={Lock}>
-                           <Input
-                                type={showPassword ? 'text' : 'password'}
-                                placeholder="Confirm your new password"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                required
-                                className="pl-10 pr-10"
-                            />
-                        </FormField>
-
-                        <Button type="submit" className="w-full" disabled={status === 'submitting'}>
-                            {status === 'submitting' ? <LoadingSpinner size="sm" text="Updating..." /> : 'Set New Password'}
-                        </Button>
-                    </form>
+                    <PasswordForm
+                        isNewUser={false}
+                        onSubmit={handleSubmit}
+                        password={{ value: password, set: setPassword }}
+                        confirmPassword={{ value: confirmPassword, set: setConfirmPassword }}
+                        isLoading={status === 'submitting'}
+                    />
                 </CardContent>
             </Card>
         </div>
