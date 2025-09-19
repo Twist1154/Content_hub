@@ -1,4 +1,3 @@
-
 // src/components/content/AdminContentCard.tsx
 'use client';
 
