@@ -11,7 +11,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Button } from './button';
+import { Button, buttonVariants } from './button';
+import { cn } from '@/lib/utils';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ interface ConfirmModalProps {
   description: string;
   confirmText?: string;
   cancelText?: string;
+  confirmVariant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
 }
 
 export function ConfirmModal({
@@ -31,6 +33,7 @@ export function ConfirmModal({
   description,
   confirmText = 'Confirm',
   cancelText = 'Cancel',
+  confirmVariant = "destructive",
 }: ConfirmModalProps) {
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
@@ -43,8 +46,11 @@ export function ConfirmModal({
           <AlertDialogCancel asChild>
             <Button variant="outline" onClick={onClose}>{cancelText}</Button>
           </AlertDialogCancel>
-          <AlertDialogAction asChild>
-            <Button variant="destructive" onClick={onConfirm}>{confirmText}</Button>
+          <AlertDialogAction
+            className={cn(buttonVariants({ variant: confirmVariant }))}
+            onClick={onConfirm}
+          >
+            {confirmText}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

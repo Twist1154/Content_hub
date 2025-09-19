@@ -1,5 +1,3 @@
-
-
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
@@ -182,7 +180,7 @@ const contentSchema = z.object({
   store_id: z.string().uuid(),
   user_id: z.string().uuid(),
   title: z.string(),
-  type: z.enum(['image', 'video', 'audio']),
+  type: z.enum(['image', 'video', 'audio', 'document', 'other']),
   file_url: z.string().url(),
   file_size: z.number(),
   start_date: z.string().nullable(),
@@ -232,4 +230,32 @@ export async function getAllAdmins() {
         return { success: false, error: error.message, admins: [] };
     }
     return { success: true, admins: data };
+}
+
+export async function deleteContent(contentId: string, fileUrl: string) {
+    const supabase = await createClient({ useServiceRole: true });
+
+    // 1. Delete the file from storage
+    const filePath = new URL(fileUrl).pathname.split('/files/').pop();
+    if (filePath) {
+        const { error: storageError } = await supabase.storage.from('files').remove([filePath]);
+        if (storageError) {
+            console.error('Error deleting file from storage:', storageError);
+            // Decide if you want to stop or just log the error and continue
+            // return { success: false, error: 'Failed to delete file from storage.' };
+        }
+    }
+
+    // 2. Delete the record from the database
+    const { error: dbError } = await supabase
+        .from('content')
+        .delete()
+        .eq('id', contentId);
+    
+    if (dbError) {
+        console.error('Error deleting content from database:', dbError);
+        return { success: false, error: 'Failed to delete content from database.' };
+    }
+
+    return { success: true };
 }
