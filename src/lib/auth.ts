@@ -2,6 +2,7 @@
 'use server';
 
 import { createClient } from './supabase/server';
+import type { Client } from './types';
 
 export async function getCurrentUser() {
     const supabase = await createClient();
@@ -24,22 +25,51 @@ export async function getCurrentUser() {
     };
 }
 
-export async function getAllClients() {
+export async function getAllClients(): Promise<{ success: boolean, clients: Client[], error?: string }> {
     const supabase = await createClient({ useServiceRole: true });
-    const { data, error } = await supabase
+
+    // 1. Fetch all client profiles along with their stores
+    const { data: profiles, error: profileError } = await supabase
         .from('profiles')
         .select(`
             id,
             email,
-            role,
-            stores ( name, brand_company )
+            created_at,
+            stores ( id, name, brand_company )
         `)
         .eq('role', 'client');
 
-    if (error) {
-        console.error('Error fetching clients:', error);
-        return [];
+    if (profileError) {
+        console.error('Error fetching clients:', profileError);
+        return { success: false, clients: [], error: profileError.message };
     }
 
-    return data;
+    // 2. Fetch content counts for all users in one go
+    const { data: contentCounts, error: countError } = await supabase
+        .rpc('get_user_content_counts');
+
+    if (countError) {
+        console.error('Error fetching content counts:', countError);
+        return { success: false, clients: [], error: countError.message };
+    }
+
+    // Create a map for easy lookup
+    const countsMap = new Map(contentCounts.map((c: any) => [c.user_id, {
+        content_count: c.content_count,
+        latest_upload: c.latest_upload,
+    }]));
+
+
+    // 3. Combine the data
+    const clients: Client[] = profiles.map(profile => ({
+        id: profile.id,
+        email: profile.email,
+        created_at: profile.created_at,
+        stores: profile.stores,
+        content_count: countsMap.get(profile.id)?.content_count || 0,
+        latest_upload: countsMap.get(profile.id)?.latest_upload || null,
+        role: 'client'
+    }));
+
+    return { success: true, clients };
 }

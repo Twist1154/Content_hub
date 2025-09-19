@@ -45,3 +45,17 @@ export interface ContentStats {
     scheduled: number;
     thisMonth: number;
 }
+
+export interface Client {
+    id: string;
+    email: string;
+    role: 'client';
+    created_at: string;
+    stores: {
+        id: string;
+        name: string;
+        brand_company: string;
+    }[];
+    content_count: number;
+    latest_upload: string | null;
+}
