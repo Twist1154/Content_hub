@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FormField } from '@/components/ui/form-field';
-import { Mail, Lock, Chrome, Eye, EyeOff, Loader2, User, Smartphone } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Loader2, User, Smartphone } from 'lucide-react';
 import { useAuthForm } from '@/hooks/useAuthForm';
 import Link from 'next/link';
 
@@ -19,41 +19,15 @@ export function AuthForm({ mode, userType = 'client' }: AuthFormProps) {
     formData,
     errors,
     loading,
-    googleLoading,
     handleInputChange,
     handleBlur,
     handleSubmit,
-    signInWithGoogle,
   } = useAuthForm(mode, userType);
 
   const [showPassword, setShowPassword] = useState(false);
 
   return (
     <>
-      <div className="space-y-4 mb-4">
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full"
-          onClick={signInWithGoogle}
-          disabled={googleLoading || loading}
-        >
-          <Chrome className="w-4 h-4 mr-2" />
-          {googleLoading ? 'Connecting...' : `${mode === 'signin' ? 'Sign in' : 'Sign up'} with Google`}
-        </Button>
-
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-border" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">
-                  Or continue with email
-              </span>
-          </div>
-        </div>
-      </div>
-
       <form onSubmit={handleSubmit} className="space-y-4">
         {mode === 'signup' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -156,7 +130,7 @@ export function AuthForm({ mode, userType = 'client' }: AuthFormProps) {
         <Button
             type="submit"
             className="w-full"
-            disabled={loading || googleLoading}
+            disabled={loading}
         >
             {loading && <Loader2 className="animate-spin mr-2" />}
             {mode === 'signin' ? 'Sign In' : 'Sign Up'}

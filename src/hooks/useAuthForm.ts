@@ -33,7 +33,6 @@ export function useAuthForm(mode: AuthMode, userType: UserType = 'client') {
     const [formData, setFormData] = useState<Partial<FormData>>({ email: '', password: '' });
     const [errors, setErrors] = useState<FormErrors>({});
     const [loading, setLoading] = useState(false);
-    const [googleLoading, setGoogleLoading] = useState(false);
     const router = useRouter();
     const { toast } = useToast();
     const supabase = useMemo(() => createClient(), []);
@@ -170,29 +169,12 @@ export function useAuthForm(mode: AuthMode, userType: UserType = 'client') {
         }
     };
 
-    const signInWithGoogle = async () => {
-        setGoogleLoading(true);
-        const { error } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                redirectTo: `${window.location.origin}/auth/callback`,
-                queryParams: { access_type: 'offline', prompt: 'consent' },
-            },
-        });
-        if (error) {
-            toast({ variant: 'destructive', title: 'Google Sign In Failed', description: error.message });
-            setGoogleLoading(false);
-        }
-    };
-
     return {
         formData,
         errors,
         loading,
-        googleLoading,
         handleInputChange,
         handleBlur,
         handleSubmit,
-        signInWithGoogle,
     };
 }
