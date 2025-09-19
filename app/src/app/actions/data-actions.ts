@@ -60,67 +60,62 @@ function getContentType(mimeType: string): ContentType {
     return 'other';
 }
 
+function determineStatus(startDate: string | null, endDate: string | null): ContentItem['status'] {
+    if (!startDate || !endDate) {
+        return 'draft';
+    }
+    const now = new Date();
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        return 'draft';
+    }
+
+    if (end < now) {
+        return 'archived';
+    }
+    if (start > now) {
+        return 'scheduled';
+    }
+    return 'active';
+}
+
 export async function fetchAllContent(): Promise<ContentItem[]> {
   const supabase = await createClient({ useServiceRole: true });
 
-  const { data: files, error: filesError } = await supabase
-    .storage
-    .from('files')
-    .list('public', {
-      limit: 100,
-      offset: 0,
-      sortBy: { column: 'created_at', order: 'desc' },
-    });
+  const { data: contentData, error: contentError } = await supabase
+    .from('content')
+    .select(`
+        *,
+        stores ( name, brand_company, address ),
+        profiles ( email )
+    `)
+    .order('created_at', { ascending: false });
 
-  if (filesError) {
-    console.error('Error fetching files from storage:', filesError);
+  if (contentError) {
+    console.error('Error fetching content from database:', contentError);
     return [];
   }
-
-  if (!files || files.length === 0) {
-    return [];
-  }
-
-  const { data: profiles, error: profilesError } = await supabase
-    .from('profiles')
-    .select('id, email, stores(id, name, brand_company)');
   
-  if (profilesError) {
-    console.error('Error fetching profiles and stores:', profilesError);
+  if (!contentData) {
     return [];
   }
 
-  const contentItems: ContentItem[] = files
-  .filter(file => file.name !== '.emptyFolderPlaceholder')
-  .map((file, index) => {
-    const { data: publicUrlData } = supabase.storage.from('files').getPublicUrl(`public/${file.name}`);
-    const randomProfile = profiles?.[index % profiles.length];
-    
-    // Simulate status
-    const statuses: ContentItem['status'][] = ['active', 'archived', 'draft', 'scheduled'];
-    const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
-
-    return {
-      id: file.id,
-      title: file.name,
-      file_url: publicUrlData.publicUrl,
+  const contentItems: ContentItem[] = contentData.map((item: any) => ({
+      id: item.id,
+      title: item.title,
+      file_url: item.file_url,
+      type: item.type,
+      file_size: item.file_size,
+      created_at: item.created_at,
+      status: determineStatus(item.start_date, item.end_date),
+      user_id: item.user_id,
       // @ts-ignore
-      type: getContentType(file.metadata?.mimetype || 'other'),
-      // @ts-ignore
-      file_size: file.metadata?.size || 0,
-      created_at: file.created_at,
-      status: randomStatus,
-      user_id: randomProfile?.id || 'unknown-user',
-      user_email: randomProfile?.email || 'Unknown',
-      stores: randomProfile?.stores[0] ? {
-        // @ts-ignore
-        name: randomProfile.stores[0].name,
-        // @ts-ignore
-        brand_company: randomProfile.stores[0].brand_company
-      } : null,
+      user_email: item.profiles?.email || 'Unknown',
+      stores: item.stores,
       campaigns: null, // Placeholder
-    };
-  });
+  }));
 
   return contentItems;
 }
@@ -240,7 +235,7 @@ export async function deleteContent(contentId: string, fileUrl: string) {
     // 1. Delete the file from storage
     const filePath = new URL(fileUrl).pathname.split('/files/').pop();
     if (filePath) {
-        const { error: storageError } = await supabase.storage.from('files').remove([filePath]);
+        const { error: storageError } = await supabase.storage.from('files').remove([`public/${filePath}`]);
         if (storageError) {
             console.error('Error deleting file from storage:', storageError);
             // Decide if you want to stop or just log the error and continue
@@ -308,6 +303,11 @@ export async function fetchContentForUser(
         if (error) {
             throw new Error(error.message);
         }
+        
+        if (!content) {
+            return { success: true, content: [] };
+        }
+
 
         // The 'content' table doesn't have user_email directly.
         // If we needed it, we'd have to fetch it separately from 'profiles'.
@@ -319,7 +319,7 @@ export async function fetchContentForUser(
             type: item.type,
             file_size: item.file_size,
             created_at: item.created_at,
-            status: item.status || 'draft', // Provide a default status
+            status: determineStatus(item.start_date, item.end_date),
             user_id: item.user_id,
             stores: item.stores,
             campaigns: null, // Placeholder
@@ -331,3 +331,5 @@ export async function fetchContentForUser(
         return { success: false, error: 'Failed to fetch content.' };
     }
 }
+
+    
