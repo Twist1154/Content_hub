@@ -1,3 +1,4 @@
+
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
@@ -294,3 +295,5 @@ export async function switchUserRole(userId: string, newRole: 'admin' | 'client'
 
     return { success: true, message: `User role successfully updated to ${newRole}.` };
 }
+
+    
