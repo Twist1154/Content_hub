@@ -100,3 +100,24 @@ export async function requestReauthentication(email: string) {
 }
 
 
+export async function inviteUser(email: string, role: 'client' | 'admin') {
+    const emailValidation = emailSchema.safeParse(email);
+    if (!emailValidation.success) {
+        return { success: false, error: 'Invalid email address.' };
+    }
+
+    const supabase = await createClient({ useServiceRole: true });
+    const origin = headers().get('origin');
+
+    const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
+        data: { role },
+        redirectTo: role === 'admin' ? `${origin}/admin` : `${origin}/dashboard`,
+    });
+
+    if (error) {
+        console.error('Error inviting user:', error.message);
+        return { success: false, error: error.message };
+    }
+
+    return { success: true, message: `Invitation sent to ${email}.` };
+}
