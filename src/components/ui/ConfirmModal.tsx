@@ -11,7 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Button, buttonVariants } from './button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface ConfirmModalProps {
@@ -35,6 +35,8 @@ export function ConfirmModal({
   cancelText = 'Cancel',
   confirmVariant = "default",
 }: ConfirmModalProps) {
+  if (!isOpen) return null;
+
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent>
