@@ -121,3 +121,47 @@ export async function inviteUser(email: string, role: 'client' | 'admin') {
 
     return { success: true, message: `Invitation sent to ${email}.` };
 }
+
+export async function syncAllUsersAppMetadata() {
+    try {
+        const supabase = await createClient({ useServiceRole: true });
+
+        // 1. Fetch all profiles
+        const { data: profiles, error: profileError } = await supabase
+            .from('profiles')
+            .select('id, role');
+
+        if (profileError) {
+            throw new Error(`Failed to fetch profiles: ${profileError.message}`);
+        }
+
+        let successCount = 0;
+        let errorCount = 0;
+
+        // 2. Iterate and update each user's app_metadata in Auth
+        for (const profile of profiles) {
+            const { error: authError } = await supabase.auth.admin.updateUserById(
+                profile.id,
+                { app_metadata: { role: profile.role } }
+            );
+
+            if (authError) {
+                console.error(`Failed to sync role for user ${profile.id}:`, authError.message);
+                errorCount++;
+            } else {
+                successCount++;
+            }
+        }
+
+        const message = `Sync complete. ${successCount} users synced successfully, ${errorCount} failed.`;
+        if (errorCount > 0) {
+            return { success: false, error: message };
+        }
+
+        return { success: true, message };
+
+    } catch (error: any) {
+        console.error('Unexpected error during user sync:', error);
+        return { success: false, error: 'An unexpected error occurred during the sync process.' };
+    }
+}
