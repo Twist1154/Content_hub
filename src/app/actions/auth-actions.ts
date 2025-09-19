@@ -2,6 +2,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import {SupabaseClient} from '@supabase/supabase-js';
 import { z } from 'zod';
 import { headers } from 'next/headers';
 
@@ -12,7 +13,7 @@ const signInSchema = z.object({
 
 export async function signInUser(prevState: any, formData: FormData) {
   try {
-    const supabase = await createClient();
+    const supabase = await createClient() as SupabaseClient;
 
     const validatedFields = signInSchema.safeParse(
       Object.fromEntries(formData.entries())
@@ -61,7 +62,7 @@ const registerSchema = z.object({
 
 export async function registerUser(prevState: any, formData: FormData) {
   try {
-    const supabaseAdmin = await createClient({ useServiceRole: true });
+    const supabaseAdmin = await createClient({ useServiceRole: true }) as SupabaseClient;
     
     const validatedFields = registerSchema.safeParse(
       Object.fromEntries(formData.entries())
@@ -211,7 +212,7 @@ export async function sendMagicLink(prevState: any, formData: FormData, forceEma
 
 export async function getUserAndProfile(userId: string) {
   try {
-    const supabase = await createClient({ useServiceRole: true });
+    const supabase = await createClient({ useServiceRole: true }) as SupabaseClient;
     const { data: user, error: userError } = await supabase.auth.admin.getUserById(userId);
 
     if (userError) {
@@ -240,7 +241,7 @@ export async function switchUserRole(userId: string, newRole: 'admin' | 'client'
         return { success: false, error: 'User ID and new role are required.' };
     }
 
-    const supabase = await createClient({ useServiceRole: true });
+    const supabase = await createClient({ useServiceRole: true }) as SupabaseClient;
 
     // 1. Update the user's role in the 'profiles' table
     const { error: profileError } = await supabase
