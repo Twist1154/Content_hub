@@ -344,5 +344,3 @@ export function ContentUpload({userId, stores, onSuccess}: ContentUploadProps) {
         </Card>
     );
 }
-
-    
