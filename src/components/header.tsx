@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { UserNav } from './user-nav';
 import { MobileNav } from './mobile-nav';
 import { ThemeSwitcher } from './ui/ThemeSwitcher';
+import { signOut } from '@/app/actions/auth-actions';
 
 export default async function Header() {
   const supabase = await createClient();
@@ -24,7 +25,10 @@ export default async function Header() {
         <div className="flex items-center gap-2">
           <div className="hidden md:flex items-center gap-2">
             {user ? (
-              <UserNav user={user} />
+              <UserNav user={user} onSignOut={async () => {
+                'use server';
+                await signOut();
+              }} />
             ) : (
               <nav className="flex items-center gap-2">
                 <Link href="/auth/client/signin">

@@ -33,7 +33,7 @@ export function ConfirmModal({
   description,
   confirmText = 'Confirm',
   cancelText = 'Cancel',
-  confirmVariant = "destructive",
+  confirmVariant = "default",
 }: ConfirmModalProps) {
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>

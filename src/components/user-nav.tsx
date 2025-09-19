@@ -13,14 +13,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "./ui/button"
-import { signOut } from "@/app/actions/auth-actions"
 import Link from "next/link"
+import { Settings, User as UserIcon, LogOut } from "lucide-react";
 
 interface UserNavProps {
-  user: User
+  user: User,
+  onSignOut: () => void;
 }
 
-export function UserNav({ user }: UserNavProps) {
+export function UserNav({ user, onSignOut }: UserNavProps) {
   const getInitials = (email: string | undefined) => {
     if (!email) return "U"
     return email.substring(0, 2).toUpperCase()
@@ -58,23 +59,22 @@ export function UserNav({ user }: UserNavProps) {
           </Link>
           <Link href="/profile">
             <DropdownMenuItem>
-                Profile
+                <UserIcon className="mr-2 h-4 w-4" />
+                <span>Profile</span>
             </DropdownMenuItem>
           </Link>
            <Link href="/settings">
             <DropdownMenuItem>
-                Settings
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Settings</span>
             </DropdownMenuItem>
           </Link>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <form action={signOut}>
-          <DropdownMenuItem asChild>
-            <button type="submit" className="w-full">
-              Log out
-            </button>
+          <DropdownMenuItem onClick={onSignOut}>
+            <LogOut className="mr-2 h-4 w-4 text-destructive" />
+            <span className="text-destructive">Log out</span>
           </DropdownMenuItem>
-        </form>
       </DropdownMenuContent>
     </DropdownMenu>
   )
