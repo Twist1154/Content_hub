@@ -1,26 +1,27 @@
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { signOut } from "@/app/actions/auth-actions";
+
+import { redirect } from 'next/navigation';
+import { getCurrentUser } from '@/lib/auth';
+import { AdminHeader } from '@/components/admin/AdminHeader';
+import { AdminClientOverview } from '@/components/admin/AdminClientOverview';
 
 export default async function AdminDashboardPage() {
-  const supabase = await createClient();
+    const user = await getCurrentUser();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    // Ensure user is authenticated and is an admin
+    if (!user || user.profile?.role !== 'admin') {
+        redirect('/auth/admin/signin');
+    }
 
-  if (!user) {
-    return redirect("/auth/admin/signin");
-  }
-
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <h1 className="text-3xl font-bold mb-4">Admin Dashboard</h1>
-      <p className="mb-6">Welcome, {user.email}</p>
-      <form action={signOut}>
-        <Button type="submit">Sign Out</Button>
-      </form>
-    </div>
-  );
+    return (
+        <div className="min-h-screen bg-background">
+            <AdminHeader
+                user={user}
+                title="Admin Dashboard"
+                breadcrumbItems={[{ label: 'Admin Dashboard', current: true }]}
+            />
+            <main className="container mx-auto px-4 py-8">
+                <AdminClientOverview />
+            </main>
+        </div>
+    );
 }
