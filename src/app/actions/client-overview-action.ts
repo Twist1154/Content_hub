@@ -2,6 +2,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { SupabaseClient } from '@supabase/supabase-js';
 import { subDays } from 'date-fns';
 
 export interface ClientOverview {
@@ -28,7 +29,7 @@ export async function getClientOverview(): Promise<{
     error?: string;
 }> {
     try {
-        const supabase = await createClient({ useServiceRole: true });
+        const supabase = await createClient({ useServiceRole: true }) as SupabaseClient;
         const sevenDaysAgo = subDays(new Date(), 7).toISOString();
 
         // 1. Fetch all client profiles with their stores

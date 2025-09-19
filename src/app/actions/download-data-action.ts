@@ -4,6 +4,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { ContentItem } from '@/lib/types';
+import { SupabaseClient } from '@supabase/supabase-js';
 import { format } from 'date-fns';
 
 function convertToCsv(data: any[]): string {
@@ -27,7 +28,7 @@ function convertToCsv(data: any[]): string {
 export async function getClientDataAsCsv(clientId: string, clientEmail: string): Promise<{ success: boolean, error?: string }> {
     if (!clientId) return { success: false, error: 'Client ID is required.' };
 
-    const supabase = await createClient({ useServiceRole: true });
+    const supabase = await createClient({ useServiceRole: true }) as SupabaseClient;
 
     const { data, error } = await supabase
         .from('content')

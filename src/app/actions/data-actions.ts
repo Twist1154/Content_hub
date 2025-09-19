@@ -5,6 +5,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 import type { ContentItem, ContentType } from '@/lib/types';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 const storeSchema = z.object({
   name: z.string().min(1, 'Store name is required.'),
@@ -15,7 +16,7 @@ const storeSchema = z.object({
 export type StoreData = z.infer<typeof storeSchema>;
 
 export async function addStore(storeData: StoreData, userId: string) {
-  const supabase = await createClient();
+  const supabase = await createClient() as SupabaseClient;
 
   const validatedFields = storeSchema.safeParse(storeData);
 
@@ -82,7 +83,7 @@ function determineStatus(startDate: string | null, endDate: string | null): Cont
 }
 
 export async function fetchAllContent(): Promise<ContentItem[]> {
-  const supabase = await createClient({ useServiceRole: true });
+  const supabase = await createClient({ useServiceRole: true }) as SupabaseClient;
 
   const { data: contentData, error: contentError } = await supabase
     .from('content')
@@ -122,7 +123,7 @@ export async function fetchAllContent(): Promise<ContentItem[]> {
 
 export async function fetchStoresByUserId(userId: string) {
     if (!userId) return { success: false, error: 'User ID is required.' };
-    const supabase = await createClient();
+    const supabase = await createClient({ useServiceRole: true }) as SupabaseClient;
 
     const { data, error } = await supabase
         .from('stores')
@@ -156,7 +157,7 @@ export async function fetchContentStatsByUserId(userId: string) {
 
 export async function fetchClientProfileById(clientId: string) {
     if (!clientId) return { success: false, error: 'Client ID is required' };
-    const supabase = await createClient({ useServiceRole: true });
+    const supabase = await createClient({ useServiceRole: true }) as SupabaseClient;
 
     const { data: profile, error } = await supabase
         .from('profiles')
@@ -216,7 +217,7 @@ export async function insertContent(contentData: ContentData) {
 }
 
 export async function getAllAdmins() {
-    const supabase = await createClient({ useServiceRole: true });
+    const supabase = await createClient({ useServiceRole: true }) as SupabaseClient;
     const { data, error } = await supabase
         .from('profiles')
         .select('id, email')
@@ -230,8 +231,7 @@ export async function getAllAdmins() {
 }
 
 export async function deleteContent(contentId: string, fileUrl: string) {
-    const supabase = await createClient({ useServiceRole: true });
-
+    const supabase = await createClient({ useServiceRole: true }) as SupabaseClient;
     // 1. Delete the file from storage
     const filePath = new URL(fileUrl).pathname.split('/files/').pop();
     if (filePath) {
@@ -260,7 +260,7 @@ export async function deleteContent(contentId: string, fileUrl: string) {
 
 export async function fetchUserRole(userId: string) {
     if (!userId) return { success: false, error: 'User ID is required.' };
-    const supabase = await createClient({ useServiceRole: true });
+    const supabase = await createClient({ useServiceRole: true }) as SupabaseClient;
 
     const { data, error } = await supabase
         .from('profiles')
