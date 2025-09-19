@@ -1,18 +1,28 @@
 
+'use client';
+
 import Link from 'next/link';
 import { Button } from './ui/button';
 import { Logo } from './logo';
-import { createClient } from '@/lib/supabase/server';
 import { UserNav } from './user-nav';
 import { MobileNav } from './mobile-nav';
 import { ThemeSwitcher } from './ui/ThemeSwitcher';
 import { signOut } from '@/app/actions/auth-actions';
+import { useEffect, useState } from 'react';
+import type { User } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/client';
 
-export default async function Header() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export default function Header() {
+  const [user, setUser] = useState<User | null>(null);
+  
+  useEffect(() => {
+    async function fetchUser() {
+      const supabase = createClient();
+      const { data } = await supabase.auth.getUser();
+      setUser(data.user);
+    }
+    fetchUser();
+  }, []);
 
   return (
     <header className="absolute top-0 left-0 right-0 z-50 p-4 bg-transparent">
@@ -25,10 +35,7 @@ export default async function Header() {
         <div className="flex items-center gap-2">
           <div className="hidden md:flex items-center gap-2">
             {user ? (
-              <UserNav user={user} onSignOut={async () => {
-                'use server';
-                await signOut();
-              }} />
+              <UserNav user={user} onSignOut={signOut} />
             ) : (
               <nav className="flex items-center gap-2">
                 <Link href="/auth/client/signin">
