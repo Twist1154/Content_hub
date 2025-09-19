@@ -46,7 +46,7 @@ export async function deleteUser(userId: string) {
         return { success: false, error: error.message };
     }
 
-    return { success: true };
+    return { success: true, message: 'User successfully deleted.' };
 }
 
 
@@ -98,4 +98,5 @@ export async function requestReauthentication(email: string) {
     // the user to verify their identity by accessing their email.
     return sendPasswordReset(email);
 }
+
 
