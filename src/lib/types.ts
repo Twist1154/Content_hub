@@ -21,10 +21,27 @@ export interface ContentItem {
     stores?: {
         name: string;
         brand_company: string;
+        address?: string;
     } | null;
     campaigns?: {
         name: string;
         start_date: string;
         end_date: string;
     } | null;
+}
+
+export interface Store {
+    id: string;
+    user_id: string;
+    name: string;
+    brand_company: string;
+    address: string;
+    created_at: string;
+}
+
+export interface ContentStats {
+    total: number;
+    active: number;
+    scheduled: number;
+    thisMonth: number;
 }

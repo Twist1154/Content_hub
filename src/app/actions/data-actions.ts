@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
@@ -278,4 +279,55 @@ export async function fetchUserRole(userId: string) {
     }
     
     return { success: true, role: data.role };
+}
+
+
+export async function fetchContentForUser(
+    userId: string,
+    options: { useServiceRole?: boolean } = {}
+): Promise<{ success: boolean; content?: ContentItem[]; error?: string }> {
+    if (!userId) {
+        return { success: false, error: 'User ID is required.' };
+    }
+    try {
+        const supabase = await createClient({ useServiceRole: options.useServiceRole });
+
+        const { data: content, error } = await supabase
+            .from('content')
+            .select(`
+                *,
+                stores (
+                    name,
+                    brand_company,
+                    address
+                )
+            `)
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            throw new Error(error.message);
+        }
+
+        // The 'content' table doesn't have user_email directly.
+        // If we needed it, we'd have to fetch it separately from 'profiles'.
+        // For now, we'll omit it from the response for this specific query.
+        const mappedContent: ContentItem[] = content.map((item: any) => ({
+            id: item.id,
+            title: item.title,
+            file_url: item.file_url,
+            type: item.type,
+            file_size: item.file_size,
+            created_at: item.created_at,
+            status: item.status || 'draft', // Provide a default status
+            user_id: item.user_id,
+            stores: item.stores,
+            campaigns: null, // Placeholder
+        }));
+
+        return { success: true, content: mappedContent };
+    } catch (err: any) {
+        console.error('Error fetching content for user:', err);
+        return { success: false, error: 'Failed to fetch content.' };
+    }
 }
