@@ -1,3 +1,4 @@
+
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
@@ -258,4 +259,23 @@ export async function deleteContent(contentId: string, fileUrl: string) {
     }
 
     return { success: true };
+}
+
+
+export async function fetchUserRole(userId: string) {
+    if (!userId) return { success: false, error: 'User ID is required.' };
+    const supabase = await createClient({ useServiceRole: true });
+
+    const { data, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .single();
+    
+    if (error) {
+        console.error(`Error fetching role for user ${userId}:`, error.message);
+        return { success: false, error: error.message };
+    }
+    
+    return { success: true, role: data.role };
 }
