@@ -1,3 +1,4 @@
+
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
@@ -142,23 +143,28 @@ const magicLinkSchema = z.object({
   email: z.string().email('Please enter a valid email address.'),
 });
 
-export async function sendMagicLink(prevState: any, formData: FormData) {
+export async function sendMagicLink(prevState: any, formData: FormData, forceEmail?: string) {
     try {
         const supabase = await createClient();
         const origin = headers().get('origin');
 
-        const validatedFields = magicLinkSchema.safeParse(
-            Object.fromEntries(formData.entries())
-        );
+        let email: string;
+        if (forceEmail) {
+            email = forceEmail;
+        } else {
+            const validatedFields = magicLinkSchema.safeParse(
+                Object.fromEntries(formData.entries())
+            );
 
-        if (!validatedFields.success) {
-            return {
-            success: false,
-            error: 'Invalid email address.',
-            };
+            if (!validatedFields.success) {
+                return {
+                success: false,
+                error: 'Invalid email address.',
+                };
+            }
+            email = validatedFields.data.email;
         }
 
-        const { email } = validatedFields.data;
 
         // Determine user role to construct the correct redirect URL
         const { data: profile } = await supabase
@@ -222,3 +228,37 @@ export async function getUserAndProfile(userId: string) {
     return { success: false, error: error.message };
   }
 }
+
+export async function switchUserRole(userId: string, newRole: 'admin' | 'client') {
+    if (!userId || !newRole) {
+        return { success: false, error: 'User ID and new role are required.' };
+    }
+
+    const supabase = await createClient({ useServiceRole: true });
+
+    // 1. Update the user's role in the 'profiles' table
+    const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ role: newRole })
+        .eq('id', userId);
+
+    if (profileError) {
+        console.error(`Failed to update role in profiles for ${userId}:`, profileError);
+        return { success: false, error: 'Failed to update user profile role.' };
+    }
+
+    // 2. Update the user's app_metadata in Supabase Auth
+    const { error: authError } = await supabase.auth.admin.updateUserById(
+        userId,
+        { app_metadata: { role: newRole } }
+    );
+
+    if (authError) {
+        console.error(`Failed to update app_metadata for ${userId}:`, authError);
+        // If this fails, we should ideally roll back the profile update, but for now we'll just report the error.
+        return { success: false, error: 'Failed to update user authentication role.' };
+    }
+
+    return { success: true, message: `User role successfully updated to ${newRole}.` };
+}
+
