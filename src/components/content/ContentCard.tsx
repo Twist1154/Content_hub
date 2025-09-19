@@ -11,7 +11,7 @@ import { CheckSquare, Square, ExternalLink, Video, Music, Trash2 } from 'lucide-
 import { cn } from '@/lib/utils';
 
 // ---  these are now in a shared utils file ---
-import { formatFileSize, getStatusBadge } from '@/lib/content-utils';
+import { formatFileSize, getStatusBadge } from '@/lib/content-utils.tsx';
 import { ContentItem } from '@/lib/types';
 
 // --- NEW: Updated props to include admin functionality ---

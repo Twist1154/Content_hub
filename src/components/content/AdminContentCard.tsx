@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Download, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 import { ContentItem } from '@/lib/types';
-import { getStatusBadge, formatFileSize, getTypeIcon } from '@/lib/content-utils';
+import { getStatusBadge, formatFileSize, getTypeIcon } from '@/lib/content-utils.tsx';
 
 interface AdminContentCardProps {
     item: ContentItem;

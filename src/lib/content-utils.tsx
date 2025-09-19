@@ -1,5 +1,4 @@
-
-// src/lib/content-utils.ts
+// src/lib/content-utils.tsx
 import { Badge } from "@/components/ui/badge";
 import type { ContentItem, ContentType } from "./types";
 import { File, Video, Music, Image as ImageIcon, Book } from "lucide-react";

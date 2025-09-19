@@ -26,7 +26,7 @@ import {ContentDetailModal} from "@/components/content/ContentDetailModal";
 import {ContentCard} from "@/components/content/ContentCard";
 import {AdminContentCard} from "@/components/content/AdminContentCard";
 import type { ContentItem } from "@/lib/types";
-import {formatFileSize, getStatusBadge, getTypeIcon} from "@/lib/content-utils";
+import {formatFileSize, getStatusBadge, getTypeIcon} from "@/lib/content-utils.tsx";
 import {ContentPreviewTooltip} from '@/components/content/ContentPreviewTooltip';
 import {cn} from '@/lib/utils';
 import {Badge} from "@/components/ui/badge";
@@ -415,7 +415,7 @@ export function ContentManager({
                                     key={item.id}
                                     item={item}
                                     isSelected={selectedItems.includes(item.id)}
-                                    onSelectItem={(id: string, shiftKey: boolean) => handleSelectItem(id, shiftKey)}
+                                    onSelectItem={(id: string) => handleSelectItem(id, false)}
                                     onViewDetails={() => setSelectedContent(item)}
                                     isAdminView={isAdminView}
                                     onDeleteItem={handleDeleteRequest}
@@ -599,4 +599,3 @@ export function ContentManager({
         </div>
     );
 }
-
