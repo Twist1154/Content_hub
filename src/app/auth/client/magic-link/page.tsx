@@ -2,7 +2,6 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { MagicLinkForm } from '@/components/auth/MagicLinkForm';
 import { BackButton } from '@/components/ui/back-button';
