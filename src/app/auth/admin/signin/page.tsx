@@ -4,9 +4,12 @@ import { AuthForm } from '@/components/auth/AuthForm';
 import { BackButton } from '@/components/ui/back-button';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useGoogleOneTap } from '@/hooks/use-google-one-tap';
 import Link from 'next/link';
 
 export default function AdminSignInPage() {
+  useGoogleOneTap();
+  
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <div className="w-full max-w-md">
