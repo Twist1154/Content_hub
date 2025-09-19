@@ -1,9 +1,24 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/middleware';
+import { createServerClient } from '@supabase/ssr';
+import { updateSession } from '@/lib/supabase/middleware';
 
 
 export async function middleware(request: NextRequest) {
-  const { supabase, response } = createClient(request);
+  // First, run the session refresher.
+  const response = await updateSession(request);
+
+  // Now, create a client to check the session for routing logic.
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value;
+        },
+      },
+    }
+  );
 
   const {
     data: { session },
@@ -26,7 +41,7 @@ export async function middleware(request: NextRequest) {
 
 
   // Protect dashboard routes
-  if (pathname.startsWith('/dashboard')) {
+  if (pathname.startsWith('/dashboard') || pathname.startsWith('/profile') || pathname.startsWith('/settings')) {
     if (!session) {
       return NextResponse.redirect(new URL('/auth/client/signin', request.url));
     }
@@ -44,7 +59,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Redirect signed-in users from the landing page to their dashboard
-  if (session && pathname === '/') {
+  if (session && (pathname === '/' || pathname.startsWith('/auth/client') || pathname.startsWith('/auth/admin'))) {
      if (userRole === 'admin') {
         return NextResponse.redirect(new URL('/admin', request.url));
      }

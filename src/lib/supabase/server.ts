@@ -6,36 +6,26 @@ import { SupabaseClient } from '@supabase/supabase-js'; // <--- IMPORTANT: Impor
 interface CreateClientOptions {
   useServiceRole?: boolean;
 }
-
-// A cache for the service role client so we don't create it on every call
-let serviceRoleClient: SupabaseClient | undefined;
   
-export const createClient = async (options?: CreateClientOptions) => {
+export const createClient = (options?: CreateClientOptions) => {
   // If the service role is requested, create a pure, admin-level client.
-  // This client does not need cookies and is cached.
+  // This client does not need cookies.
   if (options?.useServiceRole) {
 
     if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
       throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set in .env.local');
     }
 
-    // Use the cached client if it exists
-    if (serviceRoleClient) {
-      return serviceRoleClient;
-    }
-
     // Create a new service role client using the base SupabaseClient constructor
-    serviceRoleClient = new SupabaseClient(
+    return new SupabaseClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY, // Use the service key
       { auth: { persistSession: false } } // Server-side client, no need to persist sessions
     );
-
-    return serviceRoleClient;
   }
 
   // --- For all other cases, create a standard, user-session client ---
-  const cookieStore = await cookies();
+  const cookieStore = cookies();
     
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
