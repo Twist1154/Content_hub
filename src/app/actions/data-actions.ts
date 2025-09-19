@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
@@ -175,4 +176,60 @@ export async function fetchClientProfileById(clientId: string) {
     }
     
     return { success: true, profile };
+}
+
+const contentSchema = z.object({
+  store_id: z.string().uuid(),
+  user_id: z.string().uuid(),
+  title: z.string(),
+  type: z.enum(['image', 'video', 'audio']),
+  file_url: z.string().url(),
+  file_size: z.number(),
+  start_date: z.string().nullable(),
+  end_date: z.string().nullable(),
+  recurrence_type: z.enum(['none', 'daily', 'weekly', 'monthly', 'custom']),
+  recurrence_days: z.array(z.string()).nullable(),
+});
+
+export type ContentData = z.infer<typeof contentSchema>;
+
+export async function insertContent(contentData: ContentData) {
+    const supabase = await createClient({ useServiceRole: true });
+
+    const validatedFields = contentSchema.safeParse(contentData);
+
+    if (!validatedFields.success) {
+        return {
+            success: false,
+            error: 'Invalid content data: ' + validatedFields.error.message,
+        };
+    }
+
+    const { error } = await supabase
+        .from('content')
+        .insert([validatedFields.data]);
+    
+    if (error) {
+        console.error('Error inserting content:', error);
+        return {
+            success: false,
+            error: error.message,
+        };
+    }
+
+    return { success: true };
+}
+
+export async function getAllAdmins() {
+    const supabase = await createClient({ useServiceRole: true });
+    const { data, error } = await supabase
+        .from('profiles')
+        .select('id, email')
+        .eq('role', 'admin');
+
+    if (error) {
+        console.error('Error fetching admins:', error);
+        return { success: false, error: error.message, admins: [] };
+    }
+    return { success: true, admins: data };
 }
