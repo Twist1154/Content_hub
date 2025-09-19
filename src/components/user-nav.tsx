@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import type { User } from "@supabase/supabase-js"
@@ -14,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from "./ui/button"
 import Link from "next/link"
-import { Settings, User as UserIcon, LogOut } from "lucide-react";
+import { Settings, User as UserIcon, LogOut, LayoutDashboard, Users } from "lucide-react";
 
 interface UserNavProps {
   user: User,
@@ -52,8 +53,9 @@ export function UserNav({ user, onSignOut }: UserNavProps) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <Link href={userRole === 'admin' ? '/admin' : '/dashboard'}>
+           <Link href={userRole === 'admin' ? '/admin' : '/dashboard'}>
             <DropdownMenuItem>
+              <LayoutDashboard className="mr-2 h-4 w-4" />
               Dashboard
             </DropdownMenuItem>
           </Link>
@@ -69,6 +71,14 @@ export function UserNav({ user, onSignOut }: UserNavProps) {
                 <span>Settings</span>
             </DropdownMenuItem>
           </Link>
+          {userRole === 'admin' && (
+            <Link href="/admin/clients">
+              <DropdownMenuItem>
+                <Users className="mr-2 h-4 w-4" />
+                <span>Clients</span>
+              </DropdownMenuItem>
+            </Link>
+          )}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
           <DropdownMenuItem onClick={onSignOut}>
