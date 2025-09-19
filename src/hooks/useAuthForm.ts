@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, FormEvent } from 'react';
@@ -134,12 +135,14 @@ export function useAuthForm(mode: AuthMode, userType: UserType = 'client') {
         setLoading(true);
 
         const form = new FormData();
-        form.append('email', formData.email!);
-        form.append('password', formData.password!);
-        if (mode === 'signup') {
-            form.append('role', userType);
+        // @ts-ignore
+        for (const key in formData) {
+            if (formData[key as keyof FormData]) {
+                form.append(key, formData[key as keyof FormData]!);
+            }
         }
-
+        form.append('role', userType);
+        
         try {
             if (mode === 'signup') {
                 const result = await registerUser(null, form);

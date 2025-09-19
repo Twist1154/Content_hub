@@ -54,6 +54,9 @@ const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   role: z.enum(['client', 'admin']).default('client'),
+  fullName: z.string().optional(),
+  username: z.string().optional(),
+  phoneNumber: z.string().optional(),
 });
 
 export async function registerUser(prevState: any, formData: FormData) {
@@ -72,13 +75,13 @@ export async function registerUser(prevState: any, formData: FormData) {
       };
     }
 
-    const { email, password, role } = validatedFields.data;
+    const { email, password, role, fullName, username, phoneNumber } = validatedFields.data;
 
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
-      user_metadata: { role },
+      user_metadata: { role, full_name: fullName },
       app_metadata: { role },
     });
 
@@ -102,7 +105,10 @@ export async function registerUser(prevState: any, formData: FormData) {
         .insert({
             id: authData.user.id,
             email: authData.user.email!,
-            role: role
+            role: role,
+            full_name: fullName,
+            username: username,
+            phone_number: phoneNumber,
         });
     
     if (profileError) {
@@ -261,4 +267,3 @@ export async function switchUserRole(userId: string, newRole: 'admin' | 'client'
 
     return { success: true, message: `User role successfully updated to ${newRole}.` };
 }
-
