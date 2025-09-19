@@ -2,18 +2,20 @@
 
 import { useRouter } from 'next/navigation';
 import { Button } from './button';
-import { ChevronLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './tooltip';
+import { cn } from '@/lib/utils';
 
 interface BackButtonProps {
-    href?: string;
-    label: string;
+  href?: string;
+  label?: string;
+  className?: string;
 }
 
-export function BackButton({ href, label }: BackButtonProps) {
+export function BackButton({ href, label = 'Go back', className }: BackButtonProps) {
   const router = useRouter();
 
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
+  const handleBack = () => {
     if (href) {
       router.push(href);
     } else {
@@ -22,9 +24,23 @@ export function BackButton({ href, label }: BackButtonProps) {
   };
 
   return (
-    <Button variant="ghost" onClick={handleClick} className="p-0 h-auto">
-      <ChevronLeft className="mr-2" />
-      {label}
-    </Button>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleBack}
+            className={cn(className)}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>{label}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
