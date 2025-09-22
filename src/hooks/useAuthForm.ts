@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, FormEvent } from 'react';
@@ -43,11 +44,13 @@ export function useAuthForm(mode: AuthMode, userType: UserType = 'client') {
     const validateField = (name: keyof FormData, value: string): string | undefined => {
         switch (name) {
             case 'fullName': {
+                if (mode !== 'signup') return undefined;
                 if (!value || value.trim().length === 0) return 'Full name is required.';
                 if (value.trim().length < 2) return 'Full name must be at least 2 characters.';
                 return undefined;
             }
             case 'username': {
+                if (mode !== 'signup') return undefined;
                 if (!value || value.trim().length === 0) return 'Username is required.';
                 const username = value.trim();
                 if (username.length < 3 || username.length > 20) {
@@ -66,20 +69,23 @@ export function useAuthForm(mode: AuthMode, userType: UserType = 'client') {
             }
             case 'password': {
                 if (!value) return 'Password is required.';
-                if (value.length < 8) return 'Password must be at least 8 characters.';
-                // Encourage stronger passwords: at least one letter and one number
-                if (!/[A-Za-z]/.test(value) || !/[0-9]/.test(value)) {
-                    return 'Password should include at least one letter and one number.';
+                if (mode === 'signup') {
+                    if (value.length < 8) return 'Password must be at least 8 characters.';
+                    if (!/[A-Za-z]/.test(value) || !/[0-9]/.test(value)) {
+                        return 'Password should include at least one letter and one number.';
+                    }
                 }
                 return undefined;
             }
             case 'confirmPassword': {
+                if (mode !== 'signup') return undefined;
                 const pwd = formData.password || '';
                 if (!value) return 'Please confirm your password.';
                 if (value !== pwd) return 'Passwords do not match.';
                 return undefined;
             }
             case 'phoneNumber': {
+                 if (mode !== 'signup') return undefined;
                 if (!value || value.trim().length === 0) return 'Phone number is required.';
                 const digits = value.replace(/\D/g, '');
                 if (digits.length < 10 || digits.length > 15) return 'Please enter a valid phone number.';
@@ -91,7 +97,6 @@ export function useAuthForm(mode: AuthMode, userType: UserType = 'client') {
     };
 
     const handleBlur = (name: keyof FormData) => {
-        if (mode !== 'signup') return;
         const error = validateField(name, formData[name] || '');
         setErrors(prev => ({ ...prev, [name]: error }));
     };
@@ -111,11 +116,9 @@ export function useAuthForm(mode: AuthMode, userType: UserType = 'client') {
 
         const newErrors: FormErrors = {};
         for (const field of fieldsToValidate) {
-            if (field in formData || field === 'password' || field === 'email') {
-                 const value = (formData[field as keyof typeof formData] as string) || '';
-                 const error = validateField(field, value);
-                 if (error) newErrors[field] = error;
-            }
+            const value = (formData[field as keyof typeof formData] as string) || '';
+            const error = validateField(field, value);
+            if (error) newErrors[field] = error;
         }
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -124,29 +127,32 @@ export function useAuthForm(mode: AuthMode, userType: UserType = 'client') {
     // --- Submission Handlers ---
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
-        if (!validateForm()) {
+        const formIsValid = validateForm();
+        if (!formIsValid) {
             addToast({ variant: 'destructive', title: 'Validation Error', description: 'Please fix the errors before submitting.' });
             return;
         }
+
         setLoading(true);
-        
+
         try {
             if (mode === 'signup') {
-                const result = await registerUser(formData.email!, formData.password!, userType, formData.fullName, formData.username, formData.phoneNumber);
+                const result = await registerUser(formData.email!, formData.password!, userType);
                 if (!result.success) throw new Error(result.error || 'Sign up failed.');
-                addToast({ title: 'Account Created', description: 'Please check your email to verify your account.' });
+                
+                addToast({ title: 'Account Created', description: 'Please check your email to verify your account and then sign in.' });
                 router.push(`/auth/${userType}/signin`);
+
             } else { // Signin mode
                 const result = await signInUser(formData.email!, formData.password!);
                 if (!result.success || !result.user) throw new Error(result.error || 'Sign in failed.');
+                
                 addToast({ title: 'Sign In Successful', description: 'Welcome back!' });
                 
-                // Fetch full user profile to get the role for redirection
-                const userResult = await getUserAndProfile(result.user.id);
+                const userResult = await getUserAndProfile(result.user.id, userType);
                 if (userResult.success && userResult.user) {
                      router.push(userResult.user.profile?.role === 'admin' ? '/admin' : '/dashboard');
                 } else {
-                    // Default redirect if profile fails
                     router.push('/dashboard');
                 }
             }
