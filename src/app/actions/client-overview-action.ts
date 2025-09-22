@@ -29,7 +29,7 @@ export async function getClientOverview(): Promise<{
     error?: string;
 }> {
     try {
-        const supabase = await createClient({ useServiceRole: true }) as SupabaseClient;
+        const supabase = createClient({ useServiceRole: true }) as SupabaseClient;
         const sevenDaysAgo = subDays(new Date(), 7).toISOString();
 
         // 1. Fetch all client profiles with their stores

@@ -27,7 +27,7 @@ export async function sendPasswordReset(email: string) {
         return { success: false, error: 'Server configuration error.' };
     }
 
-    const supabase = await createClient({ useServiceRole: true }) as SupabaseClient;
+    const supabase = createClient({ useServiceRole: true }) as SupabaseClient;
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${siteUrl}/auth/reset-password`,
     });
@@ -51,7 +51,7 @@ export async function deleteUser(userId: string) {
     }
 
     // Use the service role client to delete a user
-    const supabase = await createClient({ useServiceRole: true }) as SupabaseClient;
+    const supabase = createClient({ useServiceRole: true }) as SupabaseClient;
 
     const { error } = await supabase.auth.admin.deleteUser(userId);
 
@@ -76,7 +76,7 @@ export async function changeUserEmail(userId: string, newEmail: string) {
         return { success: false, error: 'Invalid new email address.' };
     }
 
-    const supabase = await createClient({ useServiceRole: true }) as SupabaseClient;
+    const supabase = createClient({ useServiceRole: true }) as SupabaseClient;
 
     // First, update the email in the authentication system
     const { error: authError } = await supabase.auth.admin.updateUserById(
@@ -140,7 +140,7 @@ export async function inviteUser(email: string, role: 'client' | 'admin') {
         return { success: false, error: 'Server configuration error.' };
     }
 
-    const supabase = await createClient({ useServiceRole: true }) as SupabaseClient;
+    const supabase = createClient({ useServiceRole: true }) as SupabaseClient;
 
     // This part was already correct and serves as a great example of secure redirection.
     // The unused 'origin' variable has been removed.
@@ -167,7 +167,7 @@ export async function inviteUser(email: string, role: 'client' | 'admin') {
  */
 export async function syncAllUsersAppMetadata() {
     try {
-        const supabase = await createClient({ useServiceRole: true }) as SupabaseClient;
+        const supabase = createClient({ useServiceRole: true }) as SupabaseClient;
 
         // 1. Fetch all profiles
         const { data: profiles, error: profileError } = await supabase

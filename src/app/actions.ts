@@ -9,7 +9,7 @@ export async function generateLinkAction(
   
   console.log("Generating link for:", input.fileNames.join(", "));
   
-  const supabase = await createClient();
+  const supabase = createClient();
 
   // In a real app, you might want to associate the files with a user or a record in your database.
   // For now, we just pass the info to the AI flow.

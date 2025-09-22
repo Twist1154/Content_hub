@@ -28,7 +28,7 @@ function convertToCsv(data: any[]): string {
 export async function getClientDataAsCsv(clientId: string, clientEmail: string): Promise<{ success: boolean, error?: string }> {
     if (!clientId) return { success: false, error: 'Client ID is required.' };
 
-    const supabase = await createClient({ useServiceRole: true }) as SupabaseClient;
+    const supabase = createClient({ useServiceRole: true }) as SupabaseClient;
 
     const { data, error } = await supabase
         .from('content')

@@ -5,7 +5,7 @@ import { createClient } from './supabase/server';
 import type { Client } from './types';
 
 export async function getCurrentUser() {
-    const supabase = await createClient();
+    const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
@@ -26,7 +26,7 @@ export async function getCurrentUser() {
 }
 
 export async function getAllClients(): Promise<{ success: boolean, clients: Client[], error?: string }> {
-    const supabase = await createClient({ useServiceRole: true });
+    const supabase = createClient({ useServiceRole: true });
 
     // 1. Fetch all client profiles along with their stores
     const { data: profiles, error: profileError } = await supabase
