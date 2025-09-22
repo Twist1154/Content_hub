@@ -9,32 +9,56 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { ThemeSwitcher } from '@/components/ui/ThemeSwitcher';
-import { UserNav } from '@/components/user-nav';
-import { ChevronLeft, Eye } from 'lucide-react';
+import { UserNav, UserNavHeader, UserNavItem, UserNavSeparator } from '@/components/user-nav';
+import { ChevronLeft, Eye, LogOut, Settings, User as UserIcon } from 'lucide-react';
 import { Breadcrumb } from '../ui/breadcrumb';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { Shield } from 'lucide-react';
 
 interface ClientHeaderProps {
-    user: any; // The currently authenticated user (could be an admin)
-    isAdminView: boolean;
-    viewingClient: any; // The client being viewed (user object with profile)
+    user: any;
+    isAdminView?: boolean;
+    viewingClient?: any;
 }
 
-export function ClientHeader({
-  user,
-  isAdminView,
-  viewingClient,
-}: ClientHeaderProps) {
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const router = useRouter();
+export function ClientHeader({ user, isAdminView, viewingClient }: ClientHeaderProps) {
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+    const router = useRouter();
 
-  const handleLogout = () => {
-    signOut();
-    router.push('/');
-  };
+    const handleLogout = async () => {
+        try {
+            const response = await fetch('/api/auth/signout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
 
-  const confirmLogout = () => {
-    setShowLogoutConfirm(true);
-  };
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                // Clear any local storage or session data if needed
+                localStorage.clear();
+                sessionStorage.clear();
+
+                // Redirect to home page
+                router.push('/');
+                router.refresh(); // Force a refresh to clear any cached data
+            } else {
+                console.error('Logout failed:', data.error);
+                // Still redirect even if there's an error to prevent being stuck
+                router.push('/');
+            }
+        } catch (error) {
+            console.error('Logout error:', error);
+            // Fallback: still redirect to home page
+            router.push('/');
+        }
+    };
+
+    const confirmLogout = () => {
+        setShowLogoutConfirm(true);
+    };
 
   const getHeaderTitle = () => {
     if (isAdminView) {
@@ -69,7 +93,27 @@ export function ClientHeader({
             </div>
             <div className="flex items-center gap-2">
                 <ThemeSwitcher />
-                <UserNav user={user} onSignOut={confirmLogout} />
+                <UserNav email={isAdminView ? viewingClient?.profile?.email : user.email}>
+                    <UserNavHeader
+                        title={isAdminView ? 'Viewing as Admin' : 'Signed in as'}
+                        email={isAdminView ? viewingClient?.profile?.email : user.email}
+                        note={isAdminView ? `Admin: ${user.email}` : undefined}
+                        noteVariant="primary"
+                    />
+                            <div className="py-1">
+                        <UserNavItem onClick={() => router.push('/profile')}>
+                            <UserIcon className="w-4 h-4" /> User Profile
+                        </UserNavItem>
+                        <UserNavItem onClick={() => router.push('/settings')}>
+                            <Settings className="w-4 h-4" /> Settings
+                        </UserNavItem>
+                        <UserNavSeparator />
+                        <UserNavItem onClick={confirmLogout}>
+                            <LogOut className="w-4 h-4 text-destructive" />
+                            <span className="text-destructive">Sign Out</span>
+                        </UserNavItem>
+                        </div>
+                </UserNav>
             </div>
           </div>
         </div>

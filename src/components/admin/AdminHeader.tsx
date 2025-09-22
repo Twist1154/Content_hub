@@ -9,7 +9,7 @@ import {Breadcrumb} from '@/components/ui/breadcrumb';
 import {LogOut, Settings, Shield, User, Users} from 'lucide-react';
 import {ThemeSwitcher} from '@/components/ui/ThemeSwitcher';
 import {ConfirmModal} from '@/components/ui/ConfirmModal';
-import { UserNav } from "@/components/user-nav";
+import { UserNav, UserNavHeader, UserNavItem, UserNavSeparator } from "@/components/user-nav";
 import {Logo} from "@/components/logo";
 import { signOut } from '@/app/actions/auth-actions';
 
@@ -26,6 +26,7 @@ export function AdminHeader({user, title = 'Admin Dashboard', breadcrumbItems}: 
     const handleLogout = () => {
         signOut();
         router.push('/');
+        router.refresh();
     };
 
     const confirmLogout = () => {
@@ -71,7 +72,30 @@ export function AdminHeader({user, title = 'Admin Dashboard', breadcrumbItems}: 
                         <div className="flex items-center gap-4">
                             <ThemeSwitcher/>
 
-                            <UserNav user={user} onSignOut={confirmLogout} />
+                            <UserNav email={user.email}>
+                                <UserNavHeader
+                                    title="Admin Account"
+                                    email={user.email}
+                                    note={`Role: ${user.profile?.role || 'admin'}`}
+                                    noteVariant="primary"
+                                />
+                                <div className="py-1">
+                                    <UserNavItem onClick={() => router.push('/profile')}>
+                                        <User className="w-4 h-4"/> Admin Profile
+                                    </UserNavItem>
+                                    <UserNavItem onClick={() => router.push('/settings')}>
+                                        <Settings className="w-4 h-4"/> Admin Settings
+                                    </UserNavItem>
+                                    <UserNavItem onClick={() => router.push('/dashboard')}>
+                                        <Users className="w-4 h-4"/> Client View
+                                    </UserNavItem>
+                                    <UserNavSeparator/>
+                                    <UserNavItem onClick={confirmLogout}>
+                                        <LogOut className="w-4 h-4 text-destructive"/>
+                                        <span className="text-destructive">Sign Out</span>
+                                    </UserNavItem>
+                                </div>
+                            </UserNav>
                         </div>
                     </div>
                 </div>
