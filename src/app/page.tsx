@@ -236,10 +236,10 @@ export default function Home() {
             <Link href="#" prefetch={false} className="hover:underline">
               Help Center
             </Link>
-            <Link href="#" prefetch={false} className="hover-underline">
-              API Documentation
+            <Link href="/privacy" prefetch={false} className="hover:underline">
+              Privacy Policy
             </Link>
-            <Link href="#" prefetch={false} className="hover:underline">
+            <Link href="/terms" prefetch={false} className="hover:underline">
               Terms of Service
             </Link>
           </div>

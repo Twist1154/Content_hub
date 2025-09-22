@@ -1,3 +1,4 @@
+
 // app/terms/page.tsx
 
 import { BackButton } from '@/components/ui/back-button';
