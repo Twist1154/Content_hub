@@ -1,11 +1,10 @@
-
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
+// components/ui/StatCard.tsx
+import { Card, CardContent } from '@/components/ui/card';
 import type { LucideIcon } from 'lucide-react';
 
 interface StatCardProps {
     icon: LucideIcon;
-    value: number | string;
+    value: string | number;
     label: string;
     iconColorClass?: string;
 }
@@ -13,12 +12,14 @@ interface StatCardProps {
 export function StatCard({ icon: Icon, value, label, iconColorClass }: StatCardProps) {
     return (
         <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
-                <Icon className={cn('w-4 h-4 text-muted-foreground', iconColorClass)} />
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold text-foreground">{value}</div>
+            <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                    <Icon className={`w-8 h-8 ${iconColorClass || 'text-primary'}`} />
+                    <div>
+                        <p className="text-2xl font-bold text-foreground">{value}</p>
+                        <p className="text-sm text-muted-foreground">{label}</p>
+                    </div>
+                </div>
             </CardContent>
         </Card>
     );
