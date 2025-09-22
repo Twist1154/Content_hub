@@ -38,6 +38,16 @@ function getAdminHeaderProps(pathname: string, user: any) {
             ]
         };
     }
+     if (pathname.startsWith('/admin/downloads')) {
+        return {
+            user,
+            title: "Bulk Download",
+            breadcrumbItems: [
+                { label: 'Admin Dashboard', href: '/admin' },
+                { label: 'Bulk Download', current: true }
+            ]
+        };
+    }
     // Default for /admin
     return {
         user,
