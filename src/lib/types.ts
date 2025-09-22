@@ -1,4 +1,3 @@
-
 // src/lib/types.ts
 
 export type ViewMode = 'grid' | 'list';
