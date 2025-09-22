@@ -14,6 +14,7 @@ import {insertContent} from '@/app/actions/data-actions';
 import {LoadingSpinner} from '@/components/ui/loading-spinner';
 import {cn} from '@/lib/utils';
 import type { ContentItem } from '@/lib/types';
+import { notifyAdminsOfContentUpload } from '@/app/actions/notification-actions';
 
 // The store type is part of ContentItem, but let's define a simple one for props
 interface StoreType {
@@ -101,6 +102,7 @@ export function ContentUpload({userId, stores, onSuccess}: ContentUploadProps) {
         setError('');
 
         try {
+            const uploadedItems: { title: string, storeId: string }[] = [];
             for (const file of files) {
                 const fileUrl = await uploadFile(file);
 
@@ -119,11 +121,19 @@ export function ContentUpload({userId, stores, onSuccess}: ContentUploadProps) {
                     };
 
                     const result = await insertContent(contentData);
-
                     if (!result.success) {
                         throw new Error(result.error);
                     }
+                     uploadedItems.push({ title: contentData.title, storeId: storeId });
                 }
+            }
+
+            // After all uploads are successful, trigger the notification
+            if (uploadedItems.length > 0) {
+                await notifyAdminsOfContentUpload({
+                    userId: userId,
+                    items: uploadedItems,
+                });
             }
 
             setFiles([]);
