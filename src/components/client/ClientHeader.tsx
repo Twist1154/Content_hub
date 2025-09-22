@@ -11,7 +11,6 @@ import { ThemeSwitcher } from '@/components/ui/ThemeSwitcher';
 import { UserNav, UserNavHeader, UserNavItem, UserNavSeparator } from '@/components/user-nav';
 import { ChevronLeft, Eye, LogOut, Settings, User as UserIcon } from 'lucide-react';
 import { Breadcrumb } from '../ui/breadcrumb';
-import { signOut } from '@/app/actions/auth-actions';
 
 interface ClientHeaderProps {
     user: any;
@@ -23,10 +22,34 @@ export function ClientHeader({ user, isAdminView, viewingClient }: ClientHeaderP
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const router = useRouter();
 
-    const handleLogout = () => {
-        signOut();
-        router.push('/');
-        router.refresh();
+    const handleLogout = async () => {
+        try {
+            const response = await fetch('/api/auth/signout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                if (typeof window !== 'undefined') {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                }
+                router.push('/');
+                router.refresh();
+            } else {
+                console.error('Logout failed:', data.error);
+                router.push('/');
+                router.refresh();
+            }
+        } catch (error) {
+            console.error('Logout error:', error);
+            router.push('/');
+            router.refresh();
+        }
     };
 
     const confirmLogout = () => {

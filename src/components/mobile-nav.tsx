@@ -4,7 +4,7 @@
 import { useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -13,9 +13,9 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { signOut } from "@/app/actions/auth-actions";
 import { Logo } from "./logo";
 import { ThemeSwitcher } from "./ui/ThemeSwitcher";
+import { useRouter } from "next/navigation";
 
 interface MobileNavProps {
   user: User | null;
@@ -23,6 +23,42 @@ interface MobileNavProps {
 
 export function MobileNav({ user }: MobileNavProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+        const response = await fetch('/api/auth/signout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            if (typeof window !== 'undefined') {
+                localStorage.clear();
+                sessionStorage.clear();
+            }
+            // Close the nav before redirecting
+            setIsOpen(false);
+            router.push('/');
+            router.refresh();
+        } else {
+            console.error('Logout failed:', data.error);
+            setIsOpen(false);
+            router.push('/');
+            router.refresh();
+        }
+    } catch (error) {
+        console.error('Logout error:', error);
+        setIsOpen(false);
+        router.push('/');
+        router.refresh();
+    }
+  };
+
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -69,15 +105,13 @@ export function MobileNav({ user }: MobileNavProps) {
                   Settings
                 </Button>
               </Link>
-              <form action={signOut}>
-                <Button
-                  type="submit"
-                  variant="ghost"
-                  className="w-full justify-start"
-                >
-                  Log out
-                </Button>
-              </form>
+              <Button
+                onClick={handleLogout}
+                variant="ghost"
+                className="w-full justify-start"
+              >
+                Log out
+              </Button>
             </>
           ) : (
             <>

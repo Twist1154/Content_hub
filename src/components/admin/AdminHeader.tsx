@@ -11,7 +11,6 @@ import {ThemeSwitcher} from '@/components/ui/ThemeSwitcher';
 import {ConfirmModal} from '@/components/ui/ConfirmModal';
 import { UserNav, UserNavHeader, UserNavItem, UserNavSeparator } from "@/components/user-nav";
 import {Logo} from "@/components/logo";
-import { signOut } from '@/app/actions/auth-actions';
 
 interface AdminHeaderProps {
     user: any;
@@ -23,10 +22,36 @@ export function AdminHeader({user, title = 'Admin Dashboard', breadcrumbItems}: 
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const router = useRouter();
 
-    const handleLogout = () => {
-        signOut();
-        router.push('/');
-        router.refresh();
+    const handleLogout = async () => {
+        try {
+            const response = await fetch('/api/auth/signout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                if (typeof window !== 'undefined') {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                }
+
+                // Redirect to home page and refresh to clear server state
+                router.push('/');
+                router.refresh();
+            } else {
+                console.error('Logout failed:', data.error);
+                router.push('/');
+                router.refresh();
+            }
+        } catch (error) {
+            console.error('Logout error:', error);
+            router.push('/');
+            router.refresh();
+        }
     };
 
     const confirmLogout = () => {
