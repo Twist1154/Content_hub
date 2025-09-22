@@ -37,7 +37,7 @@ import { ServerCrash } from 'lucide-react';
 
 // Props to configure the component's behavior
 interface ContentManagerProps {
-    fetchAction: () => Promise<ContentItem[]>;
+    fetchAction: () => Promise<{ success: boolean; content?: ContentItem[]; error?: string; }>;
     showFilters?: boolean;
     showGrouping?: boolean;
     defaultView?: 'grid' | 'list' | 'location' | 'company';
@@ -95,10 +95,15 @@ export function ContentManager({
         setLoading(true);
         setError(null);
         try {
-            const contentItems = await fetchAction();
-            setContent(contentItems);
+            const result = await fetchAction();
+            if (result.success) {
+                setContent(result.content || []);
+            } else {
+                throw new Error(result.error || 'Failed to fetch content.');
+            }
         } catch (err: any) {
             setError(err.message || 'An unexpected error occurred fetching content.');
+            setContent([]); // Ensure content is an array on error
         } finally {
             setLoading(false);
         }

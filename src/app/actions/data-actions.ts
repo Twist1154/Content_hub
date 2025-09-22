@@ -82,43 +82,47 @@ function determineStatus(startDate: string | null, endDate: string | null): Cont
     return 'active';
 }
 
-export async function fetchAllContent(): Promise<ContentItem[]> {
-  const supabase = await createClient({ useServiceRole: true }) as SupabaseClient;
+export async function fetchAllContent(): Promise<{ success: boolean; content?: ContentItem[]; error?: string }> {
+  try {
+    const supabase = await createClient({ useServiceRole: true }) as SupabaseClient;
 
-  const { data: contentData, error: contentError } = await supabase
-    .from('content')
-    .select(`
-        *,
-        stores ( name, brand_company, address ),
-        profiles ( email )
-    `)
-    .order('created_at', { ascending: false });
+    const { data: contentData, error: contentError } = await supabase
+      .from('content')
+      .select(`
+          *,
+          stores ( name, brand_company, address ),
+          profiles ( email )
+      `)
+      .order('created_at', { ascending: false });
 
-  if (contentError) {
-    console.error('Error fetching content from database:', contentError);
-    return [];
+    if (contentError) {
+      throw new Error(contentError.message);
+    }
+    
+    if (!contentData) {
+      return { success: true, content: [] };
+    }
+
+    const contentItems: ContentItem[] = contentData.map((item: any) => ({
+        id: item.id,
+        title: item.title,
+        file_url: item.file_url,
+        type: item.type,
+        file_size: item.file_size,
+        created_at: item.created_at,
+        status: determineStatus(item.start_date, item.end_date),
+        user_id: item.user_id,
+        // @ts-ignore
+        user_email: item.profiles?.email || 'Unknown',
+        stores: item.stores,
+        campaigns: null, // Placeholder
+    }));
+
+    return { success: true, content: contentItems };
+  } catch (err: any) {
+    console.error('Error fetching all content:', err);
+    return { success: false, error: 'Failed to fetch all content.' };
   }
-  
-  if (!contentData) {
-    return [];
-  }
-
-  const contentItems: ContentItem[] = contentData.map((item: any) => ({
-      id: item.id,
-      title: item.title,
-      file_url: item.file_url,
-      type: item.type,
-      file_size: item.file_size,
-      created_at: item.created_at,
-      status: determineStatus(item.start_date, item.end_date),
-      user_id: item.user_id,
-      // @ts-ignore
-      user_email: item.profiles?.email || 'Unknown',
-      stores: item.stores,
-      campaigns: null, // Placeholder
-  }));
-
-  return contentItems;
 }
 
 export async function fetchStoresByUserId(userId: string) {
