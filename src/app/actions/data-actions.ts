@@ -147,7 +147,7 @@ export async function fetchContentStatsByUserId(userId: string) {
     if (!userId) return { success: false, error: 'User ID is required.' };
     
     try {
-        const supabase = await createClient();
+        const supabase = await createClient({ useServiceRole: true}) as SupabaseClient;
         const now = new Date();
         const startOfCurrentMonth = startOfMonth(now);
         const endOfCurrentMonth = endOfMonth(now);
