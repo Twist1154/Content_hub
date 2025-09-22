@@ -1,7 +1,7 @@
+
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { Logo } from "@/components/logo";
 import HeroSlider from "@/components/hero-slider";
 
@@ -120,9 +120,18 @@ function BrandLogos() {
 }
 
 export default function Home() {
-  const featureImage1 = PlaceHolderImages[0];
-  const featureImage2 = PlaceHolderImages[1];
-  const featureImage3 = PlaceHolderImages[2];
+  const featureImage1 = {
+    imageUrl: "https://picsum.photos/seed/1/600/400",
+    imageHint: "office creative team"
+  };
+  const featureImage2 = {
+    imageUrl: "https://picsum.photos/seed/2/600/400",
+    imageHint: "team working on laptops"
+  };
+  const featureImage3 = {
+    imageUrl: "https://picsum.photos/seed/3/600/400",
+    imageHint: "brand advertisement display"
+  };
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between">

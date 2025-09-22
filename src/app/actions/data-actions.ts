@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 import type { ContentItem, ContentType } from '@/lib/types';
 import { SupabaseClient } from '@supabase/supabase-js';
+import { startOfMonth, endOfMonth } from 'date-fns';
 
 const storeSchema = z.object({
   name: z.string().min(1, 'Store name is required.'),
@@ -144,19 +145,56 @@ export async function fetchStoresByUserId(userId: string) {
 
 export async function fetchContentStatsByUserId(userId: string) {
     if (!userId) return { success: false, error: 'User ID is required.' };
-    const supabase = await createClient();
+    
+    try {
+        const supabase = await createClient();
+        const now = new Date();
+        const startOfCurrentMonth = startOfMonth(now);
+        const endOfCurrentMonth = endOfMonth(now);
 
-    // NOTE: This is a placeholder implementation.
-    // We are generating random stats. In a real application, you would
-    // query your 'content' or 'files' table with a where clause for the userId.
-    const stats = {
-        total: Math.floor(Math.random() * 200),
-        active: Math.floor(Math.random() * 100),
-        scheduled: Math.floor(Math.random() * 50),
-        thisMonth: Math.floor(Math.random() * 30),
-    };
+        // Fetch all content for the user once
+        const { data: allContent, error: fetchError } = await supabase
+            .from('content')
+            .select('start_date, end_date, created_at')
+            .eq('user_id', userId);
 
-    return { success: true, stats };
+        if (fetchError) throw fetchError;
+        
+        if (!allContent) {
+            return { success: true, stats: { total: 0, active: 0, scheduled: 0, thisMonth: 0 } };
+        }
+
+        let activeCount = 0;
+        let scheduledCount = 0;
+        let thisMonthCount = 0;
+
+        for (const item of allContent) {
+            const status = determineStatus(item.start_date, item.end_date);
+            if (status === 'active') activeCount++;
+            if (status === 'scheduled') scheduledCount++;
+            
+            const createdAt = new Date(item.created_at);
+            if (createdAt >= startOfCurrentMonth && createdAt <= endOfCurrentMonth) {
+                thisMonthCount++;
+            }
+        }
+
+        const stats = {
+            total: allContent.length,
+            active: activeCount,
+            scheduled: scheduledCount,
+            thisMonth: thisMonthCount,
+        };
+
+        return { success: true, stats };
+    } catch (err: any) {
+        console.error("Error fetching content stats:", err.message);
+        return { 
+            success: false, 
+            error: err.message, 
+            stats: { total: 0, active: 0, scheduled: 0, thisMonth: 0 } 
+        };
+    }
 }
 
 export async function fetchClientProfileById(clientId: string) {
