@@ -310,7 +310,7 @@ export function ContentUpload({userId, stores, onSuccess}: ContentUploadProps) {
 
                     <TooltipProvider>
                         <Tooltip>
-                            <TooltipTrigger className="w-full">
+                            <TooltipTrigger asChild className="w-full">
                                 <Button
                                     type="submit"
                                     className="w-full disabled:opacity-70"
