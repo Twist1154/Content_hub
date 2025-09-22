@@ -1,8 +1,7 @@
-
 // src/components/admin/client-management/ClientCard.tsx
 'use client';
 
-import { Client } from '@/lib/types';
+import { Client } from '@/app/actions/get-clients-action';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
