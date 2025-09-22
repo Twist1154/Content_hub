@@ -33,7 +33,7 @@ export const createClient = async (options?: CreateClientOptions) => {
   }
 
   // --- For all other cases, create a standard, user-session client ---
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
     
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import Link from 'next/link';
 
 export default function AdminSignInPage() {
+
   
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">

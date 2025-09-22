@@ -85,7 +85,7 @@ function determineStatus(startDate: string | null, endDate: string | null): Cont
 
 export async function fetchAllContent(): Promise<{ success: boolean; content?: ContentItem[]; error?: string }> {
   try {
-    const supabase = createClient({ useServiceRole: true }) as SupabaseClient;
+    const supabase = await createClient({ useServiceRole: true }) as SupabaseClient;
 
     const { data: contentData, error: contentError } = await supabase
       .from('content')
@@ -99,7 +99,7 @@ export async function fetchAllContent(): Promise<{ success: boolean; content?: C
     if (contentError) {
       throw new Error(contentError.message);
     }
-    
+
     if (!contentData) {
       return { success: true, content: [] };
     }
@@ -128,7 +128,7 @@ export async function fetchAllContent(): Promise<{ success: boolean; content?: C
 
 export async function fetchStoresByUserId(userId: string) {
     if (!userId) return { success: false, error: 'User ID is required.' };
-    const supabase = createClient({ useServiceRole: true }) as SupabaseClient;
+    const supabase = await createClient({ useServiceRole: true }) as SupabaseClient;
 
     const { data, error } = await supabase
         .from('stores')
@@ -147,7 +147,7 @@ export async function fetchContentStatsByUserId(userId: string) {
     if (!userId) return { success: false, error: 'User ID is required.' };
     
     try {
-        const supabase = createClient({ useServiceRole: true}) as SupabaseClient;
+        const supabase = await createClient({useServiceRole: true}) as SupabaseClient;
         const now = new Date();
         const startOfCurrentMonth = startOfMonth(now);
         const endOfCurrentMonth = endOfMonth(now);
@@ -189,17 +189,17 @@ export async function fetchContentStatsByUserId(userId: string) {
         return { success: true, stats };
     } catch (err: any) {
         console.error("Error fetching content stats:", err.message);
-        return { 
-            success: false, 
-            error: err.message, 
-            stats: { total: 0, active: 0, scheduled: 0, thisMonth: 0 } 
+        return {
+            success: false,
+            error: err.message,
+            stats: { total: 0, active: 0, scheduled: 0, thisMonth: 0 }
         };
     }
 }
 
 export async function fetchClientProfileById(clientId: string) {
     if (!clientId) return { success: false, error: 'Client ID is required' };
-    const supabase = createClient({ useServiceRole: true }) as SupabaseClient;
+    const supabase = await createClient({ useServiceRole: true }) as SupabaseClient;
 
     const { data: profile, error } = await supabase
         .from('profiles')
@@ -232,7 +232,7 @@ const contentSchema = z.object({
 export type ContentData = z.infer<typeof contentSchema>;
 
 export async function insertContent(contentData: ContentData) {
-    const supabase = createClient({ useServiceRole: true });
+    const supabase = await createClient({ useServiceRole: true });
 
     const validatedFields = contentSchema.safeParse(contentData);
 
@@ -259,7 +259,7 @@ export async function insertContent(contentData: ContentData) {
 }
 
 export async function getAllAdmins() {
-    const supabase = createClient({ useServiceRole: true }) as SupabaseClient;
+    const supabase = await createClient({useServiceRole: true}) as SupabaseClient;
     const { data, error } = await supabase
         .from('profiles')
         .select('id, email')
@@ -273,7 +273,7 @@ export async function getAllAdmins() {
 }
 
 export async function deleteContent(contentId: string, fileUrl: string) {
-    const supabase = createClient({ useServiceRole: true }) as SupabaseClient;
+    const supabase = await createClient({useServiceRole: true}) as SupabaseClient;
     // 1. Delete the file from storage
     const filePath = new URL(fileUrl).pathname.split('/files/').pop();
     if (filePath) {
@@ -302,7 +302,7 @@ export async function deleteContent(contentId: string, fileUrl: string) {
 
 export async function fetchUserRole(userId: string) {
     if (!userId) return { success: false, error: 'User ID is required.' };
-    const supabase = createClient({ useServiceRole: true }) as SupabaseClient;
+    const supabase = await createClient({useServiceRole: true}) as SupabaseClient;
 
     const { data, error } = await supabase
         .from('profiles')
@@ -327,7 +327,7 @@ export async function fetchContentForUser(
         return { success: false, error: 'User ID is required.' };
     }
     try {
-        const supabase = createClient({ useServiceRole: options.useServiceRole });
+        const supabase = await createClient({ useServiceRole: options.useServiceRole }) as SupabaseClient;
 
         const { data: content, error } = await supabase
             .from('content')
