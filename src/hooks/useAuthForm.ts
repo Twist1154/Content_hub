@@ -1,9 +1,7 @@
-
 'use client';
 
 import { useState, useMemo, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 import { useToast } from './use-toast';
 import { signInUser, registerUser, getUserAndProfile } from '@/app/actions/auth-actions';
 
@@ -34,8 +32,7 @@ export function useAuthForm(mode: AuthMode, userType: UserType = 'client') {
     const [errors, setErrors] = useState<FormErrors>({});
     const [loading, setLoading] = useState(false);
     const router = useRouter();
-    const { toast } = useToast();
-    const supabase = useMemo(() => createClient(), []);
+    const { addToast } = useToast();
 
     const handleInputChange = (name: keyof FormData, value: string) => {
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -128,30 +125,21 @@ export function useAuthForm(mode: AuthMode, userType: UserType = 'client') {
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         if (!validateForm()) {
-            toast({ variant: 'destructive', title: 'Validation Error', description: 'Please fix the errors before submitting.' });
+            addToast({ variant: 'destructive', title: 'Validation Error', description: 'Please fix the errors before submitting.' });
             return;
         }
         setLoading(true);
-
-        const form = new FormData();
-        // @ts-ignore
-        for (const key in formData) {
-            if (formData[key as keyof FormData]) {
-                form.append(key, formData[key as keyof FormData]!);
-            }
-        }
-        form.append('role', userType);
         
         try {
             if (mode === 'signup') {
-                const result = await registerUser(null, form);
+                const result = await registerUser(formData.email!, formData.password!, userType, formData.fullName, formData.username, formData.phoneNumber);
                 if (!result.success) throw new Error(result.error || 'Sign up failed.');
-                toast({ title: 'Account Created', description: 'Please check your email to verify your account.' });
+                addToast({ title: 'Account Created', description: 'Please check your email to verify your account.' });
                 router.push(`/auth/${userType}/signin`);
             } else { // Signin mode
-                const result = await signInUser(null, form);
+                const result = await signInUser(formData.email!, formData.password!);
                 if (!result.success || !result.user) throw new Error(result.error || 'Sign in failed.');
-                toast({ title: 'Sign In Successful', description: 'Welcome back!' });
+                addToast({ title: 'Sign In Successful', description: 'Welcome back!' });
                 
                 // Fetch full user profile to get the role for redirection
                 const userResult = await getUserAndProfile(result.user.id);
@@ -163,7 +151,7 @@ export function useAuthForm(mode: AuthMode, userType: UserType = 'client') {
                 }
             }
         } catch (err: any) {
-            toast({ variant: 'destructive', title: mode === 'signin' ? 'Sign In Failed' : 'Sign Up Failed', description: err.message });
+            addToast({ variant: 'destructive', title: mode === 'signin' ? 'Sign In Failed' : 'Sign Up Failed', description: err.message });
         } finally {
             setLoading(false);
         }

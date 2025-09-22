@@ -29,7 +29,7 @@ const magicLinkSchema = z.object({
 
 export async function signInUser(prevState: any, formData: FormData) {
   try {
-    const supabase = createClient() as SupabaseClient;
+    const supabase = await createClient() as SupabaseClient;
 
     const validatedFields = signInSchema.safeParse(
       Object.fromEntries(formData.entries())
@@ -76,7 +76,7 @@ export async function signInUser(prevState: any, formData: FormData) {
  */
 export async function registerUser(prevState: any, formData: FormData) {
   try {
-    const supabaseAdmin = createClient({ useServiceRole: true }) as SupabaseClient;
+    const supabaseAdmin = await createClient({ useServiceRole: true }) as SupabaseClient;
     
     const validatedFields = registerSchema.safeParse(
       Object.fromEntries(formData.entries())
@@ -157,7 +157,7 @@ export async function registerUser(prevState: any, formData: FormData) {
 
 export async function signOut() {
     try {
-        const supabase = createClient();
+        const supabase = await createClient();
         await supabase.auth.signOut();
     } catch (error: any) {
         console.error('Unexpected error during sign out:', error);
@@ -189,7 +189,7 @@ export async function sendMagicLink(prevState: any, formData: FormData) {
         }
         const { email } = validatedFields.data;
 
-        const supabase = createClient({ useServiceRole: true }) as SupabaseClient;
+        const supabase = await createClient({ useServiceRole: true }) as SupabaseClient;
 
         // Determine user role to construct the correct redirect URL
         const { data: profile } = await supabase
@@ -232,7 +232,7 @@ export async function sendMagicLink(prevState: any, formData: FormData) {
 
 export async function getUserAndProfile(userId: string) {
   try {
-    const supabase = createClient({ useServiceRole: true }) as SupabaseClient;
+    const supabase = await createClient({ useServiceRole: true }) as SupabaseClient;
     const { data: userResponse, error: userError } = await supabase.auth.admin.getUserById(userId);
 
     if (userError) {
@@ -266,7 +266,7 @@ export async function switchUserRole(userId: string, newRole: 'admin' | 'client'
         return { success: false, error: 'User ID and new role are required.' };
     }
 
-    const supabase = createClient({ useServiceRole: true }) as SupabaseClient;
+    const supabase = await createClient({ useServiceRole: true }) as SupabaseClient;
 
     // Step 1: Update the user's app_metadata in Supabase Auth first.
     // This is the most critical part for security (JWT claims).
