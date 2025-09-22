@@ -11,7 +11,7 @@ import { CheckSquare, Square, ExternalLink, Video, Music, Trash2 } from 'lucide-
 import { cn } from '@/lib/utils';
 
 // ---  these are now in a shared utils file ---
-import { formatFileSize, getStatusBadge } from '@/lib/content-utils.tsx';
+import { formatFileSize, getStatusBadge } from '@/lib/content-utils';
 import { ContentItem } from '@/lib/types';
 
 // --- NEW: Updated props to include admin functionality ---
@@ -110,8 +110,8 @@ export function ContentCard({
                     {item.title}
                 </h3>
                 <div className="space-y-1 text-xs text-muted-foreground">
-                    <p className="font-medium truncate text-foreground/80">{item.stores?.name || 'Unknown Store'}</p>
-                    <p className="truncate">{item.stores?.brand_company || 'Unknown Company'}</p>
+                    <p className="font-medium truncate text-foreground/80">{item.stores?.name ?? 'Unknown Store'}</p>
+                    <p className="truncate">{item.stores?.brand_company ?? 'Unknown Company'}</p>
                     <p>{formatFileSize(item.file_size)}</p>
                 </div>
                 <div className="mt-2 pt-2 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
