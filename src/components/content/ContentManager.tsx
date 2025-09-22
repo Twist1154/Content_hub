@@ -391,7 +391,7 @@ export function ContentManager({
                                     onSelectItem={handleSelectItem}
                                     onViewDetails={() => setSelectedContent(item)}
                                     isAdminView={isAdminView}
-                                    onDeleteItem={handleDeleteRequest}
+                                    onDeleteItem={isAdminView ? handleDeleteRequest : undefined}
                                 />
                             ))}
                         </div>
@@ -555,3 +555,5 @@ export function ContentManager({
         </div>
     );
 }
+
+    
