@@ -3,7 +3,6 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { ContentItem } from '@/lib/types';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { format } from 'date-fns';
 
@@ -15,8 +14,14 @@ function convertToCsv(data: any[]): string {
         ...data.map(row =>
             headers.map(header => {
                 let value = row[header];
+                if (value === null || value === undefined) {
+                    return '';
+                }
                 if (typeof value === 'string') {
-                    value = `"${value.replace(/"/g, '""')}"`;
+                    // Escape quotes by doubling them and wrap the whole field in quotes if it contains a comma, newline, or quote.
+                    if (value.includes('"') || value.includes(',') || value.includes('\n')) {
+                        return `"${value.replace(/"/g, '""')}"`;
+                    }
                 }
                 return value;
             }).join(',')
@@ -25,7 +30,7 @@ function convertToCsv(data: any[]): string {
     return csvRows.join('\n');
 }
 
-export async function getClientDataAsCsv(clientId: string, clientEmail: string): Promise<{ success: boolean, error?: string }> {
+export async function getClientDataAsCsv(clientId: string, clientEmail: string): Promise<{ success: boolean, csvString?: string, fileName?: string, error?: string }> {
     if (!clientId) return { success: false, error: 'Client ID is required.' };
 
     const supabase = createClient({ useServiceRole: true }) as SupabaseClient;
@@ -65,27 +70,7 @@ export async function getClientDataAsCsv(clientId: string, clientEmail: string):
     }));
 
     const csvContent = convertToCsv(flattenedData);
+    const fileName = `hapohub-data-${clientEmail.split('@')[0]}-${new Date().toISOString().split('T')[0]}.csv`;
 
-    // This part is tricky in a server action. We can't directly trigger a download.
-    // A common pattern is to return the content to the client to handle the download.
-    // For now, let's just log it and return success, as we can't create a file blob on server easily
-    // without more complex client-side logic to handle it.
-    // In a real app, you might save this to a temporary file and return a URL to it.
-    
-    console.log(`---- CSV DATA FOR ${clientEmail} ----`);
-    console.log(csvContent);
-    
-    // In a real scenario, you'd do something like this on the client:
-    /*
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-        link.setAttribute('download', 'client_data.csv');
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    */
-
-    return { success: true };
+    return { success: true, csvString: csvContent, fileName };
 }
