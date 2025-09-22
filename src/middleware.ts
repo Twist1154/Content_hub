@@ -44,7 +44,7 @@ export async function middleware(request: NextRequest) {
     return response;
   }
   
-  if (session && !session.user.user_metadata.store_id && pathname !== '/auth/setup-store' && userRole === 'client') {
+  if (session && pathname !== '/auth/setup-store' && userRole === 'client') {
       const { data: stores } = await supabase.from('stores').select('id').eq('user_id', session.user.id);
       if(!stores || stores.length === 0) {
         return NextResponse.redirect(new URL('/auth/setup-store', request.url));
@@ -70,12 +70,20 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Redirect signed-in users from the landing page to their dashboard
-  if (session && (pathname === '/' || pathname.startsWith('/auth/client') || pathname.startsWith('/auth/admin'))) {
+  // Redirect signed-in users from public auth pages to their dashboard
+  if (session && (pathname.startsWith('/auth/client') || pathname.startsWith('/auth/admin'))) {
      if (userRole === 'admin') {
         return NextResponse.redirect(new URL('/admin', request.url));
      }
      return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
+
+  // Redirect signed-in users from the landing page to their dashboard
+  if (session && pathname === '/') {
+    if (userRole === 'admin') {
+      return NextResponse.redirect(new URL('/admin', request.url));
+    }
+    return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
   return response;
