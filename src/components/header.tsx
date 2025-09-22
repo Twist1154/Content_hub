@@ -11,8 +11,8 @@ import { getCurrentUser } from '@/lib/auth';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { headers } from 'next/headers';
 
-function getPathname() {
-    const headersList = headers();
+async function getPathname() {
+    const headersList = await headers();
     const pathname = headersList.get('x-pathname') || '';
     return pathname;
 }
@@ -49,7 +49,7 @@ function getAdminHeaderProps(pathname: string, user: any) {
 
 export default async function Header() {
   const user = await getCurrentUser();
-  const pathname = getPathname();
+  const pathname = await getPathname();
   
   if (user && user.profile?.role === 'admin') {
     const props = getAdminHeaderProps(pathname, user);
@@ -59,7 +59,8 @@ export default async function Header() {
   if (user) {
     // The ClientHeader is smart enough to figure out its own title and breadcrumbs
     // But we need to pass it the user and view context
-     const adminViewClientId = new URLSearchParams(headers().get('x-search') || '').get('admin_view');
+     const headersList = await headers();
+     const adminViewClientId = new URLSearchParams(headersList.get('x-search') || '').get('admin_view');
      const isAdminView = !!(user.profile?.role === 'admin' && adminViewClientId);
 
     return null; // ClientHeader is rendered in the page layout itself

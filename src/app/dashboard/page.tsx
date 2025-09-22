@@ -11,10 +11,10 @@ import { DashboardClient } from '@/components/client/DashboardClient';
 
 export default async function Dashboard(
   props: {
-    searchParams: { [key: string]: string | string[] | undefined };
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
   }
 ) {
-  const searchParams = props.searchParams;
+  const searchParams = await props.searchParams;
   const user = await getCurrentUser();
   if (!user || !user.profile) redirect('/auth/client/signin');
 

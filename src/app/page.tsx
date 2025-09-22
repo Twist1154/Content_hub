@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
@@ -195,7 +194,7 @@ export default function Home() {
           </div>
         </div>
       </section>
-
+        {/*Footer section */}
       <footer className="w-full p-6 md:px-8 md:py-12 bg-muted">
         <div className="container grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-8 text-sm">
           <div className="grid gap-1">
