@@ -5,7 +5,7 @@ import { updateSession } from '@/lib/supabase/middleware';
 
 export async function middleware(request: NextRequest) {
   // First, run the session refresher.
-  const response = await updateSession(request);
+  let response = await updateSession(request);
 
   // Now, create a client to check the session for routing logic.
   const supabase = createServerClient(
@@ -25,7 +25,19 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getSession();
   
   const userRole = session?.user?.user_metadata?.role;
-  const { pathname } = request.nextUrl;
+  const { pathname, search } = request.nextUrl;
+  
+  // Add pathname and search to request headers for use in server components
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-pathname', pathname);
+  requestHeaders.set('x-search', search);
+
+  // Use NextResponse.next() to apply the new headers
+   response = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
 
   // Let the dedicated /auth/callback route handle the code exchange
   if (pathname === '/auth/callback') {

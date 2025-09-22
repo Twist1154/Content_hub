@@ -14,11 +14,6 @@ export default async function AdminDashboardPage() {
 
     return (
         <div className="min-h-screen bg-background">
-            <AdminHeader
-                user={user}
-                title="Admin Dashboard"
-                breadcrumbItems={[{ label: 'Admin Dashboard', current: true }]}
-            />
             <main className="container mx-auto px-4 py-8">
                 <AdminClientOverview />
             </main>

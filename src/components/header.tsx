@@ -1,5 +1,4 @@
-
-'use client';
+'use server';
 
 import Link from 'next/link';
 import { Button } from './ui/button';
@@ -8,22 +7,65 @@ import { UserNav } from './user-nav';
 import { MobileNav } from './mobile-nav';
 import { ThemeSwitcher } from './ui/ThemeSwitcher';
 import { signOut } from '@/app/actions/auth-actions';
-import { useEffect, useState } from 'react';
-import type { User } from '@supabase/supabase-js';
-import { createClient } from '@/lib/supabase/client';
+import { getCurrentUser } from '@/lib/auth';
+import { AdminHeader } from '@/components/admin/AdminHeader';
+import { headers } from 'next/headers';
 
-export default function Header() {
-  const [user, setUser] = useState<User | null>(null);
-  
-  useEffect(() => {
-    async function fetchUser() {
-      const supabase = createClient();
-      const { data } = await supabase.auth.getUser();
-      setUser(data.user);
+function getPathname() {
+    const headersList = headers();
+    const pathname = headersList.get('x-pathname') || '';
+    return pathname;
+}
+
+function getAdminHeaderProps(pathname: string, user: any) {
+    if (pathname.startsWith('/admin/clients')) {
+        return {
+            user,
+            title: "Client Management",
+            breadcrumbItems: [
+                { label: 'Admin Dashboard', href: '/admin' },
+                { label: 'Client Management', current: true }
+            ]
+        };
     }
-    fetchUser();
-  }, []);
+    if (pathname.startsWith('/admin/content')) {
+        return {
+            user,
+            title: "Content Library",
+            breadcrumbItems: [
+                { label: 'Admin Dashboard', href: '/admin' },
+                { label: 'Content Library', current: true }
+            ]
+        };
+    }
+    // Default for /admin
+    return {
+        user,
+        title: "Admin Dashboard",
+        breadcrumbItems: [{ label: 'Admin Dashboard', current: true }]
+    };
+}
 
+
+export default async function Header() {
+  const user = await getCurrentUser();
+  const pathname = getPathname();
+  
+  if (user && user.profile?.role === 'admin') {
+    const props = getAdminHeaderProps(pathname, user);
+    return <AdminHeader {...props} />;
+  }
+  
+  if (user) {
+    // The ClientHeader is smart enough to figure out its own title and breadcrumbs
+    // But we need to pass it the user and view context
+     const adminViewClientId = new URLSearchParams(headers().get('x-search') || '').get('admin_view');
+     const isAdminView = !!(user.profile?.role === 'admin' && adminViewClientId);
+
+    return null; // ClientHeader is rendered in the page layout itself
+  }
+
+  // Guest header
   return (
     <header className="absolute top-0 left-0 right-0 z-50 p-4 bg-transparent">
       <div className="container mx-auto flex items-center justify-between">
@@ -34,9 +76,6 @@ export default function Header() {
         
         <div className="flex items-center gap-2">
           <div className="hidden md:flex items-center gap-2">
-            {user ? (
-              <UserNav user={user} onSignOut={signOut} />
-            ) : (
               <nav className="flex items-center gap-2">
                 <Link href="/auth/client/signin">
                   <Button variant="ghost">Sign in</Button>
@@ -45,12 +84,11 @@ export default function Header() {
                   <Button>Sign up</Button>
                 </Link>
               </nav>
-            )}
              <ThemeSwitcher />
           </div>
 
           <div className="md:hidden">
-            <MobileNav user={user} />
+            <MobileNav user={null} />
           </div>
         </div>
       </div>
