@@ -3,9 +3,10 @@
 
 import { createClient } from './supabase/server';
 import type { Client } from './types';
+import {SupabaseClient} from "@supabase/supabase-js";
 
 export async function getCurrentUser() {
-    const supabase = createClient();
+    const supabase = await createClient() as SupabaseClient;
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
@@ -26,7 +27,7 @@ export async function getCurrentUser() {
 }
 
 export async function getAllClients(): Promise<{ success: boolean, clients: Client[], error?: string }> {
-    const supabase = createClient({ useServiceRole: true });
+    const supabase = await createClient({ useServiceRole: true }) as SupabaseClient;
 
     // 1. Fetch all client profiles along with their stores
     const { data: profiles, error: profileError } = await supabase
