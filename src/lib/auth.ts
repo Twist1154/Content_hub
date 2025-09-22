@@ -1,4 +1,3 @@
-// src/lib/auth.ts
 'use server';
 
 import { createClient } from './supabase/server';
