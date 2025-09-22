@@ -182,11 +182,14 @@ export function ContentManager({
     const handleDeleteRequest = (item: ContentItem) => setDeletingItem(item);
     const handleDeleteConfirm = async () => {
         if (!deletingItem) return;
-        // The deleteContent action doesn't exist yet, we will create it.
-        // For now, we simulate success.
-        console.log("Deleting:", deletingItem.id);
+        const result = await deleteContent(deletingItem.id, deletingItem.file_url);
+        if (result.success) {
+            // success notification
+            fetchContent();
+        } else {
+            // error notification
+        }
         setDeletingItem(null);
-        await fetchContent(); // Re-fetch after "deletion"
     };
 
     const handleSort = (field: SortOptions['field']) => {
