@@ -22,13 +22,13 @@ import { Button } from '@/components/ui/button';
 interface ClientHeaderProps {
   user: any; // The currently authenticated user (could be an admin)
   isAdminView: boolean;
-  viewingClientProfile: any; // The profile of the client being viewed
+  viewingClient: any; // The client being viewed (user object with profile)
 }
 
 export function ClientHeader({
   user,
   isAdminView,
-  viewingClientProfile,
+  viewingClient,
 }: ClientHeaderProps) {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const router = useRouter();
@@ -44,7 +44,7 @@ export function ClientHeader({
 
   const getHeaderTitle = () => {
     if (isAdminView) {
-      return `Viewing: ${viewingClientProfile?.email}`;
+      return `Viewing: ${viewingClient.profile?.email}`;
     }
     // This is a simple way to check the current page from the client side
     if (typeof window !== 'undefined') {
@@ -93,7 +93,7 @@ export function ClientHeader({
                     </AlertTitle>
                     <AlertDescription className="text-primary/90">
                       You are viewing the dashboard as{' '}
-                      {viewingClientProfile?.email}. Any actions you take will
+                      {viewingClient.profile?.email}. Any actions you take will
                       be on their behalf.
                     </AlertDescription>
                   </div>
