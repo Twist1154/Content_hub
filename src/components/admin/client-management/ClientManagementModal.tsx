@@ -2,7 +2,7 @@
 'use client';
 
 import {useEffect, useState} from 'react';
-import {Client} from '@/lib/types';
+import type {Client} from '@/app/actions/get-clients-action';
 import {format} from 'date-fns';
 import Link from 'next/link';
 import {Button} from '@/components/ui/button';
@@ -12,10 +12,9 @@ import {Download, Eye, Key, Mail, Settings, Shield, Trash2, X} from 'lucide-reac
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {
     changeUserEmail,
-    requestReauthentication,
     sendPasswordReset,
 } from '@/app/actions/user-management-actions';
-import { sendMagicLink, switchUserRole } from '@/app/actions/auth-actions';
+import { switchUserRole } from '@/app/actions/auth-actions';
 import { getClientDataAsCsv } from '@/app/actions/download-data-action';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
@@ -162,19 +161,6 @@ export function ClientManagementModal({
                                     variant={client.role === 'admin' ? 'destructive' : 'default'}
                                     className="w-full">
                                     {isSubmitting && activeAction === 'switchRole' ? <LoadingSpinner size="sm"/> : (client.role === 'admin' ? 'Make Client' : 'Make Admin')}
-                                </Button>
-                            </div>
-                            <div className="space-y-3">
-                                <h5 className="font-medium text-foreground flex items-center gap-2">
-                                    <Mail className="w-4 h-4"/>Send Magic Link</h5>
-                                <Button
-                                    onClick={() => runAction('magicLink',
-                                        sendMagicLink(new FormData(), client.email))}
-                                    disabled={isSubmitting}
-                                    variant="outline"
-                                    className="w-full">
-                                    {isSubmitting && activeAction === 'magicLink'
-                                        ? <LoadingSpinner size="sm" text="Sending..."/> : 'Send Magic Link'}
                                 </Button>
                             </div>
                         </div>

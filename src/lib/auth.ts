@@ -12,7 +12,7 @@ export async function signUp(email: string, password: string, role: 'client' | '
     throw new Error(result.error || result.message);
   }
 
-  const supabase = createClient() as SupabaseClient;
+  const supabase = await createClient() as SupabaseClient;
   const { data, error } = await supabase.auth.getUser();
 
   if (error) throw error;
@@ -21,7 +21,7 @@ export async function signUp(email: string, password: string, role: 'client' | '
 }
 
 export async function getCurrentUser() {
-  const supabase = createClient() as SupabaseClient;
+  const supabase = await createClient() as SupabaseClient;
   
   const { data: { user } } = await supabase.auth.getUser();
   
@@ -31,7 +31,7 @@ export async function getCurrentUser() {
 
   let supabaseClient: SupabaseClient;
   if (isAdmin) {
-    supabaseClient = createClient({ useServiceRole: true }) as SupabaseClient;
+    supabaseClient = await createClient({ useServiceRole: true }) as SupabaseClient;
   } else {
     supabaseClient = supabase;
   }

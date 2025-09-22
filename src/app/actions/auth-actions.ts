@@ -4,6 +4,21 @@
 import { createClient } from '@/lib/supabase/server';
 import { SupabaseClient } from '@supabase/supabase-js';
 
+export async function signOut() {
+    try {
+        const supabase = await createClient();
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+            console.error('Error signing out:', error);
+            return { success: false, error: error.message };
+        }
+        return { success: true };
+    } catch (error: any) {
+        console.error('Unexpected error signing out:', error);
+        return { success: false, error: error.message };
+    }
+}
+
 // Additional auth-related functions
 export async function signInUser(email: string, password: string): Promise<{
     success: boolean;
@@ -341,6 +356,51 @@ export async function switchUserRole(
         return { success: true, message: `Role updated to '${newRole}' for user ${targetUserId}` };
     } catch (error: any) {
         console.error('switchUserRole: Unexpected error:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+export async function sendMagicLink(prevState: any, formData: FormData) {
+    try {
+        const email = formData.get('email') as string;
+        if (!email) {
+            return { success: false, error: 'Email is required.' };
+        }
+
+        // Use service role to check profile without user being logged in
+        const supabaseAdmin = await createClient({ useServiceRole: true }) as SupabaseClient;
+
+        // Determine the redirect path based on user role
+        const { data: profile, error: profileError } = await supabaseAdmin
+            .from('profiles')
+            .select('role')
+            .eq('email', email)
+            .single();
+
+        if (profileError || !profile) {
+            // Default to client if profile doesn't exist or on error
+            console.warn(`Magic link for non-existent or error profile: ${email}. Defaulting to client.`);
+        }
+
+        const redirectTo = profile?.role === 'admin'
+            ? `/admin`
+            : `/dashboard`;
+
+
+        const supabase = await createClient();
+        const { error } = await supabase.auth.signInWithOtp({
+            email,
+            options: {
+                // The magic link will redirect to the callback, which then handles the final redirect
+                emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=${redirectTo}`,
+            },
+        });
+
+        if (error) throw error;
+
+        return { success: true, message: 'Magic link sent! Check your email.' };
+    } catch (error: any) {
+        console.error('Magic link error:', error);
         return { success: false, error: error.message };
     }
 }
