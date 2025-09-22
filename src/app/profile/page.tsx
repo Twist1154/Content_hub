@@ -1,9 +1,9 @@
+
 'use client';
 
 import {useEffect, useState} from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/hooks/useUser';
-import { ClientHeader } from '@/components/client/ClientHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,7 +53,7 @@ export default function ProfilePage() {
         if (result.success) {
             toast({ title: 'Account Deleted', description: 'Your account is being deleted. You will be logged out.' });
             // The signout is handled by Supabase, the redirect will happen automatically
-            // after the session is terminated.
+            // after the session is terminated by the middleware.
             router.push('/');
         } else {
              toast({ variant: 'destructive', title: 'Deletion Failed', description: result.error || 'Could not delete your account.' });
@@ -64,11 +64,8 @@ export default function ProfilePage() {
     return (
         <>
         <div className="min-h-screen bg-background">
-             <ClientHeader user={user} isAdminView={false} viewingClientProfile={user.profile} />
-
             <main className="container mx-auto px-4 py-8">
                 <div className="max-w-2xl mx-auto space-y-6">
-                    {/* The title is now in the header */}
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
@@ -148,6 +145,7 @@ export default function ProfilePage() {
                 title="Delete Account"
                 description="Are you sure you want to permanently delete your account? This action cannot be undone."
                 confirmText="Yes, Delete My Account"
+                confirmVariant="destructive"
             />
         </>
     );
