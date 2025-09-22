@@ -5,7 +5,7 @@
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip } from '@/components/ui/tooltip';
 import { format } from 'date-fns';
 import { CheckSquare, Square, ExternalLink, Video, Music, Trash2 } from 'lucide-react'; // --- NEW: Import Trash2 ---
 import { cn } from '@/lib/utils';
@@ -62,26 +62,15 @@ export function ContentCard({
                 className="absolute top-2 left-2 z-20"
                 onClick={handleSelectClick}
             >
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger>
-                            {isSelected ? (
-                                // THEME: The selected icon now uses the `primary` theme color.
-                                <CheckSquare className="w-6 h-6 text-primary-foreground bg-primary rounded-md p-0.5" />
-                            ) : (
-                                // THEME: The unselected icon is styled to be subtle but visible in both themes.
-                                <Square className="w-6 h-6 text-muted-foreground bg-background/70 backdrop-blur-sm rounded-md transition-colors group-hover:text-primary" />
-                            )}
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            {isSelected ? 'Deselect' : 'Select'}
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
+                <Tooltip content={isSelected ? 'Deselect' : 'Select'}>
+                    {isSelected ? (
+                        <CheckSquare className="w-6 h-6 text-primary-foreground bg-primary rounded-md p-0.5" />
+                    ) : (
+                        <Square className="w-6 h-6 text-muted-foreground bg-background/70 backdrop-blur-sm rounded-md transition-colors group-hover:text-primary" />
+                    )}
+                </Tooltip>
             </div>
 
-            {/* --- MEDIA PREVIEW --- */}
-            {/* THEME: 'bg-gray-100' becomes 'bg-muted' for the placeholder. */}
             <div className="relative aspect-video bg-muted overflow-hidden">
                 {item.type === 'image' && (
                     <Image
@@ -93,39 +82,25 @@ export function ContentCard({
                     />
                 )}
                 {item.type === 'video' && (
-                    // THEME: 'bg-black' is okay here as it's a universal 'video player' color,
-                    // but using 'bg-foreground/10' might be a softer option. For now, we'll keep it.
                     <div className="w-full h-full flex items-center justify-center bg-black">
                         <Video className="w-12 h-12 text-white/70" />
                     </div>
                 )}
                 {item.type === 'audio' && (
-                    // THEME: Kept the gradient as it is a specific design choice, not a theme issue. This is fine.
                     <div className="w-full h-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center">
                         <Music className="w-12 h-12 text-white" />
                     </div>
                 )}
 
-                {/* Hover overlay with actions */}
-                {/* THEME: Changed overlay to use a semi-transparent foreground color for better theme adaptability. */}
                 <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button variant="outline" size="sm">
-                                    <ExternalLink className="w-4 h-4" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                View details
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
+                    <Tooltip content="View details">
+                        <Button variant="outline" size="sm">
+                            <ExternalLink className="w-4 h-4" />
+                        </Button>
+                    </Tooltip>
                 </div>
 
-                {/* Status badge */}
                 <div className="absolute top-2 right-2 z-10">
-                    {/* Assuming getStatusBadge() returns a themed <Badge> component, this is correct. */}
                     {getStatusBadge(item)}
                 </div>
             </div>
@@ -148,27 +123,19 @@ export function ContentCard({
                     )}
                 </div>
 
-                {/* --- NEW: Conditionally rendered admin action bar --- */}
                 {isAdminView && (
                     <div className="mt-2 pt-2 border-t border-border flex items-center justify-end">
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                        onClick={handleDeleteClick}
-                                    >
-                                        <Trash2 className="w-4 h-4 mr-1" />
-                                        Delete
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>Delete this content permanently</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
+                        <Tooltip content="Delete this content permanently">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                onClick={handleDeleteClick}
+                            >
+                                <Trash2 className="w-4 h-4 mr-1" />
+                                Delete
+                            </Button>
+                        </Tooltip>
                     </div>
                 )}
             </div>

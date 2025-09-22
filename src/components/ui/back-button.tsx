@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { Button } from './button';
 import { ArrowLeft } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './tooltip';
+import { Tooltip } from './tooltip';
 import { cn } from '@/lib/utils';
 
 interface BackButtonProps {
@@ -24,23 +24,16 @@ export function BackButton({ href, label = 'Go back', className }: BackButtonPro
   };
 
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleBack}
-            className={cn(className)}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>{label}</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Tooltip content={label}>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleBack}
+        className={cn(className)}
+      >
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Back
+      </Button>
+    </Tooltip>
   );
 }

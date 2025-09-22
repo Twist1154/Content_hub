@@ -5,7 +5,7 @@ import {useCallback, useEffect, useMemo, useState} from 'react';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
-import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from '@/components/ui/tooltip';
+import { Tooltip } from '@/components/ui/tooltip';
 import {
     Calendar,
     ChevronLeft,
@@ -307,92 +307,57 @@ export function ContentManager({
 
                         <div className="flex items-center gap-2">
                             <div className="flex rounded-md border border-border">
-                                <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                            variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                                            size="sm" onClick={() => setViewMode('grid')}
-                                            className="rounded-r-none">
-                                            <LayoutGrid className="w-4 h-4"/>
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>Grid View</TooltipContent>
+                                <Tooltip content="Grid View">
+                                    <Button
+                                        variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                                        size="sm" onClick={() => setViewMode('grid')}
+                                        className="rounded-r-none">
+                                        <LayoutGrid className="w-4 h-4"/>
+                                    </Button>
                                 </Tooltip>
-                                </TooltipProvider>
-                                {isClientDashboard && <TooltipProvider><Tooltip>
-                                    <TooltipTrigger asChild>
-                                    <Button
-                                        variant={viewMode === 'list' ? 'default' : 'ghost'}
-                                        size="sm" onClick={() => setViewMode('list')}
-                                        className="rounded-l-none border-l border-border">
-                                        <List className="w-4 h-4"/>
-                                    </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>List View</TooltipContent>
-                                </Tooltip></TooltipProvider>}
-                                {showGrouping && <TooltipProvider><Tooltip>
-                                    <TooltipTrigger asChild>
-                                    <Button
-                                        variant={viewMode === 'location' ? 'default' : 'ghost'}
-                                        size="sm"
-                                        onClick={() => setViewMode('location')}
-                                        className="rounded-l-none border-l border-border">
-                                        <MapPin className="w-4 h-4"/>
-                                    </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>Group by Location</TooltipContent>
-                                </Tooltip></TooltipProvider>}
-                                {showGrouping && <TooltipProvider><Tooltip>
-                                    <TooltipTrigger asChild>
-                                    <Button
-                                        variant={viewMode === 'company' ? 'default' : 'ghost'}
-                                        size="sm"
-                                        onClick={() => setViewMode('company')}
-                                        className="rounded-l-none border-l border-border">
-                                        <Folder className="w-4 h-4"/>
-                                    </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>Group by Company</TooltipContent>
-                                </Tooltip></TooltipProvider>}
+                                {isClientDashboard && <Tooltip content="List View"><Button
+                                    variant={viewMode === 'list' ? 'default' : 'ghost'}
+                                    size="sm" onClick={() => setViewMode('list')}
+                                    className="rounded-l-none border-l border-border">
+                                    <List className="w-4 h-4"/>
+                                </Button></Tooltip>}
+                                {showGrouping && <Tooltip content="Group by Location"><Button
+                                    variant={viewMode === 'location' ? 'default' : 'ghost'}
+                                    size="sm"
+                                    onClick={() => setViewMode('location')}
+                                    className="rounded-l-none border-l border-border">
+                                    <MapPin className="w-4 h-4"/>
+                                </Button></Tooltip>}
+                                {showGrouping && <Tooltip content="Group by Company"><Button
+                                    variant={viewMode === 'company' ? 'default' : 'ghost'}
+                                    size="sm"
+                                    onClick={() => setViewMode('company')}
+                                    className="rounded-l-none border-l border-border">
+                                    <Folder className="w-4 h-4"/>
+                                </Button></Tooltip>}
                             </div>
                             <div className="flex gap-1">
-                                <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                    <Button variant={sort.field === 'created_at' ? 'default' : 'outline'}
-                                            size="sm"
-                                            onClick={() => handleSort('created_at')}>
-                                        <Calendar className="w-4 h-4"/>
-                                    </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>Sort by Date {sort.field === 'created_at' && `(${sort.direction})`}</TooltipContent>
+                                <Tooltip content={`Sort by Date ${sort.field === 'created_at' && `(${sort.direction})`}`}>
+                                <Button variant={sort.field === 'created_at' ? 'default' : 'outline'}
+                                        size="sm"
+                                        onClick={() => handleSort('created_at')}>
+                                    <Calendar className="w-4 h-4"/>
+                                </Button>
                                 </Tooltip>
-                                </TooltipProvider>
-                                <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                    <Button variant={sort.field === 'title' ? 'default' : 'outline'}
-                                            size="sm"
-                                            onClick={() => handleSort('title')}>
-                                            A-Z
-                                    </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>Sort by Name {sort.field === 'title' && `(${sort.direction})`}</TooltipContent>
+                                <Tooltip content={`Sort by Name ${sort.field === 'title' && `(${sort.direction})`}`}>
+                                <Button variant={sort.field === 'title' ? 'default' : 'outline'}
+                                        size="sm"
+                                        onClick={() => handleSort('title')}>
+                                        A-Z
+                                </Button>
                                 </Tooltip>
-                                </TooltipProvider>
-                                <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                    <Button variant={sort.field === 'file_size' ? 'default' : 'outline'}
-                                            size="sm"
-                                            onClick={() => handleSort('file_size')}>
-                                            <ArrowDownUp className="w-4 h-4" />
-                                    </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>Sort by Size {sort.field === 'file_size' && `(${sort.direction})`}</TooltipContent>
+                                <Tooltip content={`Sort by Size ${sort.field === 'file_size' && `(${sort.direction})`}`}>
+                                <Button variant={sort.field === 'file_size' ? 'default' : 'outline'}
+                                        size="sm"
+                                        onClick={() => handleSort('file_size')}>
+                                        <ArrowDownUp className="w-4 h-4" />
+                                </Button>
                                 </Tooltip>
-                                </TooltipProvider>
                             </div>
                         </div>
                     </div>
@@ -445,9 +410,7 @@ export function ContentManager({
                                     <tbody>{paginatedContent.map(item => (
                                         <tr key={item.id} className="border-b border-border hover:bg-muted/50">
                                             <td className="p-4">
-                                                <TooltipProvider>
-                                                <Tooltip>
-                                                    <TooltipTrigger>
+                                                <Tooltip content={<ContentPreviewTooltip item={item} />}>
                                                     <div className="flex items-center gap-3 cursor-default">
                                                         {getTypeIcon(item.type)}
                                                         <div>
@@ -455,12 +418,7 @@ export function ContentManager({
                                                             <p className="text-sm text-muted-foreground capitalize">{item.type}</p>
                                                         </div>
                                                     </div>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <ContentPreviewTooltip item={item} />
-                                                    </TooltipContent>
                                                 </Tooltip>
-                                                </TooltipProvider>
                                             </td>
                                             <td className="p-4">
                                                 <p className="font-medium text-foreground">
@@ -479,9 +437,7 @@ export function ContentManager({
                                             </td>
                                             <td className="p-4">
                                                 <div className="flex gap-2">
-                                                    <TooltipProvider>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
+                                                    <Tooltip content="View details">
                                                         <Button
                                                             variant="outline"
                                                             size="icon"
@@ -489,13 +445,8 @@ export function ContentManager({
                                                             onClick={() => setSelectedContent(item)}>
                                                             <Eye className="w-4 h-4"/>
                                                         </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>View details</TooltipContent>
                                                     </Tooltip>
-                                                    </TooltipProvider>
-                                                    <TooltipProvider>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
+                                                    <Tooltip content="Delete Content">
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
@@ -504,10 +455,7 @@ export function ContentManager({
                                                         >
                                                             <Trash2 className="w-4 h-4"/>
                                                         </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>Delete Content</TooltipContent>
                                                     </Tooltip>
-                                                    </TooltipProvider>
                                                 </div>
                                             </td>
                                         </tr>

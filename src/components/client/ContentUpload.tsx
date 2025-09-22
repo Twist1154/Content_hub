@@ -6,7 +6,7 @@ import {useDropzone} from 'react-dropzone';
 import {createClient} from '@/lib/supabase/client';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
-import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from '@/components/ui/tooltip';
+import { Tooltip } from '@/components/ui/tooltip';
 import {Card, CardContent, CardHeader} from '@/components/ui/card';
 import {File, Upload} from 'lucide-react';
 import type {ContentData} from '@/app/actions/data-actions';
@@ -204,29 +204,22 @@ export function ContentUpload({userId, stores, onSuccess}: ContentUploadProps) {
                         {(stores?.length ?? 0) === 0 ? (
                             <div className="text-sm text-destructive mb-2">No stores found for your account. Please create a store before uploading content.</div>
                         ) : null}
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger className="w-full text-left">
-                                     <select
-                                        multiple
-                                        className={cn('flex h-32 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50')}
-                                        value={selectedStoreIds}
-                                        onChange={(e) => {
-                                            const values = Array.from((e.target as HTMLSelectElement).selectedOptions).map(o => o.value);
-                                            setSelectedStoreIds(values);
-                                        }}
-                                        disabled={stores?.length === 0}
-                                    >
-                                        {(stores ?? []).map((s) => (
-                                            <option key={s.id} value={s.id}>{s.name}</option>
-                                        ))}
-                                    </select>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>{stores?.length === 0 ? "No stores available" : "Select one or more stores this content belongs to (Ctrl/Cmd+Click)"}</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
+                        <Tooltip content={stores?.length === 0 ? "No stores available" : "Select one or more stores this content belongs to (Ctrl/Cmd+Click)"}>
+                             <select
+                                multiple
+                                className={cn('flex h-32 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50')}
+                                value={selectedStoreIds}
+                                onChange={(e) => {
+                                    const values = Array.from((e.target as HTMLSelectElement).selectedOptions).map(o => o.value);
+                                    setSelectedStoreIds(values);
+                                }}
+                                disabled={stores?.length === 0}
+                            >
+                                {(stores ?? []).map((s) => (
+                                    <option key={s.id} value={s.id}>{s.name}</option>
+                                ))}
+                            </select>
+                        </Tooltip>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -250,57 +243,43 @@ export function ContentUpload({userId, stores, onSuccess}: ContentUploadProps) {
 
                     <div>
                         <label className="block text-sm font-medium mb-2 text-muted-foreground">Recurrence</label>
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger className="w-full">
-                                    <select
-                                        className={cn('flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1')}
-                                        value={formData.recurrence_type}
-                                        onChange={(e) => setFormData(prev => ({
-                                            ...prev,
-                                            recurrence_type: e.target.value as any,
-                                            recurrence_days: []
-                                        }))}
-                                    >
-                                        <option value="none">No Recurrence</option>
-                                        <option value="daily">Daily</option>
-                                        <option value="weekly">Weekly</option>
-                                        <option value="monthly">Monthly</option>
-                                        <option value="custom">Custom Days</option>
-                                    </select>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>Set how often this content should be displayed</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
+                        <Tooltip content="Set how often this content should be displayed">
+                            <select
+                                className={cn('flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1')}
+                                value={formData.recurrence_type}
+                                onChange={(e) => setFormData(prev => ({
+                                    ...prev,
+                                    recurrence_type: e.target.value as any,
+                                    recurrence_days: []
+                                }))}
+                            >
+                                <option value="none">No Recurrence</option>
+                                <option value="daily">Daily</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="monthly">Monthly</option>
+                                <option value="custom">Custom Days</option>
+                            </select>
+                        </Tooltip>
                     </div>
 
                     {formData.recurrence_type === 'custom' && (
                         <div>
                             <label className="block text-sm font-medium mb-2 text-muted-foreground">Select Days</label>
-                             <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger className="w-full">
-                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                            {weekDays.map(day => (
-                                                <label key={day} className="flex items-center space-x-2 cursor-pointer">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={formData.recurrence_days.includes(day)}
-                                                        onChange={() => handleRecurrenceDayToggle(day)}
-                                                        className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
-                                                    />
-                                                    <span className="text-sm text-foreground">{day}</span>
-                                                </label>
-                                            ))}
-                                        </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                         <p>Choose specific days of the week for content display</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
+                             <Tooltip content="Choose specific days of the week for content display">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                    {weekDays.map(day => (
+                                        <label key={day} className="flex items-center space-x-2 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={formData.recurrence_days.includes(day)}
+                                                onChange={() => handleRecurrenceDayToggle(day)}
+                                                className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                                            />
+                                            <span className="text-sm text-foreground">{day}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </Tooltip>
                         </div>
                     )}
 
@@ -308,37 +287,31 @@ export function ContentUpload({userId, stores, onSuccess}: ContentUploadProps) {
                         <div className="text-sm text-destructive">{error}</div>
                     )}
 
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild className="w-full">
-                                <Button
-                                    type="submit"
-                                    className="w-full disabled:opacity-70"
-                                    disabled={loading || files.length === 0 || (stores?.length ?? 0) === 0 || (selectedStoreIds?.length ?? 0) === 0}
-                                    variant="default"
-                                    size="lg"
-                                >
-                                    {loading ? <LoadingSpinner text="Uploading..."/> : (
-                                        <>
-                                            <Upload className="w-4 h-4 mr-2"/>
-                                            Upload Content
-                                        </>
-                                    )}
-                                </Button>
-                            </TooltipTrigger>
-                             <TooltipContent>
-                                <p>
-                                    {(stores?.length ?? 0) === 0
-                                        ? "No stores available"
-                                        : (selectedStoreIds?.length ?? 0) === 0
-                                            ? "Please select at least one store"
-                                            : files.length === 0
-                                                ? "Please select files to upload"
-                                                : "Upload your selected content"}
-                                </p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
+                    <Tooltip
+                        content={
+                            (stores?.length ?? 0) === 0
+                                ? "No stores available"
+                                : (selectedStoreIds?.length ?? 0) === 0
+                                    ? "Please select at least one store"
+                                    : files.length === 0
+                                        ? "Please select files to upload"
+                                        : "Upload your selected content"
+                        }>
+                        <Button
+                            type="submit"
+                            className="w-full disabled:opacity-70"
+                            disabled={loading || files.length === 0 || (stores?.length ?? 0) === 0 || (selectedStoreIds?.length ?? 0) === 0}
+                            variant="default"
+                            size="lg"
+                        >
+                            {loading ? <LoadingSpinner text="Uploading..."/> : (
+                                <>
+                                    <Upload className="w-4 h-4 mr-2"/>
+                                    Upload Content
+                                </>
+                            )}
+                        </Button>
+                    </Tooltip>
                 </form>
             </CardContent>
         </Card>

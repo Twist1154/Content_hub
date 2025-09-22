@@ -2,7 +2,7 @@
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
 import { AdminHeader } from '@/components/admin/AdminHeader';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip } from '@/components/ui/tooltip';
 import { Database, Shield } from 'lucide-react';
 import { ContentManager } from '@/components/content/ContentManager';
 import { fetchAllContent } from '@/app/actions/data-actions';
@@ -29,16 +29,9 @@ export default async function AdminContentPage() {
                     <div className="flex items-center gap-2 mb-2">
                         <Database className="w-6 h-6 text-primary" />
                         <h2 className="text-xl font-semibold text-foreground">All Content</h2>
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger>
-                                    <Shield className="w-5 h-5 text-muted-foreground" />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>View and organize all client-submitted content</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
+                        <Tooltip content="View and organize all client-submitted content">
+                            <Shield className="w-5 h-5 text-muted-foreground" />
+                        </Tooltip>
                     </div>
                     <p className="text-muted-foreground">
                         Complete library of all client-uploaded marketing content with advanced filtering and organization.

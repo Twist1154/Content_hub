@@ -3,12 +3,7 @@
 
 import { Client } from '@/lib/types';
 import { ClientCard } from './ClientCard';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { Tooltip } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { Search, UserPlus, Users, Shield } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -53,33 +48,19 @@ export function ClientList({
                         {clients.length} client{clients.length !== 1 ? 's' : ''}
                     </div>
 
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button onClick={onInviteClick}>
-                                    <UserPlus className="w-4 h-4 mr-2"/>
-                                    Invite Client
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>Invite a new client to the platform</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
+                    <Tooltip content="Invite a new client to the platform">
+                        <Button onClick={onInviteClick}>
+                            <UserPlus className="w-4 h-4 mr-2"/>
+                            Invite Client
+                        </Button>
+                    </Tooltip>
 
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button onClick={onSyncClick} variant="outline">
-                                    <Shield className="w-4 h-4 mr-2"/>
-                                    Sync All Roles
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>Sync all users' app_metadata with their profile roles</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
+                    <Tooltip content="Sync all users' app_metadata with their profile roles">
+                        <Button onClick={onSyncClick} variant="outline">
+                            <Shield className="w-4 h-4 mr-2"/>
+                            Sync All Roles
+                        </Button>
+                    </Tooltip>
                 </div>
             </div>
 

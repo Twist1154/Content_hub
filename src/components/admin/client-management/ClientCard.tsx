@@ -5,12 +5,7 @@ import { Client } from '@/app/actions/get-clients-action';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { Tooltip } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Download, Eye, Settings, Store, Upload } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -68,57 +63,34 @@ export function ClientCard({ client, onSelect, onDownloadData }: ClientCardProps
           </div>
 
           <div className="flex flex-col sm:flex-row gap-2">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Link href={`/dashboard?admin_view=${client.id}`}>
-                    <Button variant="outline" size="sm">
-                      <Eye className="w-4 h-4 mr-2" />
-                      View Dashboard
-                    </Button>
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>View client dashboard</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onDownloadData(client.id, client.email)}
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Download Data
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Download client data as CSV</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="default"
-                    size="sm"
-                    onClick={() => onSelect(client)}
-                  >
-                    <Settings className="w-4 h-4 mr-2" />
-                    Manage
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Manage client account</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Tooltip content="View client dashboard">
+              <Link href={`/dashboard?admin_view=${client.id}`}>
+                <Button variant="outline" size="sm">
+                  <Eye className="w-4 h-4 mr-2" />
+                  View Dashboard
+                </Button>
+              </Link>
+            </Tooltip>
+            <Tooltip content="Download client data as CSV">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onDownloadData(client.id, client.email)}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Download Data
+              </Button>
+            </Tooltip>
+            <Tooltip content="Manage client account">
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => onSelect(client)}
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Manage
+              </Button>
+            </Tooltip>
           </div>
         </div>
       </CardContent>

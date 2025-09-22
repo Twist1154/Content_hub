@@ -1,4 +1,3 @@
-
 // components/admin/AdminClientOverview.tsx
 
 'use client';
@@ -6,7 +5,7 @@
 import {useEffect, useState} from 'react';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {Button} from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip } from '@/components/ui/tooltip';
 import {Badge} from '@/components/ui/badge';
 import {Activity, Calendar, Eye, Store, TrendingUp, Upload, Users} from 'lucide-react';
 import {format} from 'date-fns';
@@ -147,21 +146,14 @@ export function AdminClientOverview() {
                                     </div>
 
                                     <div className="flex gap-2 ml-4">
-                                        <TooltipProvider>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Link href={`/dashboard?admin_view=${client.id}`}>
-                                                        <Button variant="outline" size="sm">
-                                                            <Eye className="w-4 h-4 mr-1"/>
-                                                            View
-                                                        </Button>
-                                                    </Link>
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                    <p>View client dashboard</p>
-                                                </TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
+                                        <Tooltip content="View client dashboard">
+                                            <Link href={`/dashboard?admin_view=${client.id}`}>
+                                                <Button variant="outline" size="sm">
+                                                    <Eye className="w-4 h-4 mr-1"/>
+                                                    View
+                                                </Button>
+                                            </Link>
+                                        </Tooltip>
                                     </div>
                                 </div>
                             ))}

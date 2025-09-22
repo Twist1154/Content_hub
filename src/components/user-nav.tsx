@@ -1,13 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipProvider, TooltipContent } from '@/components/ui/tooltip';
+import { Tooltip } from '@/components/ui/tooltip';
 import { User, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// We create sub-components for a flexible API
 interface UserNavProps {
     email: string;
     children: React.ReactNode;
@@ -19,25 +17,18 @@ export function UserNav({ email, children }: UserNavProps) {
     return (
         <>
             <div className="relative">
-                 <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setDropdownOpen(!dropdownOpen)}
-                                className="flex items-center gap-2"
-                            >
-                                <User className="w-4 h-4" />
-                                <span className="hidden sm:inline">{email}</span>
-                                <ChevronDown className={cn('w-4 h-4 transition-transform', dropdownOpen && 'rotate-180')} />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>User menu</p>
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
+                <Tooltip content="User menu">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setDropdownOpen(!dropdownOpen)}
+                        className="flex items-center gap-2"
+                    >
+                        <User className="w-4 h-4" />
+                        <span className="hidden sm:inline">{email}</span>
+                        <ChevronDown className={cn('w-4 h-4 transition-transform', dropdownOpen && 'rotate-180')} />
+                    </Button>
+                </Tooltip>
                 {dropdownOpen && (
                     <div className="absolute right-0 mt-2 w-64 bg-popover rounded-lg shadow-lg border border-border py-1 z-50">
                         {children}

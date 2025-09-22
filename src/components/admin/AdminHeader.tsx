@@ -4,7 +4,7 @@
 
 import {useState} from 'react';
 import {useRouter} from 'next/navigation';
-import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from '@/components/ui/tooltip';
+import {Tooltip} from '@/components/ui/tooltip';
 import {Breadcrumb} from '@/components/ui/breadcrumb';
 import {LogOut, Settings, Shield, User, Users} from 'lucide-react';
 import {ThemeSwitcher} from '@/components/ui/ThemeSwitcher';
@@ -49,16 +49,9 @@ export function AdminHeader({user, title = 'Admin Dashboard', breadcrumbItems}: 
                                 <div>
                                     <div className="flex items-center gap-2">
                                         <h1 className="text-2xl font-bold text-foreground">{title}</h1>
-                                         <TooltipProvider>
-                                            <Tooltip>
-                                                <TooltipTrigger>
-                                                    <Shield className="w-5 h-5 text-primary"/>
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                    Admin dashboard with full system access
-                                                </TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
+                                         <Tooltip content="Admin dashboard with full system access">
+                                            <Shield className="w-5 h-5 text-primary"/>
+                                        </Tooltip>
                                     </div>
                                     <Breadcrumb
                                         items={breadcrumbItems || defaultBreadcrumbs}
