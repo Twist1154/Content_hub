@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip } from '@/components/ui/tooltip';
 import { format } from 'date-fns';
-import { CheckSquare, Square, ExternalLink, Video, Music, Trash2 } from 'lucide-react'; // --- NEW: Import Trash2 ---
+import { CheckSquare, Square, ExternalLink, Video, Music, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // ---  these are now in a shared utils file ---
@@ -18,7 +18,7 @@ import { ContentItem } from '@/lib/types';
 interface ContentCardProps {
     item: ContentItem;
     isSelected: boolean;
-    onSelectItem: (id: string) => void;
+    onSelectItem: (id: string, shiftKey: boolean) => void;
     onViewDetails: (item: ContentItem) => void;
     isAdminView?: boolean;
     onDeleteItem?: (item: ContentItem) => void;
@@ -39,7 +39,7 @@ export function ContentCard({
 
     const handleSelectClick = (e: React.MouseEvent) => {
         e.stopPropagation();
-        onSelectItem(item.id);
+        onSelectItem(item.id, e.shiftKey);
     };
 
     // --- NEW: Handler for the delete button ---
@@ -110,20 +110,16 @@ export function ContentCard({
                     {item.title}
                 </h3>
                 <div className="space-y-1 text-xs text-muted-foreground">
-                    <p className="font-medium truncate text-foreground/80">{item.stores?.name ?? 'Unknown Store'}</p>
-                    <p className="truncate">{item.stores?.brand_company ?? 'Unknown Company'}</p>
+                    <p className="font-medium truncate text-foreground/80">{item.stores?.name || 'Unknown Store'}</p>
+                    <p className="truncate">{item.stores?.brand_company || 'Unknown Company'}</p>
                     <p>{formatFileSize(item.file_size)}</p>
                 </div>
                 <div className="mt-2 pt-2 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
                     <span>{format(new Date(item.created_at), 'MMM dd, yyyy')}</span>
-                    {item.user_email && (
-                        <span className="truncate" title={item.user_email}>
-                           {item.user_email}
-                        </span>
-                    )}
+                    <span className="capitalize">{item.type}</span>
                 </div>
 
-                {isAdminView && (
+                {isAdminView && onDeleteItem && (
                     <div className="mt-2 pt-2 border-t border-border flex items-center justify-end">
                         <Tooltip content="Delete this content permanently">
                             <Button
