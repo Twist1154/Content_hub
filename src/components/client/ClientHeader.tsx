@@ -1,28 +1,22 @@
+// components/client/ClientHeader.tsx
 
 'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { Breadcrumb } from '@/components/ui/breadcrumb';
-import { LogOut, User, Settings, Shield, Eye, ChevronLeft } from 'lucide-react';
-import { ThemeSwitcher } from '@/components/ui/ThemeSwitcher';
-import { ConfirmModal } from '@/components/ui/ConfirmModal';
-import { UserNav } from '@/components/user-nav';
-import { Logo } from '@/components/logo';
 import { signOut } from '@/app/actions/auth-actions';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import { ThemeSwitcher } from '@/components/ui/ThemeSwitcher';
+import { UserNav } from '@/components/user-nav';
+import { ChevronLeft, Eye } from 'lucide-react';
+import { Breadcrumb } from '../ui/breadcrumb';
 
 interface ClientHeaderProps {
-  user: any; // The currently authenticated user (could be an admin)
-  isAdminView: boolean;
-  viewingClient: any; // The client being viewed (user object with profile)
+    user: any; // The currently authenticated user (could be an admin)
+    isAdminView: boolean;
+    viewingClient: any; // The client being viewed (user object with profile)
 }
 
 export function ClientHeader({

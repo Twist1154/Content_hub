@@ -1,3 +1,4 @@
+// app/dashboard/page.tsx
 
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
@@ -10,10 +11,10 @@ import { DashboardClient } from '@/components/client/DashboardClient';
 
 export default async function Dashboard(
   props: {
-    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+    searchParams: { [key: string]: string | string[] | undefined };
   }
 ) {
-  const searchParams = await props.searchParams;
+  const searchParams = props.searchParams;
   const user = await getCurrentUser();
   if (!user || !user.profile) redirect('/auth/client/signin');
 
@@ -29,14 +30,17 @@ export default async function Dashboard(
   // Use a single try...catch block for all data fetching for this page
   try {
     // If it's an admin view, we first need to fetch the client's profile for the header
-  if (isAdminView) {
-      const profileResult = await fetchClientProfileById(adminViewClientId);
-      if (!profileResult.success || !profileResult.profile) {
-        // If the client profile doesn't exist, it's a 404
-        return notFound();
+    if (isAdminView) {
+        const profileResult = await fetchClientProfileById(adminViewClientId);
+        if (!profileResult.success || !profileResult.profile) {
+          // If the client profile doesn't exist, it's a 404
+          return notFound();
+        }
+        // IMPORTANT: The viewingClient should have the TARGET client's profile, but the overall user object
+        // should still be the admin's user object for permission checks in the header.
+        // We'll pass the client's profile separately to the header.
+        viewingClient = { ...user, profile: profileResult.profile };
       }
-      viewingClient = { ...user, profile: profileResult.profile };
-    }
 
     // Fetch stores and content stats in parallel for the target user
       const [storesResult, contentStatsResult] = await Promise.all([
@@ -55,16 +59,11 @@ export default async function Dashboard(
 
   return (
     <div className="min-h-screen bg-background">
-      <ClientHeader
-        user={user}
-        isAdminView={isAdminView}
-        viewingClientProfile={viewingClient.profile}
-      />
       <DashboardClient
           userId={targetUserId}
           isAdminView={isAdminView}
           initialStores={stores}
-            contentStats={contentStats}
+          contentStats={contentStats}
       />
     </div>
   );
