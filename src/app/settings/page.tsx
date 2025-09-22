@@ -72,7 +72,11 @@ export default async function SettingsPage() {
             <ClientHeader user={user} isAdminView={false} viewingClientProfile={user.profile} />
             <main className="container mx-auto px-4 py-8">
                 <div className="max-w-2xl mx-auto space-y-6">
-                    {/* The title is now in the header */}
+                    <div className="text-center mb-8">
+                        <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
+                        <p className="text-muted-foreground">Customize your dashboard experience and preferences</p>
+                    </div>
+
                     <SettingsSection icon={Bell} title="Notifications">
                         <ToggleSetting
                             id="email-notifications"
