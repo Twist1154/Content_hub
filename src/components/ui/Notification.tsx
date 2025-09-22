@@ -3,28 +3,28 @@
 
 import { useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { CheckCircle, AlertCircle, Info, X } from 'lucide-react';
+import { CheckCircle, AlertTriangle, Info, X } from 'lucide-react';
 
 const notificationVariants = {
   success: {
-    bg: 'bg-green-100 dark:bg-green-900/30',
-    border: 'border-green-400 dark:border-green-600',
-    iconColor: 'text-green-500 dark:text-green-400',
-    textColor: 'text-green-800 dark:text-green-200',
+    bg: 'bg-primary/10',
+    border: 'border-primary/20',
+    iconColor: 'text-primary',
+    textColor: 'text-primary',
     Icon: CheckCircle,
   },
   error: {
-    bg: 'bg-red-100 dark:bg-red-900/30',
-    border: 'border-red-400 dark:border-red-600',
-    iconColor: 'text-red-500 dark:text-red-400',
-    textColor: 'text-red-800 dark:text-red-200',
-    Icon: AlertCircle,
+    bg: 'bg-destructive/10',
+    border: 'border-destructive/20',
+    iconColor: 'text-destructive',
+    textColor: 'text-destructive',
+    Icon: AlertTriangle,
   },
   info: {
-    bg: 'bg-blue-100 dark:bg-blue-900/30',
-    border: 'border-blue-400 dark:border-blue-600',
-    iconColor: 'text-blue-500 dark:text-blue-400',
-    textColor: 'text-blue-800 dark:text-blue-200',
+    bg: 'bg-accent/50',
+    border: 'border-accent',
+    iconColor: 'text-accent-foreground',
+    textColor: 'text-accent-foreground',
     Icon: Info,
   },
 };
@@ -59,10 +59,10 @@ export function Notification({
   return (
     <div
       className={cn(
-        'fixed top-5 right-5 w-full max-w-sm rounded-lg shadow-lg border-l-4 transition-transform transform z-50',
+        'fixed top-5 right-5 w-full max-w-sm rounded-lg shadow-lg border-l-4 transition-all transform z-50',
         variant.bg,
         variant.border,
-        show ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
+        show ? 'translate-x-0 opacity-100 animate-in fade-in-0 slide-in-from-top-4' : 'translate-x-full opacity-0'
       )}
       role="alert"
     >
@@ -77,9 +77,10 @@ export function Notification({
           <button
             onClick={onClose}
             className={cn(
-              'inline-flex rounded-md p-1.5 focus:outline-none focus:ring-2 focus:ring-offset-2',
-              variant.textColor,
+              'inline-flex rounded-full p-1.5 focus:outline-none focus:ring-2 focus:ring-offset-2 hover:bg-current/10 transition-colors',
+              variant.textColor
             )}
+            aria-label="Close notification"
           >
             <span className="sr-only">Close</span>
             <X className="h-5 w-5" />

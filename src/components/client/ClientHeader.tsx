@@ -4,7 +4,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { signOut } from '@/app/actions/auth-actions';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
@@ -12,8 +11,7 @@ import { ThemeSwitcher } from '@/components/ui/ThemeSwitcher';
 import { UserNav, UserNavHeader, UserNavItem, UserNavSeparator } from '@/components/user-nav';
 import { ChevronLeft, Eye, LogOut, Settings, User as UserIcon } from 'lucide-react';
 import { Breadcrumb } from '../ui/breadcrumb';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
-import { Shield } from 'lucide-react';
+import { signOut } from '@/app/actions/auth-actions';
 
 interface ClientHeaderProps {
     user: any;
@@ -25,35 +23,10 @@ export function ClientHeader({ user, isAdminView, viewingClient }: ClientHeaderP
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const router = useRouter();
 
-    const handleLogout = async () => {
-        try {
-            const response = await fetch('/api/auth/signout', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
-
-            const data = await response.json();
-
-            if (response.ok && data.success) {
-                // Clear any local storage or session data if needed
-                localStorage.clear();
-                sessionStorage.clear();
-
-                // Redirect to home page
-                router.push('/');
-                router.refresh(); // Force a refresh to clear any cached data
-            } else {
-                console.error('Logout failed:', data.error);
-                // Still redirect even if there's an error to prevent being stuck
-                router.push('/');
-            }
-        } catch (error) {
-            console.error('Logout error:', error);
-            // Fallback: still redirect to home page
-            router.push('/');
-        }
+    const handleLogout = () => {
+        signOut();
+        router.push('/');
+        router.refresh();
     };
 
     const confirmLogout = () => {
