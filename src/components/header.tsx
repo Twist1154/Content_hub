@@ -3,13 +3,14 @@
 import Link from 'next/link';
 import { Button } from './ui/button';
 import { Logo } from './logo';
-import { UserNav } from './user-nav';
 import { MobileNav } from './mobile-nav';
 import { ThemeSwitcher } from './ui/ThemeSwitcher';
 import { signOut } from '@/app/actions/auth-actions';
 import { getCurrentUser } from '@/lib/auth';
 import { AdminHeader } from '@/components/admin/AdminHeader';
+import { ClientHeader } from '@/components/client/ClientHeader';
 import { headers } from 'next/headers';
+import { fetchClientProfileById } from '@/app/actions/data-actions';
 
 async function getPathname() {
     const headersList = await headers();
@@ -61,19 +62,25 @@ export default async function Header() {
   const user = await getCurrentUser();
   const pathname = await getPathname();
   
-  if (user && user.profile?.role === 'admin') {
+  if (user && user.profile?.role === 'admin' && pathname.startsWith('/admin')) {
     const props = getAdminHeaderProps(pathname, user);
     return <AdminHeader {...props} />;
   }
   
   if (user) {
-    // The ClientHeader is smart enough to figure out its own title and breadcrumbs
-    // But we need to pass it the user and view context
      const headersList = await headers();
      const adminViewClientId = new URLSearchParams(headersList.get('x-search') || '').get('admin_view');
      const isAdminView = !!(user.profile?.role === 'admin' && adminViewClientId);
 
-    return null; // ClientHeader is rendered in the page layout itself
+     let viewingClient = user;
+     if (isAdminView) {
+        const profileResult = await fetchClientProfileById(adminViewClientId as string);
+        if (profileResult.success && profileResult.profile) {
+            viewingClient = { ...user, profile: profileResult.profile };
+        }
+     }
+
+    return <ClientHeader user={user} isAdminView={isAdminView} viewingClient={viewingClient} />;
   }
 
   // Guest header

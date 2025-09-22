@@ -3,7 +3,6 @@
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
 import { notFound } from 'next/navigation';
-import { ClientHeader } from '@/components/client/ClientHeader';
 import { fetchStoresByUserId, fetchContentStatsByUserId, fetchClientProfileById } from '@/app/actions/data-actions';
 import { DashboardClient } from '@/components/client/DashboardClient';
 
@@ -25,8 +24,6 @@ export default async function Dashboard(
   // Determine the ID of the user whose data we need to fetch
   const targetUserId = isAdminView ? adminViewClientId : user.id;
 
-  let viewingClient = user;
-
   // Use a single try...catch block for all data fetching for this page
   try {
     // If it's an admin view, we first need to fetch the client's profile for the header
@@ -36,10 +33,6 @@ export default async function Dashboard(
           // If the client profile doesn't exist, it's a 404
           return notFound();
         }
-        // IMPORTANT: The viewingClient should have the TARGET client's profile, but the overall user object
-        // should still be the admin's user object for permission checks in the header.
-        // We'll pass the client's profile separately to the header.
-        viewingClient = { ...user, profile: profileResult.profile };
       }
 
     // Fetch stores and content stats in parallel for the target user

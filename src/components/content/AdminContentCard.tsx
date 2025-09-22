@@ -3,12 +3,12 @@
 
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { Download, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 import { ContentItem } from '@/lib/types';
-import { getStatusBadge, formatFileSize, getTypeIcon } from '@/lib/content-utils.tsx';
+import { getStatusBadge, formatFileSize, getTypeIcon } from '@/lib/content-utils';
 
 interface AdminContentCardProps {
     item: ContentItem;
@@ -47,30 +47,16 @@ export function AdminContentCard({ item, onClick }: AdminContentCardProps) {
 
                 <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
                     <div className="flex gap-2">
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); onClick(item); }}>
-                                        <ExternalLink className="w-4 h-4" />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>View details</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                         <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); window.open(item.file_url, '_blank'); }}>
-                                        <Download className="w-4 h-4" />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                     <p>Download file</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
+                        <Tooltip content="View details">
+                            <Button variant="outline" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); onClick(item); }}>
+                                <ExternalLink className="w-4 h-4" />
+                            </Button>
+                        </Tooltip>
+                         <Tooltip content="Download file">
+                            <Button variant="outline" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); window.open(item.file_url, '_blank'); }}>
+                                <Download className="w-4 h-4" />
+                            </Button>
+                        </Tooltip>
                     </div>
                 </div>
 
