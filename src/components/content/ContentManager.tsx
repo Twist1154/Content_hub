@@ -385,7 +385,7 @@ export function ContentManager({
                                     key={item.id}
                                     item={item}
                                     isSelected={selectedItems.includes(item.id)}
-                                    onSelectItem={(id: string) => handleSelectItem(id, false)}
+                                    onSelectItem={(id, shift) => handleSelectItem(id, shift)}
                                     onViewDetails={() => setSelectedContent(item)}
                                     isAdminView={isAdminView}
                                     onDeleteItem={handleDeleteRequest}
