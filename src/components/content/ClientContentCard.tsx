@@ -2,7 +2,7 @@
 // src/components/content/ClientContentCard.tsx
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import FileIcon from '@/components/file-icon';
+import FileIcon from '@/components/FileIcon';
 import { formatBytes, cn } from '@/lib/utils';
 import type { ContentItem, ViewMode } from '@/lib/types';
 import Image from 'next/image';
