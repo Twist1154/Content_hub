@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
@@ -89,58 +90,51 @@ export async function getUserAndProfile(userId: string, userType: 'client' | 'ad
     error?: string
 }> {
     try {
-        const supabase = await createClient() as SupabaseClient;
+        // Use the service role client to be able to fetch any user's profile, including admins.
+        const supabase = await createClient({ useServiceRole: true }) as SupabaseClient;
 
-        const {data: {user}} = await supabase.auth.getUser();
+        // Fetch the user object from the auth schema
+        const { data: { user }, error: userError } = await supabase.auth.admin.getUserById(userId);
 
-        if (!user) {
-            return {success: false, error: 'No user found'};
+        if (userError || !user) {
+            console.error('Error fetching user by ID:', userError);
+            return { success: false, error: 'No user found or error fetching user.' };
         }
 
-        const {data: profile, error} = await supabase
+        // Fetch the corresponding profile from the public schema
+        const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', user.id)
             .single();
 
-        if (error) {
-            console.error('Profile fetch error:', error);
-
-            // Create profile if it doesn't exist
-            const {data: newProfile, error: insertError} = await supabase
+        if (profileError) {
+            // This can happen if a user was created in Auth but the profile trigger failed.
+            // We can attempt to create it here as a fallback.
+            console.warn(`Profile for user ${user.id} not found, attempting to create one.`);
+            const { data: newProfile, error: insertError } = await supabase
                 .from('profiles')
                 .insert({
                     id: user.id,
                     email: user.email!,
-                    role: userType
+                    role: userType // Use the provided userType for the new profile
                 })
                 .select()
                 .single();
 
             if (insertError) {
-                console.error('Error creating profile:', insertError);
-                // Return user with default profile structure
-                return {
-                    success: true,
-                    user: {
-                        ...user,
-                        profile: {
-                            id: user.id,
-                            email: user.email!,
-                            role: userType,
-                            created_at: new Date().toISOString()
-                        }
-                    }
-                };
+                console.error('Error creating profile as fallback:', insertError);
+                // Return the user object even if profile creation fails
+                return { success: true, user: { ...user, profile: { role: userType } } };
             }
-
-            return {success: true, user: {...user, profile: newProfile}};
+             return { success: true, user: { ...user, profile: newProfile } };
         }
 
-        return {success: true, user: {...user, profile}};
+        // Return the user merged with their profile
+        return { success: true, user: { ...user, profile } };
     } catch (error: any) {
-        console.error('Unexpected error getting user and profile:', error);
-        return {success: false, error: error.message};
+        console.error('Unexpected error in getUserAndProfile:', error);
+        return { success: false, error: error.message };
     }
 }
 
