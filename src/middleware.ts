@@ -8,8 +8,6 @@ export async function middleware(request: NextRequest) {
   const { supabase, response } = createClient(request);
 
   // This is the only call we need to make in middleware to refresh the session
-  await supabase.auth.getSession();
-  
   const {
     data: { session },
   } = await supabase.auth.getSession();

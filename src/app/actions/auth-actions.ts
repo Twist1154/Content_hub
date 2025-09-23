@@ -76,6 +76,10 @@ export async function signInUser(prevState: any, formData: FormData) {
         return { success: false, error: error.message };
     }
     
+    if (!data.user) {
+        return { success: false, error: 'Sign in failed, no user returned.' };
+    }
+
     return { success: true, user: data.user };
 }
 

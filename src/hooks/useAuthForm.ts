@@ -4,7 +4,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/Toast';
 import { signInUser, registerUser, getUserAndProfile } from '@/app/actions/auth-actions';
 
 type AuthMode = 'signin' | 'signup';
@@ -12,7 +12,7 @@ type UserType = 'client' | 'admin';
 
 export function useAuthForm(mode: AuthMode, userType: UserType = 'client') {
     const router = useRouter();
-    const { toast } = useToast();
+    const { addToast } = useToast();
     const [loading, setLoading] = useState(false);
 
     const [formData, setFormData] = useState({
@@ -42,7 +42,7 @@ export function useAuthForm(mode: AuthMode, userType: UserType = 'client') {
 
         if (mode === 'signup') {
             if(submissionData.get('password') !== submissionData.get('confirmPassword')) {
-                toast({ variant: 'destructive', title: 'Passwords do not match' });
+                addToast({ type: 'error', title: 'Passwords do not match' });
                 setLoading(false);
                 return;
             }
@@ -50,10 +50,10 @@ export function useAuthForm(mode: AuthMode, userType: UserType = 'client') {
             const registerState = await registerUser(null, submissionData);
             
             if (registerState.success) {
-                toast({ title: 'Account Created', description: 'Please check your email to verify your account.' });
+                addToast({ type: 'success', title: 'Account Created', message: 'Please check your email to verify your account.' });
                 router.push(`/auth/${userType}/signin`);
             } else if (registerState.error) {
-                toast({ variant: 'destructive', title: 'Sign Up Failed', description: registerState.error });
+                addToast({ type: 'error', title: 'Sign Up Failed', message: registerState.error });
             }
 
         } else { // 'signin' mode
@@ -62,17 +62,17 @@ export function useAuthForm(mode: AuthMode, userType: UserType = 'client') {
             if (signInState.success && signInState.user) {
                 const profileResult = await getUserAndProfile(signInState.user.id);
                 if (profileResult.success) {
-                    toast({ title: 'Sign In Successful', description: 'Welcome back!' });
+                    addToast({ type: 'success', title: 'Sign In Successful', message: 'Welcome back!' });
                     if (profileResult.role === 'admin') {
                         router.push('/admin');
                     } else {
                         router.push('/dashboard');
                     }
                 } else {
-                    toast({ variant: 'destructive', title: 'Sign In Error', description: profileResult.error || 'Could not determine user role.' });
+                    addToast({ type: 'error', title: 'Sign In Error', message: profileResult.error || 'Could not determine user role.' });
                 }
             } else if (signInState.error) {
-                toast({ variant: 'destructive', title: 'Sign In Failed', description: signInState.error });
+                addToast({ type: 'error', title: 'Sign In Failed', message: signInState.error });
             }
         }
 
