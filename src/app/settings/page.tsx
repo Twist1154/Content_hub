@@ -7,6 +7,8 @@ import { Bell, Eye, Download, Trash2 } from 'lucide-react';
 import { Switch } from '@/components/ui/Switch';
 import { Label } from '@/components/ui/Label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
+import { BackButton } from '@/components/ui/BackButton';
+import { Breadcrumb } from '@/components/ui/Breadcrumb';
 
 // A component for each settings section
 const SettingsSection = ({ icon: Icon, title, children }: { icon: React.ElementType, title: string, children: React.ReactNode }) => (
@@ -70,6 +72,17 @@ export default async function SettingsPage() {
         <div className="min-h-screen bg-background">
             <main className="container mx-auto px-4 py-8">
                 <div className="max-w-2xl mx-auto space-y-6">
+                    <div className="mb-6">
+                        <BackButton href="/dashboard" label="Back to Dashboard" />
+                        <Breadcrumb
+                            items={[
+                                { label: 'Dashboard', href: '/dashboard' },
+                                { label: 'Settings', current: true }
+                            ]}
+                            className="mt-2"
+                        />
+                    </div>
+
                     <div className="text-center mb-8">
                         <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
                         <p className="text-muted-foreground">Customize your dashboard experience and preferences</p>

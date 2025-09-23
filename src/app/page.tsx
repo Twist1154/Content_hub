@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/Button";
 import Image from "next/image";
 import Link from "next/link";
-import { Logo } from "@/components/logo";
+import { Logo } from "@/components/Logo";
 import HeroSlider from "@/components/hero-slider";
 import { Footer } from "@/components/Footer";
 

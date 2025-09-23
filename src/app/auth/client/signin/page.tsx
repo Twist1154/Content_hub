@@ -1,8 +1,8 @@
 'use client';
 
 import { AuthForm } from '@/components/auth/AuthForm';
-import { BackButton } from '@/components/ui/back-button';
-import { Breadcrumb } from '@/components/ui/breadcrumb';
+import { BackButton } from '@/components/ui/BackButton';
+import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 

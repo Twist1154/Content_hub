@@ -3,20 +3,36 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { SupabaseClient } from '@supabase/supabase-js';
+import {ClientOverview} from "@/app/actions/client-overview-action";
 
 // Define the Client type locally as it's returned by this action
 export interface Client {
     id: string;
     email: string;
-    role: 'client';
+    role: string;
     created_at: string;
-    stores: {
+    stores?: {
         id: string;
         name: string;
         brand_company: string;
     }[];
-    content_count: number;
-    latest_upload: string | null;
+    content_count?: number;
+    latest_upload?: string;
+    active_campaigns?: number;
+}
+
+export interface OverviewStats {
+    totalClients: number;
+    activeClients: number;
+    totalUploads: number;
+    recentActivity: number;
+}
+
+export interface ClientOverviewResult {
+    success: boolean;
+    clients: ClientOverview[];
+    stats: OverviewStats;
+    error?: string;
 }
 
 
