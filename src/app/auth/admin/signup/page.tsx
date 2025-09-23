@@ -38,4 +38,3 @@ export default function AdminSignUp() {
     </div>
   );
 }
-
