@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 
 export function usePasswordResetFlow() {
     const [status, setStatus] = useState<'validating' | 'ready' | 'error' | 'submitting' | 'success'>('validating');
+    const [isNewUser, setIsNewUser] = useState(false);
     const [userEmail, setUserEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -27,12 +28,33 @@ export function usePasswordResetFlow() {
                      setStatus('error');
                      toast({ variant: 'destructive', title: 'Invalid Link', description: 'This link is invalid or has expired. Please try again.' });
                  }
+            } else if (event === 'SIGNED_IN') {
+                try {
+                    if (!session) throw new Error("Session is null after sign-in.");
+
+                    const user = session.user;
+                    setUserEmail(user.email || '');
+
+                    const { data: profile, error } = await supabase.from('profiles').select('id').eq('id', user.id).single();
+
+                    if (error && error.code === 'PGRST116') {
+                        setIsNewUser(true);
+                        await supabase.from('profiles').insert({ id: user.id, email: user.email!, role: 'client' });
+                    } else if (error) {
+                        throw error;
+                    }
+
+                    setStatus('ready');
+                } catch (err: any) {
+                    console.error('Validation Error:', err);
+                    toast({ variant: 'destructive', title: 'Invalid Link', description: 'This link is invalid or has expired. Please try again.' });
+                    setStatus('error');
+                }
             }
         });
-        
-        // Handle the case where the user lands on the page without a valid token in the URL hash
-        // The 'PASSWORD_RECOVERY' event only fires if the hash is present.
-         const timer = setTimeout(() => {
+
+        // Handle the case where the user lands on the page without a valid token in the URL
+        const timer = setTimeout(() => {
             if (status === 'validating') {
                 setStatus('error');
                 toast({ variant: 'destructive', title: 'Invalid Link', description: 'No valid session found. Please use the link from your email.' });
@@ -43,7 +65,7 @@ export function usePasswordResetFlow() {
             subscription.unsubscribe();
             clearTimeout(timer);
         };
-    }, [supabase, toast, status, router]);
+    }, [supabase, toast, router, status]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -51,26 +73,21 @@ export function usePasswordResetFlow() {
             toast({ variant: 'destructive', title: 'Password Mismatch', description: 'Passwords do not match.' });
             return;
         }
-         if (password.length < 8) {
-            toast({ variant: 'destructive', title: 'Password Too Short', description: 'Password must be at least 8 characters.' });
-            return;
-        }
-
 
         setStatus('submitting');
         try {
             const { error } = await supabase.auth.updateUser({ password });
             if (error) throw error;
 
-            toast({ title: 'Password Updated!', description: 'You can now sign in with your new password. Redirecting...' });
+            toast({ title: 'Password Updated!', description: 'Redirecting you now...' });
             setStatus('success');
-            
-            // Sign out to clear the recovery session
-            await supabase.auth.signOut();
+
+            const { data: { user } } = await supabase.auth.getUser();
+            const { data: stores } = await supabase.from('stores').select('id').eq('user_id', user!.id);
 
             setTimeout(() => {
-                router.push('/auth/client/signin');
-            }, 2000);
+                router.push((!stores || stores.length === 0) ? '/auth/setup-store' : '/dashboard');
+            }, 1500);
 
         } catch (err: any) {
             toast({ variant: 'destructive', title: 'Update Failed', description: err.message });
@@ -80,6 +97,7 @@ export function usePasswordResetFlow() {
 
     return {
         status,
+        isNewUser,
         userEmail,
         password,
         setPassword,
