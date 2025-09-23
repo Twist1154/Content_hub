@@ -1,7 +1,6 @@
 
 import type {Metadata} from 'next';
 import './globals.css';
-import Header from '@/components/header';
 import { Providers } from './providers';
 import { Inter } from 'next/font/google';
 import { ToastProvider } from '@/components/ui/Toast';
@@ -38,7 +37,6 @@ export default function RootLayout({
       <body className="antialiased">
         <Providers>
           <ToastProvider>
-            <Header />
             <main>{children}</main>
           </ToastProvider>
         </Providers>
