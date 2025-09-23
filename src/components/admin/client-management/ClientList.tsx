@@ -3,10 +3,10 @@
 
 import { Client } from '@/lib/types';
 import { ClientCard } from './ClientCard';
-import { Tooltip } from '@/components/ui/tooltip';
-import { Button } from '@/components/ui/button';
+import { Tooltip } from '@/components/ui/Tooltip';
+import { Button } from '@/components/ui/Button';
 import { Search, UserPlus, Users, Shield } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/Input';
 
 interface ClientListProps {
     clients: Client[];

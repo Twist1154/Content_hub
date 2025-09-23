@@ -1,6 +1,6 @@
 
 // src/components/content/ViewSwitcher.tsx
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { LayoutGrid, List } from 'lucide-react';
 import type { ViewMode } from '@/lib/types';
 

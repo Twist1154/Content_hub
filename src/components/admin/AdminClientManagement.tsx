@@ -3,7 +3,7 @@
 'use client';
 
 import {useCallback, useEffect, useMemo, useState} from 'react';
-import {LoadingSpinner} from '@/components/ui/loading-spinner';
+import {LoadingSpinner} from '@/components/ui/LoadingSpinner';
 import {ClientList} from '@/components/admin/client-management/ClientList';
 import {ClientManagementModal} from '@/components/admin/client-management/ClientManagementModal';
 import {InviteModal} from '@/components/admin/client-management/InviteModal';

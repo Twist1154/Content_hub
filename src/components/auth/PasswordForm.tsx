@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Eye, EyeOff, Shield, Lock } from 'lucide-react';
-import { FormField } from '../ui/form-field';
+import { FormField } from '../ui/FormField';
 
 interface PasswordFormProps {
     isNewUser: boolean;

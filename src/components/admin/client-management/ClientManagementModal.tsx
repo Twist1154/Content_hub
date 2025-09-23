@@ -5,11 +5,11 @@ import {useEffect, useState} from 'react';
 import type {Client} from '@/app/actions/get-clients-action';
 import {format} from 'date-fns';
 import Link from 'next/link';
-import {Button} from '@/components/ui/button';
-import {Input} from '@/components/ui/input';
-import {LoadingSpinner} from '@/components/ui/loading-spinner';
+import {Button} from '@/components/ui/Button';
+import {Input} from '@/components/ui/Input';
+import {LoadingSpinner} from '@/components/ui/LoadingSpinner';
 import {Download, Eye, Key, Mail, Settings, Shield, Trash2, X} from 'lucide-react';
-import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
+import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/Card';
 import {
     changeUserEmail,
     sendPasswordReset,

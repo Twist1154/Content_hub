@@ -12,17 +12,17 @@ import {
   Loader2,
   PlusCircle,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/Textarea";
 import {
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Card, CardContent } from "@/components/ui/card";
+} from "@/components/ui/Form";
+import { Card, CardContent } from "@/components/ui/Card";
 import { cn, formatBytes } from "@/lib/utils";
 import FileIcon from "../FileIcon";
 

@@ -3,16 +3,16 @@
 'use client';
 
 import {useEffect, useState} from 'react';
-import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
-import {Button} from '@/components/ui/button';
-import { Tooltip } from '@/components/ui/tooltip';
-import {Badge} from '@/components/ui/badge';
+import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/Card';
+import {Button} from '@/components/ui/Button';
+import {Tooltip} from '@/components/ui/Tooltip';
+import {Badge} from '@/components/ui/Badge';
 import {Activity, Calendar, Eye, Store, TrendingUp, Upload, Users} from 'lucide-react';
 import {format} from 'date-fns';
 import Link from 'next/link';
 import type {ClientOverview, OverviewStats} from '@/app/actions/client-overview-action';
 import {getClientOverview} from '@/app/actions/client-overview-action';
-import {LoadingSpinner} from '@/components/ui/loading-spinner'; // Import LoadingSpinner
+import {LoadingSpinner} from '@/components/ui/LoadingSpinner'; // Import LoadingSpinner
 import {StatCard} from '@/components/ui/StatCard';
 
 export function AdminClientOverview() {

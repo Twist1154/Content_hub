@@ -51,7 +51,7 @@ export function ContentPreviewTooltip({ item }: Props) {
                 </PreviewContainer>
             );
 
-        case 'music':
+        case 'audio':
             return (
                 // THEME: Replaced hardcoded colors with theme-aware semantic classes.
                 <div className="p-3 w-48 bg-popover rounded-md border border-border">

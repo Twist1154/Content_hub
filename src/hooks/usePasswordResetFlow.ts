@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
-import { useToast } from '@/components/ui/toast';
+import { useToast } from '@/components/ui/Toast';
 
 export function usePasswordResetFlow() {
     const [status, setStatus] = useState<'validating' | 'ready' | 'error' | 'submitting' | 'success'>('validating');

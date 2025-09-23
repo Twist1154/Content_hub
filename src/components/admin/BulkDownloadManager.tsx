@@ -2,12 +2,12 @@
 'use client';
 
 import {useCallback, useEffect, useState} from 'react';
-import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
-import {Button} from '@/components/ui/button';
-import {Input} from '@/components/ui/input';
-import {Tooltip} from '@/components/ui/tooltip';
-import {Badge} from '@/components/ui/badge';
-import {LoadingSpinner} from '@/components/ui/loading-spinner';
+import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/Card';
+import {Button} from '@/components/ui/Button';
+import {Input} from '@/components/ui/Input';
+import {Tooltip} from '@/components/ui/Tooltip';
+import {Badge} from '@/components/ui/Badge';
+import {LoadingSpinner} from '@/components/ui/LoadingSpinner';
 import {Archive, Filter, FileArchive} from 'lucide-react';
 import {format} from 'date-fns';
 import {fetchAllContent} from '@/app/actions/data-actions';

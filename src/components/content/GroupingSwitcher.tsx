@@ -1,6 +1,6 @@
 
 // src/components/content/GroupingSwitcher.tsx
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { Building, Store } from 'lucide-react';
 import type { GroupingMode } from '@/lib/types';
 

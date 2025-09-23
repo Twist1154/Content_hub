@@ -2,8 +2,8 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { Card, CardContent } from "@/components/ui/Card";
+import { Progress } from "@/components/ui/Progress";
 import { formatBytes } from "@/lib/utils";
 
 type FileDropUploadingProps = {

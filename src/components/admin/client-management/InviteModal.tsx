@@ -3,11 +3,11 @@
 'use client';
 
 import {useState} from 'react';
-import {Button} from '@/components/ui/button';
-import {Input} from '@/components/ui/input';
-import {LoadingSpinner} from '@/components/ui/loading-spinner';
+import {Button} from '@/components/ui/Button';
+import {Input} from '@/components/ui/Input';
+import {LoadingSpinner} from '@/components/ui/LoadingSpinner';
 import {UserPlus} from 'lucide-react';
-import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
+import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/Card';
 import { inviteUser } from '@/app/actions/user-management-actions';
 
 interface InviteModalProps {

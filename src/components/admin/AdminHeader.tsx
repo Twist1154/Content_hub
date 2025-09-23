@@ -4,12 +4,12 @@
 
 import {useState} from 'react';
 import {useRouter} from 'next/navigation';
-import {Tooltip} from '@/components/ui/tooltip';
-import {Breadcrumb} from '@/components/ui/breadcrumb';
+import {Tooltip} from '@/components/ui/Tooltip';
+import {Breadcrumb} from '@/components/ui/Breadcrumb';
 import {LogOut, Settings, Shield, User, Users} from 'lucide-react';
 import {ThemeSwitcher} from '@/components/ui/ThemeSwitcher';
 import {ConfirmModal} from '@/components/ui/ConfirmModal';
-import { UserNav, UserNavHeader, UserNavItem, UserNavSeparator } from "@/components/user-nav";
+import { UserNav, UserNavHeader, UserNavItem, UserNavSeparator } from "@/components/ui/UserNav";
 import {Logo} from "@/components/logo";
 import { signOut } from '@/app/actions/auth-actions';
 

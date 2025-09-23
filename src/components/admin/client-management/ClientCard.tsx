@@ -4,11 +4,11 @@
 import { Client } from '@/app/actions/get-clients-action';
 import { format } from 'date-fns';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Tooltip } from '@/components/ui/tooltip';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/Button';
+import { Tooltip } from '@/components/ui/Tooltip';
+import { Badge } from '@/components/ui/Badge';
 import { Calendar, Download, Eye, Settings, Store, Upload } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/Card';
 
 interface ClientCardProps {
   client: Client;

@@ -2,8 +2,8 @@
 "use client";
 
 import { CheckCircle, Copy, Lock } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/Button";
+import { Card, CardContent } from "@/components/ui/Card";
 import { useToast } from "@/hooks/use-toast";
 
 type FileDropSuccessProps = {

@@ -2,14 +2,14 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { Store, Building, MapPin } from 'lucide-react';
 import { addStore } from '@/app/actions/data-actions';
 import type { StoreData } from '@/app/actions/data-actions';
-import { FormField } from '@/components/ui/form-field';
+import { FormField } from '@/components/ui/FormField';
 
 interface StoreFormProps {
     userId: string;

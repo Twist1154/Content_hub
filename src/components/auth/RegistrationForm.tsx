@@ -2,10 +2,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FormField } from '@/components/ui/form-field';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { FormField } from '@/components/ui/FormField';
 import { User, Mail, Lock, Phone, AtSign, Eye, EyeOff } from 'lucide-react';
 import { useAuthForm } from '@/hooks/useAuthForm';
 import { cn } from '@/lib/utils';

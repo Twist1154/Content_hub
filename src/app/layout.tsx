@@ -4,7 +4,7 @@ import './globals.css';
 import Header from '@/components/header';
 import { Providers } from './providers';
 import { Inter } from 'next/font/google';
-import { ToastProvider } from '@/components/ui/toast';
+import { ToastProvider } from '@/components/ui/Toast';
 
 const inter = Inter({
   subsets: ['latin'],
