@@ -10,34 +10,34 @@ import {InviteModal} from '@/components/admin/client-management/InviteModal';
 import {DeleteConfirmationModal} from '@/components/admin/client-management/DeleteConfirmationModal';
 import {SyncModal} from '@/components/admin/client-management/SyncModal';
 import {Notification} from '@/components/ui/Notification';
-import type {Client} from '@/app/actions/get-clients-action';
-import {getAllClients} from '@/app/actions/get-clients-action';
+import type {User} from '@/app/actions/get-clients-action';
+import {getAllUsers} from '@/app/actions/get-clients-action';
 import {getClientDataAsCsv} from '@/app/actions/download-data-action';
 
 export function AdminClientManagement() {
     // --- STATE MANAGEMENT ---
     // Data and loading state
-    const [clients, setClients] = useState<Client[]>([]);
+    const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
 
     // Search and filtering
     const [searchTerm, setSearchTerm] = useState('');
-    const filteredClients = useMemo(() => {
+    const filteredUsers = useMemo(() => {
         if (!searchTerm) {
-            return clients;
+            return users;
         }
-        return clients.filter(client =>
-            client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            client.stores?.some(store =>
+        return users.filter(user =>
+            user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            user.stores?.some(store =>
                 store.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 store.brand_company.toLowerCase().includes(searchTerm.toLowerCase())
             )
         );
-    }, [clients, searchTerm]);
+    }, [users, searchTerm]);
 
     // Modal visibility and data
-    const [managingClient, setManagingClient] = useState<Client | null>(null);
-    const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
+    const [managingUser, setManagingUser] = useState<User | null>(null);
+    const [userToDelete, setUserToDelete] = useState<User | null>(null);
     const [isInviteModalOpen, setInviteModalOpen] = useState(false);
     const [isSyncModalOpen, setSyncModalOpen] = useState(false);
 
@@ -56,54 +56,54 @@ export function AdminClientManagement() {
     };
 
     // --- DATA FETCHING ---
-    const fetchClients = useCallback(async () => {
+    const fetchUsers = useCallback(async () => {
         setLoading(true);
         try {
-            const result = await getAllClients();
+            const result = await getAllUsers();
             if (result.success) {
-                setClients(result.clients);
+                setUsers(result.users);
             } else {
-                showNotification('error', result.error || 'Failed to fetch clients');
+                showNotification('error', result.error || 'Failed to fetch users');
             }
         } catch (error) {
-            showNotification('error', 'An unexpected error occurred while fetching clients');
+            showNotification('error', 'An unexpected error occurred while fetching users');
         }
         setLoading(false);
     }, []);
 
     useEffect(() => {
-        fetchClients();
-    }, [fetchClients]);
+        fetchUsers();
+    }, [fetchUsers]);
 
     // --- HANDLERS ---
-    const handleDownloadData = async (clientId: string, clientEmail: string) => {
-        const result = await getClientDataAsCsv(clientId, clientEmail);
+    const handleDownloadData = async (userId: string, userEmail: string) => {
+        const result = await getClientDataAsCsv(userId, userEmail);
         if (result.success && result.csvString) {
             const blob = new Blob([result.csvString], {type: 'text/csv'});
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = result.fileName || 'client-data.csv';
+            a.download = result.fileName || 'user-data.csv';
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
         } else {
-            showNotification('error', result.error || 'Failed to download client data');
+            showNotification('error', result.error || 'Failed to download user data');
         }
     };
 
     // This handler is passed to the manage modal, which calls it when a user needs to be deleted
-    const handleDeleteRequest = (client: Client) => {
-        setManagingClient(null); // Close the management modal
-        setClientToDelete(client); // Open the delete confirmation modal
+    const handleDeleteRequest = (user: User) => {
+        setManagingUser(null); // Close the management modal
+        setUserToDelete(user); // Open the delete confirmation modal
     };
 
     // --- RENDER LOGIC ---
     if (loading) {
         return (
             <div className="flex justify-center p-8">
-                <LoadingSpinner text="Loading clients..."/>
+                <LoadingSpinner text="Loading users..."/>
             </div>
         );
     }
@@ -118,12 +118,12 @@ export function AdminClientManagement() {
             />
 
             <ClientList
-                clients={filteredClients}
+                users={filteredUsers}
                 searchTerm={searchTerm}
                 onSearchChange={setSearchTerm}
                 onInviteClick={() => setInviteModalOpen(true)}
                 onSyncClick={() => setSyncModalOpen(true)}
-                onClientSelect={setManagingClient}
+                onUserSelect={setManagingUser}
                 onDownloadData={handleDownloadData}
             />
 
@@ -131,11 +131,11 @@ export function AdminClientManagement() {
             {/* Each modal now controls its own state and logic. The parent just toggles visibility */}
             {/* and provides callbacks for when actions are completed successfully. */}
 
-            {managingClient && (
+            {managingUser && (
                 <ClientManagementModal
-                    client={managingClient}
-                    onClose={() => setManagingClient(null)}
-                    onUpdate={fetchClients} // Tell the modal to call this to refresh the client list
+                    user={managingUser}
+                    onClose={() => setManagingUser(null)}
+                    onUpdate={fetchUsers} // Tell the modal to call this to refresh the user list
                     onDeleteRequest={handleDeleteRequest} // A special handler to open the delete modal
                     showNotification={showNotification}
                 />
@@ -144,22 +144,22 @@ export function AdminClientManagement() {
             <InviteModal
                 isOpen={isInviteModalOpen}
                 onClose={() => setInviteModalOpen(false)}
-                onInviteSuccess={fetchClients}
+                onInviteSuccess={fetchUsers}
                 showNotification={showNotification}
             />
 
             <DeleteConfirmationModal
-                isOpen={!!clientToDelete}
-                client={clientToDelete}
-                onClose={() => setClientToDelete(null)}
-                onDeleteSuccess={fetchClients}
+                isOpen={!!userToDelete}
+                user={userToDelete}
+                onClose={() => setUserToDelete(null)}
+                onDeleteSuccess={fetchUsers}
                 showNotification={showNotification}
             />
 
             <SyncModal
                 isOpen={isSyncModalOpen}
                 onClose={() => setSyncModalOpen(false)}
-                onSyncSuccess={fetchClients}
+                onSyncSuccess={fetchUsers}
                 showNotification={showNotification}
             />
         </div>

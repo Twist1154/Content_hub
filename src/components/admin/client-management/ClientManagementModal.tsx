@@ -2,7 +2,7 @@
 'use client';
 
 import {useEffect, useState} from 'react';
-import type {Client} from '@/app/actions/get-clients-action';
+import type {User} from '@/app/actions/get-clients-action';
 import {format} from 'date-fns';
 import Link from 'next/link';
 import {Button} from '@/components/ui/Button';
@@ -19,15 +19,15 @@ import { getClientDataAsCsv } from '@/app/actions/download-data-action';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
 interface ClientManagementModalProps {
-    client: Client | null,
+    user: User | null,
     onClose: () => void,
     onUpdate: () => void,
-    onDeleteRequest: (client: Client) => void,
+    onDeleteRequest: (user: User) => void,
     showNotification: (type: 'success' | 'error' | 'info', message: string) => void,
 }
 
 export function ClientManagementModal({
-    client,
+    user,
     onClose,
     onUpdate,
     onDeleteRequest,
@@ -39,10 +39,10 @@ export function ClientManagementModal({
     const [showRoleConfirm, setShowRoleConfirm] = useState(false);
 
     useEffect(() => {
-        if (!client) setNewEmail('');
-    }, [client]);
+        if (!user) setNewEmail('');
+    }, [user]);
 
-    if (!client) return null;
+    if (!user) return null;
 
     const runAction = async (actionName: string, actionFn: Promise<any>) => {
         setIsSubmitting(true);
@@ -51,7 +51,7 @@ export function ClientManagementModal({
             const result = await actionFn;
             if (result.success) {
                 showNotification('success', result.message || 'Action completed successfully.');
-                onUpdate(); // Refresh client list
+                onUpdate(); // Refresh user list
                 if (actionName === 'changeEmail') {
                     onClose();
                 }
@@ -67,16 +67,16 @@ export function ClientManagementModal({
     };
     
     const handleConfirmSwitchRole = async () => {
-        const newRole = client.role === 'admin' ? 'client' : 'admin';
+        const newRole = user.role === 'admin' ? 'client' : 'admin';
         await runAction(
             'switchRole',
-            switchUserRole(client.id, newRole)
+            switchUserRole(user.id, newRole)
         );
         setShowRoleConfirm(false);
     };
 
     const handleDownloadData = async () => {
-        const result = await getClientDataAsCsv(client.id, client.email);
+        const result = await getClientDataAsCsv(user.id, user.email);
         if (!result.success) showNotification('error', result.error || 'Failed to download data');
     };
 
@@ -90,7 +90,7 @@ export function ClientManagementModal({
                     <div className="flex justify-between items-start">
                         <CardTitle className="flex items-center gap-2">
                             <Settings className="w-5 h-5"/>
-                            Manage Client: {client.email}
+                            Manage User: {user.email}
                         </CardTitle>
                         <Button
                             variant="ghost"
@@ -101,10 +101,10 @@ export function ClientManagementModal({
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="grid grid-cols-2 gap-4 text-sm p-4 bg-muted/50 rounded-lg border border-border">
-                        <div><strong>Email:</strong> {client.email}</div>
-                        <div><strong>Role:</strong> {client.role}</div>
-                        <div><strong>Joined:</strong> {format(new Date(client.created_at), 'MMM dd, yyyy HH:mm')}</div>
-                        <div><strong>Total Uploads:</strong> {client.content_count || 0}</div>
+                        <div><strong>Email:</strong> {user.email}</div>
+                        <div><strong>Role:</strong> <span className="capitalize">{user.role}</span></div>
+                        <div><strong>Joined:</strong> {format(new Date(user.created_at), 'MMM dd, yyyy HH:mm')}</div>
+                        <div><strong>Total Uploads:</strong> {user.content_count || 0}</div>
                     </div>
 
                     <div className="border-t border-border pt-6">
@@ -128,7 +128,7 @@ export function ClientManagementModal({
                                     />
                                     <Button
                                         onClick={() => runAction('changeEmail',
-                                            changeUserEmail(client.id, newEmail))}
+                                            changeUserEmail(user.id, newEmail))}
                                         disabled={!newEmail || isSubmitting}
                                         size="sm">
                                         {isSubmitting && activeAction === 'changeEmail'
@@ -143,7 +143,7 @@ export function ClientManagementModal({
                                 </h5>
                                 <Button
                                     onClick={() => runAction('passwordReset',
-                                        sendPasswordReset(client.email))}
+                                        sendPasswordReset(user.email))}
                                     disabled={isSubmitting}
                                     variant="outline"
                                     className="w-full">
@@ -154,23 +154,23 @@ export function ClientManagementModal({
                             <div className="space-y-3">
                                 <h5 className="font-medium text-foreground flex items-center gap-2">
                                     <Shield className="w-4 h-4"/>Role Management</h5>
-                                <p className="text-sm text-muted-foreground">Current role: {client.role}. You can {client.role === 'admin' ? 'demote to client' : 'promote to admin'}.</p>
+                                <p className="text-sm text-muted-foreground">Current role: {user.role}. You can {user.role === 'admin' ? 'demote to client' : 'promote to admin'}.</p>
                                 <Button
                                     onClick={() => setShowRoleConfirm(true)}
                                     disabled={isSubmitting}
-                                    variant={client.role === 'admin' ? 'destructive' : 'default'}
+                                    variant={user.role === 'admin' ? 'destructive' : 'default'}
                                     className="w-full">
-                                    {isSubmitting && activeAction === 'switchRole' ? <LoadingSpinner size="sm"/> : (client.role === 'admin' ? 'Make Client' : 'Make Admin')}
+                                    {isSubmitting && activeAction === 'switchRole' ? <LoadingSpinner size="sm"/> : (user.role === 'admin' ? 'Make Client' : 'Make Admin')}
                                 </Button>
                             </div>
                         </div>
                     </div>
 
-                    {client.stores && client.stores.length > 0 && (
+                    {user.stores && user.stores.length > 0 && (
                         <div className="border-t border-border pt-6">
-                            <h4 className="font-medium text-foreground mb-2">Stores ({client.stores.length})</h4>
+                            <h4 className="font-medium text-foreground mb-2">Stores ({user.stores.length})</h4>
                             <div className="max-h-48 overflow-y-auto space-y-2 pr-2">
-                                {client.stores.map(store => (
+                                {user.stores.map(store => (
                                     <div key={store.id} className="p-3 bg-muted/50 rounded border border-border">
                                         <div className="font-medium text-foreground">{store.name}</div>
                                         <div className="text-sm text-muted-foreground">{store.brand_company}</div>
@@ -181,17 +181,19 @@ export function ClientManagementModal({
                     )}
 
                     <div className="flex gap-2 pt-4 border-t border-border">
-                        <Link href={`/dashboard?admin_view=${client.id}`} className="flex-1">
-                            <Button variant="default" className="w-full">
-                                <Eye className="w-4 h-4 mr-2"/>View Dashboard</Button>
-                        </Link>
+                        {user.role === 'client' && (
+                            <Link href={`/dashboard?admin_view=${user.id}`} className="flex-1">
+                                <Button variant="default" className="w-full">
+                                    <Eye className="w-4 h-4 mr-2"/>View Dashboard</Button>
+                            </Link>
+                        )}
                         <Button
                             variant="outline"
                             onClick={handleDownloadData}>
                             <Download className="w-4 h-4 mr-2"/>Download Data</Button>
                         <Button
                             variant="destructive"
-                            onClick={() => onDeleteRequest(client)}>
+                            onClick={() => onDeleteRequest(user)}>
                             <Trash2 className="w-4 h-4 mr-2"/>Delete Account</Button>
                     </div>
                 </CardContent>
@@ -200,9 +202,9 @@ export function ClientManagementModal({
                 isOpen={showRoleConfirm}
                 onClose={() => setShowRoleConfirm(false)}
                 onConfirm={handleConfirmSwitchRole}
-                title={client.role === 'admin' ? 'Demote to Client' : 'Promote to Admin'}
-                description={`Are you sure you want to ${client.role === 'admin' ? 'demote' : 'promote'} ${client.email} ${client.role === 'admin' ? 'to client' : 'to admin'}?`}
-                confirmText={client.role === 'admin' ? 'Make Client' : 'Make Admin'}
+                title={user.role === 'admin' ? 'Demote to Client' : 'Promote to Admin'}
+                description={`Are you sure you want to ${user.role === 'admin' ? 'demote' : 'promote'} ${user.email} ${user.role === 'admin' ? 'to client' : 'to admin'}?`}
+                confirmText={user.role === 'admin' ? 'Make Client' : 'Make Admin'}
             />
         </div>
     );

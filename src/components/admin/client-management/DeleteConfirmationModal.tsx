@@ -7,10 +7,10 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { deleteUser } from '@/app/actions/user-management-actions';
-import { Client } from "@/types/content";
+import { User } from "@/app/actions/get-clients-action";
 
 interface DeleteConfirmationModalProps {
-    client: Client | null;
+    user: User | null;
     isOpen: boolean;
     onClose: () => void;
     onDeleteSuccess: () => void;
@@ -18,7 +18,7 @@ interface DeleteConfirmationModalProps {
 }
 
 export function DeleteConfirmationModal({
-    client,
+    user,
     isOpen,
     onClose,
     onDeleteSuccess,
@@ -26,16 +26,16 @@ export function DeleteConfirmationModal({
 }: DeleteConfirmationModalProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    if (!isOpen || !client) return null;
+    if (!isOpen || !user) return null;
 
     const handleConfirm = async () => {
         setIsSubmitting(true);
-        const result = await deleteUser(client.id);
+        const result = await deleteUser(user.id);
         if (result.success) {
-            showNotification('success', 'Client account has been deleted.');
+            showNotification('success', 'User account has been deleted.');
             onDeleteSuccess();
         } else {
-            showNotification('error', result.error || 'Failed to delete client account.');
+            showNotification('error', result.error || 'Failed to delete user account.');
         }
         onClose();
         setIsSubmitting(false);
@@ -56,7 +56,7 @@ export function DeleteConfirmationModal({
                     <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
                         <p className="text-destructive text-sm">
                             <strong>Warning:</strong> This will permanently delete the user account for
-                            <strong> {client.email}</strong> and all associated data. This action cannot be undone.
+                            <strong> {user.email}</strong> and all associated data. This action cannot be undone.
                         </p>
                     </div>
 

@@ -4,11 +4,11 @@
 import { createClient } from '@/utils/supabase/server';
 import { SupabaseClient } from '@supabase/supabase-js';
 
-// Define the Client type locally as it's returned by this action
-export interface Client {
+// Define the User type to include both clients and admins
+export interface User {
     id: string;
     email: string;
-    role: 'client';
+    role: 'client' | 'admin';
     created_at: string;
     stores: {
         id: string;
@@ -20,10 +20,10 @@ export interface Client {
 }
 
 
-export async function getAllClients(): Promise<{ success: boolean, clients: Client[], error?: string }> {
+export async function getAllUsers(): Promise<{ success: boolean, users: User[], error?: string }> {
     const supabase = await createClient({useServiceRole: true}) as SupabaseClient;
 
-    // 1. Fetch all client profiles along with their stores
+    // 1. Fetch all user profiles (clients and admins) along with their stores
     const { data: profiles, error: profileError } = await supabase
         .from('profiles')
         .select(`
@@ -32,12 +32,11 @@ export async function getAllClients(): Promise<{ success: boolean, clients: Clie
             created_at,
             role,
             stores ( id, name, brand_company )
-        `)
-        .eq('role', 'client');
+        `);
 
     if (profileError) {
-        console.error('Error fetching clients:', profileError);
-        return { success: false, clients: [], error: profileError.message };
+        console.error('Error fetching users:', profileError);
+        return { success: false, users: [], error: profileError.message };
     }
 
     // 2. Fetch content counts for all users in one go
@@ -46,7 +45,7 @@ export async function getAllClients(): Promise<{ success: boolean, clients: Clie
 
     if (countError) {
         console.error('Error fetching content counts:', countError);
-        return { success: false, clients: [], error: countError.message };
+        return { success: false, users: [], error: countError.message };
     }
 
     // Create a map for easy lookup
@@ -57,15 +56,15 @@ export async function getAllClients(): Promise<{ success: boolean, clients: Clie
 
 
     // 3. Combine the data
-    const clients: Client[] = profiles.map(profile => ({
+    const users: User[] = profiles.map(profile => ({
         id: profile.id,
         email: profile.email,
         created_at: profile.created_at,
         stores: profile.stores,
         content_count: countsMap.get(profile.id)?.content_count || 0,
         latest_upload: countsMap.get(profile.id)?.latest_upload || null,
-        role: 'client'
+        role: profile.role as 'client' | 'admin'
     }));
 
-    return { success: true, clients };
+    return { success: true, users };
 }
