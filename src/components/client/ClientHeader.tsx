@@ -25,22 +25,29 @@ export function ClientHeader({ user, isAdminView, viewingClient }: ClientHeaderP
 
     const handleLogout = async () => {
         try {
-            await signOut();
-            // Clear any local storage or session data if needed
-            localStorage.clear();
-            sessionStorage.clear();
+            const result = await signOut();
+            if (result.success) {
+                // Clear any local storage or session data if needed
+                localStorage.clear();
+                sessionStorage.clear();
 
-            // Redirect to home page
-            router.push('/');
-            router.refresh(); // Force a refresh to clear any cached data
+                // Redirect to home page and refresh to clear cache
+                router.push('/');
+                router.refresh();
+            } else {
+                console.error('Logout failed:', result.error);
+                // Fallback: still redirect and refresh
+                router.push('/');
+                router.refresh();
+            }
         } catch (error) {
             console.error('Logout error:', error);
-            // Fallback: still redirect to home page
+            // Fallback: still redirect and refresh
             router.push('/');
+            router.refresh();
         }
     };
 
-    // REFACTOR: This function is now simpler. It just opens the modal.
     const confirmLogout = () => {
         setShowLogoutConfirm(true);
     };
@@ -56,14 +63,12 @@ export function ClientHeader({ user, isAdminView, viewingClient }: ClientHeaderP
                                 <Logo className="w-12 h-12" />
                                 <div>
                                     <div className="flex items-center gap-2">
-                                        {/* THEME: 'text-gray-900' becomes 'text-foreground'. */}
                                         <h1 className="text-2xl font-bold text-foreground">
                                             {isAdminView ? 'Admin View: Client Dashboard' : 'Client Dashboard'}
                                         </h1>
                                         {isAdminView && (
                                             <Tooltip
                                                 content="You are viewing this client's dashboard as an admin">
-                                                {/* THEME: 'text-orange-600' becomes 'text-primary' for consistency. */}
                                                 <Shield className="w-5 h-5 text-primary" />
                                             </Tooltip>
                                         )}
@@ -85,7 +90,6 @@ export function ClientHeader({ user, isAdminView, viewingClient }: ClientHeaderP
                         {/* Right side - User Menu */}
                         <div className="flex items-center gap-4">
                             {isAdminView && (
-                                // THEME: Replaced orange colors with accent theme colors.
                                 <div className="text-sm text-accent-foreground bg-accent px-3 py-1 rounded-full border border-border">
                                     <Eye className="w-4 h-4 inline mr-1" />
                                     Admin View
@@ -93,7 +97,6 @@ export function ClientHeader({ user, isAdminView, viewingClient }: ClientHeaderP
                             )}
                             <ThemeSwitcher />
 
-                            {/* REFACTOR: The entire old dropdown is replaced with the UserNav component */}
                             <UserNav email={isAdminView ? viewingClient?.profile?.email : user.email}>
                                 <UserNavHeader
                                     title={isAdminView ? 'Viewing as Admin' : 'Signed in as'}
@@ -120,7 +123,6 @@ export function ClientHeader({ user, isAdminView, viewingClient }: ClientHeaderP
                 </div>
             </header>
 
-            {/* REFACTOR: The old modal JSX is replaced with the ConfirmModal component */}
                 <ConfirmModal
                     isOpen={showLogoutConfirm}
                     onClose={() => setShowLogoutConfirm(false)}
@@ -128,9 +130,8 @@ export function ClientHeader({ user, isAdminView, viewingClient }: ClientHeaderP
                     title="Confirm Sign Out"
                     description="Are you sure you want to sign out? You'll need to sign in again to access your dashboard."
                     confirmText="Sign Out"
+                    confirmVariant="destructive"
                 />
-
-            {/* REFACTOR: The old backdrop is no longer needed here. It's inside UserNav. */}
         </>
     );
 }
