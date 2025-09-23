@@ -1,9 +1,11 @@
-// src/app/admin/downloads/page.tsx
+// app/admin/downloads/page.tsx
 
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
-import { Archive } from 'lucide-react';
 import { BulkDownloadManager } from '@/components/admin/BulkDownloadManager';
+import { AdminHeader } from '@/components/admin/AdminHeader';
+import { Tooltip } from '@/components/ui/tooltip';
+import { Download, Shield } from 'lucide-react';
 
 export default async function AdminDownloadsPage() {
     const user = await getCurrentUser();
@@ -13,18 +15,34 @@ export default async function AdminDownloadsPage() {
     }
 
     return (
-        <main className="container mx-auto px-4 py-8">
-            <div className="mb-8">
-                <div className="flex items-center gap-2 mb-2">
-                    <Archive className="w-6 h-6 text-primary" />
-                    <h2 className="text-xl font-semibold text-foreground">Bulk Content Download</h2>
-                </div>
-                <p className="text-muted-foreground">
-                    Filter and download multiple content items as a single ZIP archive.
-                </p>
-            </div>
+        // THEME: Use theme variables for the background.
+        <div className="min-h-screen bg-background">
+            <AdminHeader
+                user={user}
+                title="Bulk Downloads"
+                breadcrumbItems={[
+                                        { label: 'Admin Dashboard', href: '/admin' },
+                                        { label: 'Bulk Downloads', current: true }
+                                    ]}
+                                />
 
-            <BulkDownloadManager />
-        </main>
+            <main className="container mx-auto px-4 py-8">
+                <div className="mb-8">
+                    <div className="flex items-center gap-2 mb-2">
+                        {/* THEME: Use theme colors for the header. */}
+                        <Download className="w-6 h-6 text-primary" />
+                        <h2 className="text-xl font-semibold text-foreground">Download Manager</h2>
+                        <Tooltip content="Download content in bulk by client, location, or date range">
+                            <Shield className="w-5 h-5 text-muted-foreground" />
+                        </Tooltip>
+                    </div>
+                    <p className="text-muted-foreground">
+                        Download client content in bulk with advanced filtering options.
+                    </p>
+                </div>
+
+                <BulkDownloadManager />
+            </main>
+        </div>
     );
 }
