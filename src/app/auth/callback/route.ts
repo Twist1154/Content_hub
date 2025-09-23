@@ -1,31 +1,58 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
+import {SupabaseClient} from "@supabase/supabase-js";
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
-  
-  // The redirect URL that the user will be sent to after the callback.
+  const userType = searchParams.get('userType') || 'client';
   const next = searchParams.get('next') ?? '/';
 
   if (code) {
-    const supabase = createClient();
-    const { error, data: { session } } = await supabase.auth.exchangeCodeForSession(code);
+    const supabase = await createClient()as SupabaseClient;
 
-    if (!error) {
-       // The user's session is now active.
-       // The handle_new_user trigger in db.sql will have already created a profile.
-       // We can now redirect based on the user's role.
-      const userRole = session?.user?.user_metadata?.role;
-      if (userRole === 'admin') {
-        return NextResponse.redirect(`${origin}/admin`);
+    try {
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+      if (error) {
+        console.error('OAuth callback error:', error);
+        return NextResponse.redirect(`${origin}/auth/${userType}/signin?error=oauth_error`);
       }
-      return NextResponse.redirect(`${origin}/dashboard`);
+
+      if (data.user) {
+        // Check if profile exists, create if it doesn't
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+
+        if (profileError && profileError.code === 'PGRST116') {
+          // Profile doesn't exist, create it
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              id: data.user.id,
+              email: data.user.email!,
+              role: userType as 'client' | 'admin'
+            });
+
+          if (insertError) {
+            console.error('Error creating profile:', insertError);
+          }
+        }
+
+        // Redirect based on user type or existing profile role
+        const redirectPath = profile?.role === 'admin' || userType === 'admin' ? '/admin' : '/dashboard';
+        return NextResponse.redirect(`${origin}${redirectPath}`);
+      }
+    } catch (error) {
+      console.error('OAuth processing error:', error);
+      return NextResponse.redirect(`${origin}/auth/${userType}/signin?error=oauth_error`);
     }
   }
 
-  // If there's an error or no code, redirect to an error page or the sign-in page.
-  console.error('OAuth callback error:', 'No code or an error occurred.');
-  return NextResponse.redirect(`${origin}/auth/client/signin?error=oauth_error`);
+  // Return the user to an error page with instructions
+  return NextResponse.redirect(`${origin}/auth/${userType}/signin?error=oauth_error`);
 }
