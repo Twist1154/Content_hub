@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/Toast';
 import { Store, MapPin, Building, User, CheckCircle } from 'lucide-react';
 import { addStore } from '@/app/actions/data-actions';
 import type { StoreData } from '@/app/actions/data-actions';
@@ -25,7 +25,7 @@ function SetupStoreContent() {
     const [user, setUser] = useState<any>(null);
 
     const router = useRouter();
-    const { toast } = useToast();
+    const { addToast } = useToast();
     const supabase = createClient();
 
     useEffect(() => {
@@ -34,10 +34,10 @@ function SetupStoreContent() {
                 const { data: { user }, error } = await supabase.auth.getUser();
 
                 if (error || !user) {
-                    toast({
-                        variant: 'destructive',
+                    addToast({
+                        type: 'error',
                         title: 'Authentication Required',
-                        description: 'Please sign in to continue.'
+                        message: 'Please sign in to continue.'
                     });
                     router.push('/auth/client/signin');
                     return;
@@ -60,26 +60,26 @@ function SetupStoreContent() {
                 setValidating(false);
             } catch (err) {
                 console.error('User validation error:', err);
-                toast({
-                    variant: 'destructive',
+                addToast({
+                    type: 'error',
                     title: 'Validation Error',
-                    description: 'Failed to validate user session.'
+                    message: 'Failed to validate user session.'
                 });
                 router.push('/auth/client/signin');
             }
         };
 
         checkUser();
-    }, [supabase, toast, router]);
+    }, [supabase, addToast, router]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!user) {
-            toast({
-                variant: 'destructive',
+            addToast({
+                type: 'error',
                 title: 'Authentication Error',
-                description: 'User session not found. Please sign in again.'
+                message: 'User session not found. Please sign in again.'
             });
             return;
         }
@@ -99,9 +99,10 @@ function SetupStoreContent() {
                 throw new Error(result.error);
             }
 
-            toast({
+            addToast({
+                type: 'success',
                 title: 'Store Setup Complete!',
-                description: 'Your store information has been saved successfully.'
+                message: 'Your store information has been saved successfully.'
             });
 
             // Redirect to dashboard after a short delay
@@ -111,10 +112,10 @@ function SetupStoreContent() {
 
         } catch (err: any) {
             console.error('Store setup error:', err);
-            toast({
-                variant: 'destructive',
+            addToast({
+                type: 'error',
                 title: 'Setup Failed',
-                description: err.message || 'Failed to save store information. Please try again.'
+                message: err.message || 'Failed to save store information. Please try again.'
             });
         } finally {
             setLoading(false);

@@ -1,3 +1,4 @@
+
 // src/components/client/DashboardClient.tsx
 'use client';
 
@@ -14,7 +15,7 @@ import { Button } from '@/components/ui/Button';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { deleteUser } from '@/app/actions/user-management-actions';
 import type { ContentStats, Store as StoreType } from '@/types/content';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/Toast';
 
 interface DashboardClientProps {
     userId: string;
@@ -31,7 +32,7 @@ export function DashboardClient({
 }: DashboardClientProps) {
     const userFetchAction = () => fetchContentForUser(userId, { useServiceRole: isAdminView });
     const router = useRouter();
-    const { toast } = useToast();
+    const { addToast } = useToast();
 
     const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
     const [showAddStoreForm, setShowAddStoreForm] = useState(false);
@@ -40,17 +41,18 @@ export function DashboardClient({
     const handleDeleteClient = async () => {
         const result = await deleteUser(userId);
         if (result.success) {
-            toast({
+            addToast({
+                type: 'success',
                 title: 'Client Deleted',
-                description: 'The client account has been successfully deleted.',
+                message: 'The client account has been successfully deleted.',
             });
             router.push('/admin/clients');
             router.refresh();
         } else {
-             toast({
+             addToast({
+                type: 'error',
                 title: 'Error',
-                description: result.error || 'Failed to delete client.',
-                variant: 'destructive',
+                message: result.error || 'Failed to delete client.',
             });
         }
         setDeleteModalOpen(false);

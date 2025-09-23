@@ -5,7 +5,7 @@
 
 import { useState, useMemo } from 'react';
 import { createClient } from '@/utils/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/Toast';
 
 export type UserType = 'client' | 'admin';
 
@@ -13,12 +13,12 @@ export function useMagicLinkAuth(defaultUserType: UserType = 'client') {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
-  const { toast } = useToast();
+  const { addToast } = useToast();
   const supabase = useMemo(() => createClient(), []);
 
   const sendMagicLink = async (userType: UserType = defaultUserType) => {
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
-      toast({ variant: 'destructive', title: 'Invalid email', description: 'Please enter a valid email address.' });
+      addToast({ type: 'error', title: 'Invalid email', message: 'Please enter a valid email address.' });
       return;
     }
     setLoading(true);
@@ -32,9 +32,9 @@ export function useMagicLinkAuth(defaultUserType: UserType = 'client') {
       });
       if (error) throw error;
       setSent(true);
-      toast({ title: 'Magic link sent', description: 'Check your email for the sign-in link.' });
+      addToast({ type: 'success', title: 'Magic link sent', message: 'Check your email for the sign-in link.' });
     } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Failed to send link', description: err.message || 'Please try again.' });
+      addToast({ type: 'error', title: 'Failed to send link', message: err.message || 'Please try again.' });
     } finally {
       setLoading(false);
     }

@@ -4,7 +4,7 @@
 import { CheckCircle, Copy, Lock } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/Toast";
 
 type FileDropSuccessProps = {
   shareableLink: string | null;
@@ -17,14 +17,15 @@ export function FileDropSuccess({
   isPasswordProtected,
   reset,
 }: FileDropSuccessProps) {
-  const { toast } = useToast();
+  const { addToast } = useToast();
 
   const copyLink = () => {
     if (shareableLink) {
       navigator.clipboard.writeText(shareableLink);
-      toast({
+      addToast({
+        type: 'success',
         title: "Link Copied!",
-        description: "The shareable link has been copied to your clipboard.",
+        message: "The shareable link has been copied to your clipboard.",
       });
     }
   };

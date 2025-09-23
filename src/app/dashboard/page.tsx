@@ -2,7 +2,6 @@
 
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
-import { notFound } from 'next/navigation';
 import { fetchStoresByUserId, fetchContentStatsByUserId, fetchClientProfileById } from '@/app/actions/data-actions';
 import { DashboardClient } from '@/components/client/DashboardClient';
 
@@ -31,8 +30,8 @@ export default async function Dashboard(
     if (isAdminView) {
         const profileResult = await fetchClientProfileById(adminViewClientId);
         if (!profileResult.success || !profileResult.profile) {
-          // If the client profile doesn't exist, it's a 404
-          return notFound();
+          // If the client profile doesn't exist, redirect to a safe page
+          redirect('/admin/clients');
         }
       }
 
@@ -64,7 +63,7 @@ export default async function Dashboard(
 
   } catch (error) {
     console.error("Dashboard page render failed:", error);
-    // If any part of the data fetching process throws an error, show the not found page.
-    return notFound();
+    // If any part of the data fetching process throws an error, redirect.
+    redirect('/auth/client/signin');
   }
 }

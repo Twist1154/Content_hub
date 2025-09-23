@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { generateLinkAction } from "@/app/actions";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/Toast";
 import { createClient } from "@/utils/supabase/client";
 
 // Import the new state components
@@ -37,7 +37,7 @@ export function FileDrop() {
   const [isPending, startTransition] = useTransition();
 
   const supabase = createClient();
-  const { toast } = useToast();
+  const { addToast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -111,10 +111,10 @@ export function FileDrop() {
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     if (files.length === 0) {
-      toast({
+      addToast({
+        type: 'error',
         title: "No files selected",
-        description: "Please select at least one file to transfer.",
-        variant: "destructive",
+        message: "Please select at least one file to transfer.",
       });
       return;
     }
@@ -142,11 +142,11 @@ export function FileDrop() {
         setUploadStatus("success");
       } catch (error: any) {
         setUploadStatus("error");
-        toast({
+        addToast({
+          type: 'error',
           title: "Upload Failed",
-          description:
+          message:
             error.message || "Something went wrong. Please try again.",
-          variant: "destructive",
         });
       }
     });

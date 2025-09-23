@@ -1,3 +1,4 @@
+
 // components/admin/BulkDownloadManager.tsx
 'use client';
 
@@ -16,7 +17,7 @@ import type {ContentItem} from "@/types/content";
 import {ContentDetailModal} from "@/components/content/ContentDetailModal";
 import {formatFileSize} from "@/lib/content-utils";
 import {cn} from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/Toast';
 
 interface FilterOptions {
     startDate: string;
@@ -41,7 +42,7 @@ export function BulkDownloadManager() {
     });
 
     const [viewingItem, setViewingItem] = useState<ContentItem | null>(null);
-    const { toast } = useToast();
+    const { addToast } = useToast();
 
     const fetchContentCb = useCallback(async () => {
         setLoading(true);
@@ -59,15 +60,15 @@ export function BulkDownloadManager() {
             }
         } catch (error) {
             console.error('Error fetching content:', error);
-            toast({
-                variant: 'destructive',
+            addToast({
+                type: 'error',
                 title: 'Failed to load content',
-                description: error instanceof Error ? error.message : 'An unknown error occurred.',
+                message: error instanceof Error ? error.message : 'An unknown error occurred.',
             });
         } finally {
             setLoading(false);
         }
-    }, [toast]);
+    }, [addToast]);
 
     const applyFilters = useCallback(() => {
         let filtered = [...content];
@@ -139,10 +140,10 @@ export function BulkDownloadManager() {
             const fileUrls = selectedContent.map(item => item.file_url).filter(Boolean);
 
             if (fileUrls.length === 0) {
-                toast({
-                    variant: 'destructive',
+                addToast({
+                    type: 'error',
                     title: 'No Files to Download',
-                    description: 'The selected items do not have any downloadable files.',
+                    message: 'The selected items do not have any downloadable files.',
                 });
                 return;
             }
@@ -173,17 +174,18 @@ export function BulkDownloadManager() {
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
             
-            toast({
+            addToast({
+                type: 'success',
                 title: 'Download Started',
-                description: 'Your ZIP archive is being downloaded.',
+                message: 'Your ZIP archive is being downloaded.',
             });
 
         } catch (error) {
             console.error('Error downloading content:', error);
-            toast({
-                variant: 'destructive',
+            addToast({
+                type: 'error',
                 title: 'Download Failed',
-                description: error instanceof Error ? error.message : 'An unknown error occurred during download.',
+                message: error instanceof Error ? error.message : 'An unknown error occurred during download.',
             });
         } finally {
             setDownloading(false);

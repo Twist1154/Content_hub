@@ -11,7 +11,6 @@ import {Tooltip} from '@/components/ui/Tooltip';
 import {Download, ExternalLink, FileText, Image, Music, Video,X} from 'lucide-react';
 import {format} from 'date-fns';
 import {ContentItem} from '@/types/content';
-import { cn } from '@/lib/utils'; // Import cn for conditional classes
 
 interface ContentDetailModalProps {
     item: ContentItem | null;
