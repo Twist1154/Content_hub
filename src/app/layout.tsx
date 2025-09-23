@@ -1,10 +1,10 @@
 
 import type {Metadata} from 'next';
 import './globals.css';
-import { Toaster } from "@/components/ui/toaster";
 import Header from '@/components/header';
 import { Providers } from './providers';
 import { Inter } from 'next/font/google';
+import { ToastProvider } from '@/components/ui/toast';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -37,9 +37,10 @@ export default function RootLayout({
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body className="antialiased">
         <Providers>
-          <Header />
-          <main>{children}</main>
-          <Toaster />
+          <ToastProvider>
+            <Header />
+            <main>{children}</main>
+          </ToastProvider>
         </Providers>
       </body>
     </html>

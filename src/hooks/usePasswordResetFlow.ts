@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/toast';
 
 export function usePasswordResetFlow() {
     const [status, setStatus] = useState<'validating' | 'ready' | 'error' | 'submitting' | 'success'>('validating');
@@ -14,7 +14,7 @@ export function usePasswordResetFlow() {
     const [confirmPassword, setConfirmPassword] = useState('');
 
     const router = useRouter();
-    const { toast } = useToast();
+    const { addToast } = useToast();
     const supabase = createClient();
 
     // Effect for handling the initial token validation
@@ -26,7 +26,7 @@ export function usePasswordResetFlow() {
                     setStatus('ready');
                  } else {
                      setStatus('error');
-                     toast({ variant: 'destructive', title: 'Invalid Link', description: 'This link is invalid or has expired. Please try again.' });
+                     addToast({ type: 'error', title: 'Invalid Link', message: 'This link is invalid or has expired. Please try again.' });
                  }
             } else if (event === 'SIGNED_IN') {
                 try {
@@ -47,7 +47,7 @@ export function usePasswordResetFlow() {
                     setStatus('ready');
                 } catch (err: any) {
                     console.error('Validation Error:', err);
-                    toast({ variant: 'destructive', title: 'Invalid Link', description: 'This link is invalid or has expired. Please try again.' });
+                    addToast({ type: 'error', title: 'Invalid Link', message: 'This link is invalid or has expired. Please try again.' });
                     setStatus('error');
                 }
             }
@@ -57,7 +57,7 @@ export function usePasswordResetFlow() {
         const timer = setTimeout(() => {
             if (status === 'validating') {
                 setStatus('error');
-                toast({ variant: 'destructive', title: 'Invalid Link', description: 'No valid session found. Please use the link from your email.' });
+                addToast({ type: 'error', title: 'Invalid Link', message: 'No valid session found. Please use the link from your email.' });
             }
         }, 3000); // If no event after 3s, assume link is bad
 
@@ -65,12 +65,12 @@ export function usePasswordResetFlow() {
             subscription.unsubscribe();
             clearTimeout(timer);
         };
-    }, [supabase, toast, router, status]);
+    }, [supabase, addToast, router, status]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (password !== confirmPassword) {
-            toast({ variant: 'destructive', title: 'Password Mismatch', description: 'Passwords do not match.' });
+            addToast({ type: 'error', title: 'Password Mismatch', message: 'Passwords do not match.' });
             return;
         }
 
@@ -79,7 +79,7 @@ export function usePasswordResetFlow() {
             const { error } = await supabase.auth.updateUser({ password });
             if (error) throw error;
 
-            toast({ title: 'Password Updated!', description: 'Redirecting you now...' });
+            addToast({ type: 'success', title: 'Password Updated!', message: 'Redirecting you now...' });
             setStatus('success');
 
             const { data: { user } } = await supabase.auth.getUser();
@@ -90,7 +90,7 @@ export function usePasswordResetFlow() {
             }, 1500);
 
         } catch (err: any) {
-            toast({ variant: 'destructive', title: 'Update Failed', description: err.message });
+            addToast({ type: 'error', title: 'Update Failed', message: err.message });
             setStatus('ready');
         }
     };
