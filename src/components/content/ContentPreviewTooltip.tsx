@@ -1,7 +1,7 @@
 // components/content/ContentPreviewTooltip.tsx
-import Image from 'next/image';
+import NextImage from 'next/image';
 import { Music, Video } from 'lucide-react';
-import type { ContentItem } from '@/lib/types'; 
+import { ContentItem } from '@/types/content'; 
 
 interface Props {
     item: ContentItem;
@@ -22,7 +22,7 @@ export function ContentPreviewTooltip({ item }: Props) {
             return (
                 <PreviewContainer>
                     <div className="relative aspect-video">
-                        <Image
+                        <NextImage
                             src={item.file_url}
                             alt={`Preview of ${item.title}`}
                             fill
@@ -51,7 +51,7 @@ export function ContentPreviewTooltip({ item }: Props) {
                 </PreviewContainer>
             );
 
-        case 'audio':
+        case 'music':
             return (
                 // THEME: Replaced hardcoded colors with theme-aware semantic classes.
                 <div className="p-3 w-48 bg-popover rounded-md border border-border">
@@ -70,4 +70,8 @@ export function ContentPreviewTooltip({ item }: Props) {
             // THEME: Ensure fallback text is also themed correctly.
             return (
                 <div className="p-3 w-48 text-sm text-muted-foreground">
-                    No preview
+                    No preview available.
+                </div>
+            );
+    }
+}

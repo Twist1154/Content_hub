@@ -1,38 +1,40 @@
+
 'use client';
 
 import {useCallback, useEffect, useMemo, useState} from 'react';
-import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
-import {Button} from '@/components/ui/button';
-import {Input} from '@/components/ui/input';
-import {Tooltip} from '@/components/ui/tooltip';
+import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/Card';
+import {Button} from '@/components/ui/Button';
+import {Input} from '@/components/ui/Input';
+import {Tooltip} from '@/components/ui/Tooltip';
 import {
     Calendar,
     ChevronLeft,
     ChevronRight,
-    Trash2,
+    Delete,
     Eye,
     Filter,
     Folder,
-    LayoutGrid,
+    Grid,
     List,
     MapPin,
     Search,
-    ArrowDownUp,
+    SortAsc,
+    SortDesc,
+    Upload
 } from 'lucide-react';
 import {format} from 'date-fns';
-import {LoadingSpinner} from '@/components/ui/loading-spinner';
+import {LoadingSpinner} from '@/components/ui/LoadingSpinner';
 import {ContentDetailModal} from "@/components/content/ContentDetailModal";
 import {ContentCard} from "@/components/content/ContentCard";
 import {AdminContentCard} from "@/components/content/AdminContentCard";
-import type { ContentItem } from "@/lib/types";
+import {ContentItem} from "@/types/content";
 import {formatFileSize, getStatusBadge, getTypeIcon} from "@/utils/contentUtils";
 import {ContentPreviewTooltip} from '@/components/content/ContentPreviewTooltip';
 import {cn} from '@/lib/utils';
-import {Badge} from "@/components/ui/badge";
+import {Badge} from "@/components/ui/Badge";
 import {ConfirmModal} from '@/components/ui/ConfirmModal';
 import {deleteContent} from '@/app/actions/data-actions';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ServerCrash } from 'lucide-react';
+import {Notification} from '@/components/ui/Notification';
 
 // Props to configure the component's behavior
 interface ContentManagerProps {
@@ -66,20 +68,22 @@ interface GroupedContent {
 }
 
 export function ContentManager({
-   fetchAction,
-   showFilters = false,
-   showGrouping = false,
-   defaultView = 'grid',
-   isAdminView = false,
-}: ContentManagerProps) {
+                                   fetchAction,
+                                   showFilters = false,
+                                   showGrouping = false,
+                                   defaultView = 'grid',
+                                   isAdminView = false,
+                               }: ContentManagerProps) {
     const [content, setContent] = useState<ContentItem[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState<'grid' | 'list' | 'location' | 'company'>(defaultView);
-    const [selectedItems, setSelectedItems] = useState<string[]>([]);
-    const [lastSelectedItem, setLastSelectedItem] = useState<string | null>(null);
     const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
     const [deletingItem, setDeletingItem] = useState<ContentItem | null>(null);
+    const [notification, setNotification] = useState({
+        show: false,
+        type: 'info' as 'success' | 'error' | 'info',
+        message: ''
+    });
     const [filters, setFilters] = useState<FilterOptions>({
         search: '',
         type: '',
@@ -90,19 +94,22 @@ export function ContentManager({
     const [sort, setSort] = useState<SortOptions>({field: 'created_at', direction: 'desc'});
     const [currentPage, setCurrentPage] = useState(1);
 
+    const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
+        setNotification({show: true, type, message});
+        setTimeout(() => setNotification(prev => ({...prev, show: false})), 5000);
+    };
+
     const fetchContent = useCallback(async () => {
         setLoading(true);
-        setError(null);
         try {
             const result = await fetchAction();
             if (result.success) {
                 setContent(result.content || []);
             } else {
-                throw new Error(result.error || 'Failed to fetch content.');
+                showNotification('error', result.error || 'Failed to fetch content');
             }
-        } catch (err: any) {
-            setError(err.message || 'An unexpected error occurred fetching content.');
-            setContent([]); // Ensure content is an array on error
+        } catch (error: any) {
+            showNotification('error', error.message || 'An unexpected error occurred fetching content.');
         } finally {
             setLoading(false);
         }
@@ -115,38 +122,26 @@ export function ContentManager({
     const processedContent = useMemo(() => {
         let items = [...content];
         if (showFilters) {
-            items = items.filter(item => {
+            if (filters.search) {
                 const searchLower = filters.search.toLowerCase();
-                const matchesSearch = !filters.search ||
+                items = items.filter(item =>
                     item.title.toLowerCase().includes(searchLower) ||
                     (item.stores?.name?.toLowerCase() ?? '').includes(searchLower) ||
-                    (item.stores?.brand_company?.toLowerCase() ?? '').includes(searchLower);
-
-                const matchesType = !filters.type || item.type === filters.type;
-                const matchesStatus = !filters.status || item.status === filters.status;
-                
-                const itemDate = new Date(item.created_at);
-                const matchesStartDate = !filters.startDate || itemDate >= new Date(filters.startDate);
-                const matchesEndDate = !filters.endDate || itemDate <= new Date(filters.endDate);
-
-                return matchesSearch && matchesType && matchesStatus && matchesStartDate && matchesEndDate;
-            });
+                    (item.stores?.brand_company?.toLowerCase() ?? '').includes(searchLower)
+                );
+            }
+            // Add other filter logic here if needed in the future
         }
         items.sort((a, b) => {
             let aValue: any = a[sort.field];
             let bValue: any = b[sort.field];
-            if (sort.field === 'created_at') {
-                aValue = new Date(a.created_at).getTime();
-                bValue = new Date(b.created_at).getTime();
-            } else if (sort.field === 'file_size') {
-                aValue = a.file_size;
-                bValue = b.file_size;
+            if (sort.field === 'created_at' || sort.field === 'file_size') {
+                aValue = sort.field === 'created_at' ? new Date(aValue).getTime() : aValue;
+                bValue = sort.field === 'created_at' ? new Date(bValue).getTime() : bValue;
             } else {
-                aValue = (a[sort.field] ?? '').toString().toLowerCase();
-                bValue = (b[sort.field] ?? '').toString().toLowerCase();
+                aValue = aValue?.toString().toLowerCase() ?? '';
+                bValue = bValue?.toString().toLowerCase() ?? '';
             }
-
-            if (aValue === bValue) return 0;
             return sort.direction === 'asc' ? (aValue > bValue ? 1 : -1) : (aValue < bValue ? 1 : -1);
         });
 
@@ -183,10 +178,10 @@ export function ContentManager({
         if (!deletingItem) return;
         const result = await deleteContent(deletingItem.id, deletingItem.file_url);
         if (result.success) {
-            // success notification
+            showNotification('success', 'Content successfully deleted.');
             fetchContent();
         } else {
-            // error notification
+            showNotification('error', result.error || 'Failed to delete content.');
         }
         setDeletingItem(null);
     };
@@ -196,52 +191,18 @@ export function ContentManager({
     };
     const clearFilters = () => setFilters({search: '', type: '', status: '', startDate: '', endDate: ''});
 
-    const handleSelectItem = (id: string, shiftKey: boolean) => {
-        const currentIndex = processedContent.findIndex(item => item.id === id);
-        let newSelectedItems = [...selectedItems];
-
-        if (shiftKey && lastSelectedItem) {
-            const lastIndex = processedContent.findIndex(item => item.id === lastSelectedItem);
-            if (lastIndex !== -1) {
-                const start = Math.min(currentIndex, lastIndex);
-                const end = Math.max(currentIndex, lastIndex);
-                const itemsToSelect = processedContent.slice(start, end + 1).map(item => item.id);
-                // This logic adds the range to the current selection
-                itemsToSelect.forEach(itemId => {
-                    if (!newSelectedItems.includes(itemId)) {
-                        newSelectedItems.push(itemId);
-                    }
-                });
-            }
-        } else {
-             if (newSelectedItems.includes(id)) {
-                newSelectedItems = newSelectedItems.filter(itemId => itemId !== id);
-            } else {
-                newSelectedItems.push(id);
-            }
-        }
-        
-        setSelectedItems(newSelectedItems);
-        setLastSelectedItem(id);
-    };
-
-
     if (loading) return <div className="p-8 flex justify-center"><LoadingSpinner text="Loading content..."/></div>;
 
-    if (error) {
-         return (
-            <Alert variant="destructive">
-                <ServerCrash className="h-4 w-4" />
-                <AlertTitle>Error Loading Content</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-            </Alert>
-        );
-    }
-
-    const isClientDashboard = !isAdminView;
+    const isClientDashboard = showFilters;
 
     return (
         <div className="space-y-6">
+            <Notification
+                show={notification.show}
+                type={notification.type}
+                message={notification.message}
+                onClose={() => setNotification(prev => ({...prev, show: false}))}
+            />
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -261,24 +222,22 @@ export function ContentManager({
                                     className="pl-10"/>
                             </div>
                             <select
-                                className={cn('flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1')}
+                                className={cn('flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm...')}
                                 value={filters.type}
                                 onChange={(e) => setFilters(prev => ({...prev, type: e.target.value}))}>
                                 <option value="">All Types</option>
                                 <option value="image">Images</option>
                                 <option value="video">Videos</option>
-                                <option value="audio">Audio</option>
-                                <option value="document">Documents</option>
+                                <option value="music">Audio</option>
                             </select>
                             <select
-                                className={cn('flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1')}
+                                className={cn('flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm...')}
                                 value={filters.status}
                                 onChange={(e) => setFilters(prev => ({...prev, status: e.target.value}))}>
                                 <option value="">All Status</option>
                                 <option value="active">Active</option>
                                 <option value="scheduled">Scheduled</option>
                                 <option value="archived">Archived</option>
-                                <option value="draft">Draft</option>
                             </select>
                             <Input
                                 type="date"
@@ -314,51 +273,54 @@ export function ContentManager({
                                         variant={viewMode === 'grid' ? 'default' : 'ghost'}
                                         size="sm" onClick={() => setViewMode('grid')}
                                         className="rounded-r-none">
-                                        <LayoutGrid className="w-4 h-4"/>
+                                        <Grid className="w-4 h-4"/>
                                     </Button>
                                 </Tooltip>
-                                {isClientDashboard && <Tooltip content="List View"><Button
-                                    variant={viewMode === 'list' ? 'default' : 'ghost'}
-                                    size="sm" onClick={() => setViewMode('list')}
-                                    className="rounded-l-none border-l border-border">
-                                    <List className="w-4 h-4"/>
-                                </Button></Tooltip>}
-                                {showGrouping && <Tooltip content="Group by Location"><Button
-                                    variant={viewMode === 'location' ? 'default' : 'ghost'}
-                                    size="sm"
-                                    onClick={() => setViewMode('location')}
-                                    className="rounded-l-none border-l border-border">
-                                    <MapPin className="w-4 h-4"/>
-                                </Button></Tooltip>}
-                                {showGrouping && <Tooltip content="Group by Company"><Button
-                                    variant={viewMode === 'company' ? 'default' : 'ghost'}
-                                    size="sm"
-                                    onClick={() => setViewMode('company')}
-                                    className="rounded-l-none border-l border-border">
-                                    <Folder className="w-4 h-4"/>
-                                </Button></Tooltip>}
+                                {isClientDashboard && <Tooltip content="List View">
+                                    <Button
+                                        variant={viewMode === 'list' ? 'default' : 'ghost'}
+                                        size="sm" onClick={() => setViewMode('list')}
+                                        className="rounded-l-none border-l border-border">
+                                        <List className="w-4 h-4"/>
+                                    </Button>
+                                </Tooltip>}
+                                {showGrouping && <Tooltip content="Group by Location">
+                                    <Button
+                                        variant={viewMode === 'location' ? 'default' : 'ghost'}
+                                        size="sm"
+                                        onClick={() => setViewMode('location')}
+                                        className="rounded-l-none border-l border-border">
+                                        <MapPin className="w-4 h-4"/>
+                                    </Button>
+                                </Tooltip>}
+                                {showGrouping && <Tooltip content="Group by Company">
+                                    <Button
+                                        variant={viewMode === 'company' ? 'default' : 'ghost'}
+                                        size="sm"
+                                        onClick={() => setViewMode('company')}
+                                        className="rounded-l-none border-l border-border">
+                                        <Folder className="w-4 h-4"/>
+                                    </Button>
+                                </Tooltip>}
                             </div>
                             <div className="flex gap-1">
-                                <Tooltip content={`Sort by Date ${sort.field === 'created_at' && `(${sort.direction})`}`}>
-                                <Button variant={sort.field === 'created_at' ? 'default' : 'outline'}
-                                        size="sm"
-                                        onClick={() => handleSort('created_at')}>
-                                    <Calendar className="w-4 h-4"/>
-                                </Button>
+                                <Tooltip content="Sort by Date">
+                                    <Button variant={sort.field === 'created_at' ? 'default' : 'outline'}
+                                            size="sm"
+                                            onClick={() => handleSort('created_at')}>
+                                        <Calendar className="w-4 h-4 mr-1"/>{sort.field === 'created_at'
+                                        && (sort.direction === 'asc' ? <SortAsc className="w-3 h-3 ml-1"/> :
+                                            <SortDesc className="w-3 h-3 ml-1"/>)}
+                                    </Button>
                                 </Tooltip>
-                                <Tooltip content={`Sort by Name ${sort.field === 'title' && `(${sort.direction})`}`}>
-                                <Button variant={sort.field === 'title' ? 'default' : 'outline'}
-                                        size="sm"
-                                        onClick={() => handleSort('title')}>
-                                        A-Z
-                                </Button>
-                                </Tooltip>
-                                <Tooltip content={`Sort by Size ${sort.field === 'file_size' && `(${sort.direction})`}`}>
-                                <Button variant={sort.field === 'file_size' ? 'default' : 'outline'}
-                                        size="sm"
-                                        onClick={() => handleSort('file_size')}>
-                                        <ArrowDownUp className="w-4 h-4" />
-                                </Button>
+                                <Tooltip content="Sort by Name">
+                                    <Button variant={sort.field === 'title' ? 'default' : 'outline'}
+                                            size="sm"
+                                            onClick={() => handleSort('title')}>A-Z {sort.field === 'title'
+                                        && (sort.direction === 'asc'
+                                            ? <SortAsc className="w-3 h-3 ml-1"/> :
+                                            <SortDesc className="w-3 h-3 ml-1"/>)}
+                                    </Button>
                                 </Tooltip>
                             </div>
                         </div>
@@ -369,7 +331,7 @@ export function ContentManager({
             {processedContent.length === 0 ? (
                 <Card>
                     <CardContent className="text-center py-12">
-                        <Folder className="w-16 h-16 text-muted-foreground mx-auto mb-4"/>
+                        <Upload className="w-16 h-16 text-muted-foreground mx-auto mb-4"/>
                         <h3 className="text-lg font-semibold text-foreground mb-2">
                             {content.length === 0 ? 'No content uploaded yet' : 'No content matches filters'}
                         </h3>
@@ -382,15 +344,22 @@ export function ContentManager({
                 <>
                     {viewMode === 'grid' && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                            {paginatedContent.map(item => (
+                            {paginatedContent.map(item => isClientDashboard ? (
                                 <ContentCard
                                     key={item.id}
                                     item={item}
-                                    isSelected={selectedItems.includes(item.id)}
-                                    onSelectItem={handleSelectItem}
+                                    isSelected={false}
+                                    onSelectItem={() => {
+                                    }}
                                     onViewDetails={() => setSelectedContent(item)}
                                     isAdminView={isAdminView}
-                                    onDeleteItem={isAdminView ? handleDeleteRequest : undefined}
+                                    onDeleteItem={handleDeleteRequest}
+                                />
+                            ) : (
+                                <AdminContentCard
+                                    key={item.id}
+                                    item={item}
+                                    onClick={() => setSelectedContent(item)}
                                 />
                             ))}
                         </div>
@@ -401,18 +370,32 @@ export function ContentManager({
                                 <table className="w-full">
                                     <thead className="bg-muted/50">
                                     <tr>
-                                        <th className="p-4 font-medium text-left text-foreground">Content</th>
-                                        <th className="p-4 font-medium text-left text-foreground">Store</th>
-                                        <th className="p-4 font-medium text-left text-foreground">Status</th>
-                                        <th className="p-4 font-medium text-left text-foreground">Size</th>
-                                        <th className="p-4 font-medium text-left text-foreground">Uploaded</th>
-                                        <th className="p-4 font-medium text-left text-foreground">Actions</th>
+                                        <th className="p-4 font-medium text-left text-foreground">
+                                            Content
+                                        </th>
+                                        <th className="p-4 font-medium text-left text-foreground">
+                                            Store
+                                        </th>
+                                        <th className="p-4 font-medium text-left text-foreground">
+                                            Status
+                                        </th>
+                                        <th className="p-4 font-medium text-left text-foreground">
+                                            Size
+                                        </th>
+                                        <th className="p-4 font-medium text-left text-foreground">
+                                            Uploaded
+                                        </th>
+                                        <th className="p-4 font-medium text-left text-foreground">
+                                            Actions
+                                        </th>
                                     </tr>
                                     </thead>
                                     <tbody>{paginatedContent.map(item => (
                                         <tr key={item.id} className="border-b border-border hover:bg-muted/50">
                                             <td className="p-4">
-                                                <Tooltip content={<ContentPreviewTooltip item={item} />}>
+                                                <Tooltip position="right"
+                                                         content={<ContentPreviewTooltip
+                                                             item={item}/>}>
                                                     <div className="flex items-center gap-3 cursor-default">
                                                         {getTypeIcon(item.type)}
                                                         <div>
@@ -420,8 +403,7 @@ export function ContentManager({
                                                             <p className="text-sm text-muted-foreground capitalize">{item.type}</p>
                                                         </div>
                                                     </div>
-                                                </Tooltip>
-                                            </td>
+                                                </Tooltip></td>
                                             <td className="p-4">
                                                 <p className="font-medium text-foreground">
                                                     {item.stores?.name ?? 'N/A'}
@@ -445,17 +427,18 @@ export function ContentManager({
                                                             size="icon"
                                                             className="h-8 w-8"
                                                             onClick={() => setSelectedContent(item)}>
-                                                            <Eye className="w-4 h-4"/>
+                                                            <Eye className="w-4 h-4"
+                                                            />
                                                         </Button>
                                                     </Tooltip>
                                                     <Tooltip content="Delete Content">
                                                         <Button
-                                                            variant="ghost"
+                                                            variant="outline"
                                                             size="icon"
-                                                            className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                                            className="h-8 w-8 text-destructive hover:text-destructive"
                                                             onClick={() => handleDeleteRequest(item)}
                                                         >
-                                                            <Trash2 className="w-4 h-4"/>
+                                                            <Delete className="w-4 h-4"/>
                                                         </Button>
                                                     </Tooltip>
                                                 </div>
@@ -464,8 +447,8 @@ export function ContentManager({
                                     ))}</tbody>
                                 </table>
                             </div>
-                        </CardContent>
-                        </Card>
+                        </CardContent
+                        ></Card>
                     )}
 
                     {(viewMode === 'location' || viewMode === 'company') && showGrouping && (
@@ -474,7 +457,7 @@ export function ContentManager({
                             <Card key={primaryKey}>
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2">
-                                        {viewMode === 'location' ? <MapPin className="w-5 h-5"/> : <Folder className="w-5 h-5"/>}
+                                        <Folder className="w-5 h-5"/>
                                         {primaryKey}
                                     </CardTitle>
                                 </CardHeader>
@@ -488,10 +471,10 @@ export function ContentManager({
                                                     <div key={type}>
                                                         <div
                                                             className="flex items-center gap-2 text-md font-semibold text-foreground mb-3">
-                                                            {getTypeIcon(type as ContentItem['type'])}
+                                                            {getTypeIcon(type)}
                                                             <span className="capitalize">
-                                                                {type}
-                                                            </span>
+                                                {type}
+                                            </span>
                                                             <Badge variant="secondary">
                                                                 {items.length}
                                                             </Badge>
@@ -541,6 +524,7 @@ export function ContentManager({
                 </>
             )}
 
+            {/* --- NEW: Add the confirmation modal for deleting content --- */}
             <ConfirmModal
                 isOpen={!!deletingItem}
                 onClose={() => setDeletingItem(null)}
@@ -554,4 +538,3 @@ export function ContentManager({
         </div>
     );
 }
-```
