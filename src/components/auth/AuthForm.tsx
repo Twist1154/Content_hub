@@ -8,6 +8,7 @@ import { FormField } from '@/components/ui/form-field';
 import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useAuthForm } from '@/hooks/useAuthForm';
 import Link from 'next/link';
+import { RegistrationForm } from './RegistrationForm';
 
 interface AuthFormProps {
   mode: 'signin' | 'signup';
@@ -26,6 +27,10 @@ export function AuthForm({ mode, userType = 'client' }: AuthFormProps) {
 
   const [showPassword, setShowPassword] = useState(false);
 
+  if (mode === 'signup') {
+    return <RegistrationForm userType={userType} />;
+  }
+
   return (
     <>
       <div className="relative my-4">
@@ -40,29 +45,6 @@ export function AuthForm({ mode, userType = 'client' }: AuthFormProps) {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {mode === 'signup' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField label="Full Name" error={errors.fullName}>
-              <Input
-                name="fullName"
-                placeholder="e.g., Jane Doe"
-                value={formData.fullName || ''}
-                onChange={(e) => handleInputChange('fullName', e.target.value)}
-                onBlur={() => handleBlur('fullName')}
-              />
-            </FormField>
-            <FormField label="Username" error={errors.username}>
-              <Input
-                name="username"
-                placeholder="e.g., jane_doe"
-                value={formData.username || ''}
-                onChange={(e) => handleInputChange('username', e.target.value)}
-                onBlur={() => handleBlur('username')}
-              />
-            </FormField>
-          </div>
-        )}
-
         <FormField label="Email" icon={Mail} error={errors.email}>
         <Input
           type="email"
@@ -76,19 +58,6 @@ export function AuthForm({ mode, userType = 'client' }: AuthFormProps) {
         />
         </FormField>
         
-        {mode === 'signup' && (
-          <FormField label="Phone Number" error={errors.phoneNumber}>
-            <Input
-              name="phoneNumber"
-              type="tel"
-              placeholder="e.g., (123) 456-7890"
-              value={formData.phoneNumber || ''}
-              onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-              onBlur={() => handleBlur('phoneNumber')}
-            />
-          </FormField>
-        )}
-
         <FormField label="Password" icon={Lock} error={errors.password}>
           <Input
             type={showPassword ? 'text' : 'password'}
@@ -111,21 +80,6 @@ export function AuthForm({ mode, userType = 'client' }: AuthFormProps) {
           </button>
         </FormField>
         
-        {mode === 'signup' && (
-          <FormField label="Confirm Password" icon={Lock} error={errors.confirmPassword}>
-            <Input
-              type={showPassword ? 'text' : 'password'}
-              name="confirmPassword"
-              placeholder="Confirm Password"
-              value={formData.confirmPassword || ''}
-              onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-              onBlur={() => handleBlur('confirmPassword')}
-              required
-              className="pl-10 pr-10"
-            />
-          </FormField>
-        )}
-
         {mode === 'signin' && (
           <div className="text-right">
             <Link href="/auth/reset-password" className="text-sm text-muted-foreground hover:underline">
