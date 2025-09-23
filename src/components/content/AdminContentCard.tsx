@@ -1,13 +1,14 @@
-// src/components/content/AdminContentCard.tsx
+// components/content/AdminContentCard.tsx
+
 'use client';
 
-import Image from 'next/image';
-import { Button } from '@/components/ui/button';
-import { Tooltip } from '@/components/ui/tooltip';
-import { Badge } from '@/components/ui/badge';
-import { Download, ExternalLink } from 'lucide-react';
+import NextImage from 'next/image';
+import { Button } from '@/components/ui/Button';
+import { Tooltip } from '@/components/ui/Tooltip';
+import { Badge } from '@/components/ui/Badge';
+import { Download, ExternalLink, Video, Music } from 'lucide-react';
 import { format } from 'date-fns';
-import type { ContentItem } from 'types/content';
+import { ContentItem } from '@/types/content';
 import { getStatusBadge, formatFileSize, getTypeIcon } from '@/utils/contentUtils';
 
 interface AdminContentCardProps {
@@ -16,32 +17,32 @@ interface AdminContentCardProps {
 }
 
 export function AdminContentCard({ item, onClick }: AdminContentCardProps) {
-    const TypeIcon = getTypeIcon(item.type);
-
     return (
         <div
             className="bg-card text-card-foreground rounded-lg border border-border shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group cursor-pointer"
             onClick={() => onClick(item)}
         >
             <div className="relative aspect-video bg-muted overflow-hidden">
-                {item.type === 'image' && item.file_url ? (
-                    <Image
+                {item.type === 'image' && (
+                    <NextImage
                         src={item.file_url}
                         alt={item.title}
                         fill
                         sizes="(max-width: 768px) 100vw, 33vw"
                         className="object-cover group-hover:scale-105 transition-transform duration-200"
                     />
-                ) : item.type === 'video' && item.file_url ? (
-                     <div className="relative w-full h-full bg-black">
+                )}
+                {item.type === 'video' && (
+                    <div className="relative w-full h-full bg-black">
                         <video src={item.file_url} className="w-full h-full object-cover" muted preload="metadata" />
                         <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                            <TypeIcon className="w-12 h-12 text-white/80" />
+                            <Video className="w-12 h-12 text-white/80" />
                         </div>
                     </div>
-                ) : (
-                    <div className="w-full h-full bg-secondary flex items-center justify-center">
-                         <TypeIcon className="w-12 h-12 text-muted-foreground" />
+                )}
+                {item.type === 'music' && (
+                    <div className="w-full h-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center">
+                        <Music className="w-12 h-12 text-white" />
                     </div>
                 )}
 
@@ -52,7 +53,7 @@ export function AdminContentCard({ item, onClick }: AdminContentCardProps) {
                                 <ExternalLink className="w-4 h-4" />
                             </Button>
                         </Tooltip>
-                         <Tooltip content="Download file">
+                        <Tooltip content="Download file">
                             <Button variant="outline" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); window.open(item.file_url, '_blank'); }}>
                                 <Download className="w-4 h-4" />
                             </Button>
@@ -73,7 +74,7 @@ export function AdminContentCard({ item, onClick }: AdminContentCardProps) {
                 </div>
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>{format(new Date(item.created_at), 'MMM dd, yyyy')}</span>
-                    <span className="capitalize">{item.type}</span>
+                    <span>{item.type}</span>
                 </div>
             </div>
         </div>
