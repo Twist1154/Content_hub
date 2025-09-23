@@ -16,6 +16,7 @@ import {
 import { Logo } from "./logo";
 import { ThemeSwitcher } from "./ui/ThemeSwitcher";
 import { useRouter } from "next/navigation";
+import { signOut } from "@/app/actions/auth-actions";
 
 interface MobileNavProps {
   user: User | null;
@@ -27,26 +28,17 @@ export function MobileNav({ user }: MobileNavProps) {
 
   const handleLogout = async () => {
     try {
-        const response = await fetch('/api/auth/signout', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.success) {
+        const result = await signOut();
+        if (result.success) {
             if (typeof window !== 'undefined') {
                 localStorage.clear();
                 sessionStorage.clear();
             }
-            // Close the nav before redirecting
             setIsOpen(false);
             router.push('/');
             router.refresh();
         } else {
-            console.error('Logout failed:', data.error);
+            console.error('Logout failed:', result.error);
             setIsOpen(false);
             router.push('/');
             router.refresh();
