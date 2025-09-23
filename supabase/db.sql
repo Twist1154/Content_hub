@@ -1,43 +1,27 @@
+-- supabase/db.sql
 
--- Profiles Table
-create table if not exists public.profiles (
-  id uuid not null primary key,
-  email text,
-  role text default 'client',
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+-- Create a table for public profiles
+create table if not exists profiles (
+  id uuid references auth.users on delete cascade not null primary key,
+  email text unique,
+  role text default 'client'
 );
-alter table public.profiles enable row level security;
+-- Set up Row Level Security (RLS)
+-- See https://supabase.com/docs/guides/auth/row-level-security
+alter table profiles
+  enable row level security;
 
--- Stores Table
-create table if not exists public.stores (
-  id uuid not null primary key default gen_random_uuid(),
-  user_id uuid references public.profiles,
-  name text,
-  brand_company text,
-  address text,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-alter table public.stores enable row level security;
+create policy "Public profiles are viewable by everyone." on profiles
+  for select using (true);
 
--- Content Table
-create table if not exists public.content (
-  id uuid not null primary key default gen_random_uuid(),
-  user_id uuid references public.profiles,
-  store_id uuid references public.stores,
-  title text,
-  type text,
-  file_url text,
-  file_size bigint,
-  start_date date,
-  end_date date,
-  recurrence_type text,
-  recurrence_days text[],
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-alter table public.content enable row level security;
+-- Allow users to manage their own profiles
+create policy "Users can insert their own profile." on profiles
+  for insert with check (auth.uid() = id);
+create policy "Users can update own profile." on profiles
+  for update using (auth.uid() = id);
 
-
--- Function to handle new user creation
+-- This trigger automatically creates a profile for new users
+-- and copies the user's role from the metadata to the 'profiles' table.
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -45,18 +29,177 @@ security definer set search_path = public
 as $$
 begin
   insert into public.profiles (id, email, role)
-  values (new.id, new.email, new.raw_app_meta_data->>'role');
+  values (new.id, new.email, new.raw_user_meta_data->>'role');
+
+  -- Also, update the app_metadata to ensure the role is in the JWT
+  update auth.users set app_metadata = jsonb_set(
+    coalesce(app_metadata, '{}'::jsonb),
+    '{role}',
+    to_jsonb(new.raw_user_meta_data->>'role')
+  ) where id = new.id;
+
   return new;
 end;
 $$;
 
--- Trigger to call the function when a new user is created
-create or replace trigger on_auth_user_created
+-- Drop existing trigger if it exists to avoid conflicts
+drop trigger if exists on_auth_user_created on auth.users;
+-- create the trigger
+create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
 
--- Function to get user content counts
+-- Create stores table
+create table if not exists stores (
+    id uuid primary key default gen_random_uuid(),
+    user_id uuid references auth.users on delete cascade not null,
+    name text not null,
+    brand_company text not null,
+    address text not null,
+    created_at timestamptz default now()
+);
+
+alter table stores enable row level security;
+
+create policy "Users can view their own stores." on stores
+    for select using (auth.uid() = user_id);
+    
+create policy "Users can insert their own stores." on stores
+    for insert with check (auth.uid() = user_id);
+
+create policy "Users can update their own stores." on stores
+    for update using (auth.uid() = user_id);
+
+create policy "Users can delete their own stores." on stores
+    for delete using (auth.uid() = user_id);
+
+-- Admins can manage all stores
+create policy "Admins can view all stores." on stores
+    for select to authenticated using (
+        (select role from profiles where id = auth.uid()) = 'admin'
+    );
+
+create policy "Admins can insert any store." on stores
+    for insert to authenticated with check (
+        (select role from profiles where id = auth.uid()) = 'admin'
+    );
+create policy "Admins can update any store." on stores
+    for update to authenticated using (
+        (select role from profiles where id = auth.uid()) = 'admin'
+    );
+create policy "Admins can delete any store." on stores
+    for delete to authenticated using (
+        (select role from profiles where id = auth.uid()) = 'admin'
+    );
+
+-- Create content table
+create table if not exists content (
+    id uuid primary key default gen_random_uuid(),
+    store_id uuid references stores(id) on delete set null,
+    user_id uuid references auth.users(id) on delete cascade not null,
+    title text not null,
+    type text not null,
+    file_url text not null,
+    file_size bigint not null,
+    created_at timestamptz default now(),
+    start_date date,
+    end_date date,
+    recurrence_type text,
+    recurrence_days text[]
+);
+
+alter table content enable row level security;
+
+create policy "Users can view their own content." on content
+    for select using (auth.uid() = user_id);
+
+create policy "Users can insert their own content." on content
+    for insert with check (auth.uid() = user_id);
+
+create policy "Users can update their own content." on content
+    for update using (auth.uid() = user_id);
+
+create policy "Users can delete their own content." on content
+    for delete using (auth.uid() = user_id);
+
+-- Admins can manage all content
+create policy "Admins can view all content." on content
+    for select using ((select role from profiles where id = auth.uid()) = 'admin');
+    
+create policy "Admins can insert any content." on content
+    for insert with check ((select role from profiles where id = auth.uid()) = 'admin');
+
+create policy "Admins can update any content." on content
+    for update using ((select role from profiles where id = auth.uid()) = 'admin');
+
+create policy "Admins can delete any content." on content
+    for delete using ((select role from profiles where id = auth.uid()) = 'admin');
+
+
+-- STORAGE
+-- Set up storage for files
+insert into storage.buckets (id, name, public)
+  values ('files', 'files', true)
+  on conflict (id) do nothing;
+
+-- Set up RLS policies for storage
+create policy "Users can view their own files"
+on storage.objects for select
+using ( auth.uid()::text = (storage.foldername(name))[1] );
+
+create policy "Users can upload files to their folder"
+on storage.objects for insert
+with check ( auth.uid()::text = (storage.foldername(name))[1] );
+
+create policy "Users can update their own files"
+on storage.objects for update
+using ( auth.uid()::text = (storage.foldername(name))[1] );
+
+create policy "Users can delete their own files"
+on storage.objects for delete
+using ( auth.uid()::text = (storage.foldername(name))[1] );
+
+-- Admins can do anything with files
+create policy "Admins can view any file"
+on storage.objects for select
+using ( (select role from public.profiles where id = auth.uid()) = 'admin' );
+
+create policy "Admins can upload any file"
+on storage.objects for insert
+with check ( (select role from public.profiles where id = auth.uid()) = 'admin' );
+
+create policy "Admins can update any file"
+on storage.objects for update
+using ( (select role from public.profiles where id = auth.uid()) = 'admin' );
+
+create policy "Admins can delete any file"
+on storage.objects for delete
+using ( (select role from public.profiles where id = auth.uid()) = 'admin' );
+
+-- Function to sync profile role to user app_metadata
+create or replace function public.sync_user_app_metadata_from_profile()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  update auth.users set app_metadata = jsonb_set(
+    coalesce(app_metadata, '{}'::jsonb),
+    '{role}',
+    to_jsonb(new.role)
+  ) where id = new.id;
+  return new;
+end;
+$$;
+
+-- Trigger to run the function when a profile is updated
+drop trigger if exists on_profile_updated on public.profiles;
+
+create trigger on_profile_updated
+  after update of role on public.profiles
+  for each row execute procedure public.sync_user_app_metadata_from_profile();
+  
 create or replace function public.get_user_content_counts()
 returns table(user_id uuid, content_count bigint, latest_upload timestamptz)
 language sql
@@ -70,110 +213,7 @@ as $$
   left join
     public.content c on p.id = c.user_id
   where
-    p.role = 'client'
+   p.role = 'client' or p.role = 'admin'
   group by
     p.id;
 $$;
-
-
--- POLICIES
-
--- Profiles
-drop policy if exists "Public profiles are viewable by everyone." on public.profiles;
-create policy "Public profiles are viewable by everyone."
-  on public.profiles for select
-  using ( true );
-
-drop policy if exists "Users can insert their own profile." on public.profiles;
-create policy "Users can insert their own profile."
-  on public.profiles for insert
-  with check ( auth.uid() = id );
-
-drop policy if exists "Users can update own profile." on public.profiles;
-create policy "Users can update own profile."
-  on public.profiles for update
-  using ( auth.uid() = id );
-
-
--- Stores
-drop policy if exists "Stores are viewable by owners and admins." on public.stores;
-create policy "Stores are viewable by owners and admins."
-  on public.stores for select
-  using (
-    (auth.uid() = user_id) or
-    (exists (select 1 from public.profiles where id = auth.uid() and role = 'admin'))
-  );
-
-drop policy if exists "Users can insert their own stores." on public.stores;
-create policy "Users can insert their own stores."
-  on public.stores for insert
-  with check ( auth.uid() = user_id );
-
-drop policy if exists "Users can update their own stores." on public.stores;
-create policy "Users can update their own stores."
-  on public.stores for update
-  using ( auth.uid() = user_id );
-
-drop policy if exists "Users can delete their own stores." on public.stores;
-create policy "Users can delete their own stores."
-    on public.stores for delete
-    using ( auth.uid() = user_id );
-
-
--- Content
-drop policy if exists "Content is viewable by owners and admins." on public.content;
-create policy "Content is viewable by owners and admins."
-  on public.content for select
-  using (
-    (auth.uid() = user_id) or
-    (exists (select 1 from public.profiles where id = auth.uid() and role = 'admin'))
-  );
-
-drop policy if exists "Users can insert their own content." on public.content;
-create policy "Users can insert their own content."
-  on public.content for insert
-  with check ( auth.uid() = user_id );
-
-drop policy if exists "Users can update their own content." on public.content;
-create policy "Users can update their own content."
-  on public.content for update
-  using ( auth.uid() = user_id );
-
-drop policy if exists "Users can delete their own content." on public.content;
-create policy "Users can delete their own content."
-    on public.content for delete
-    using ( auth.uid() = user_id );
-
--- Enable policies for file storage
--- Files bucket
-drop policy if exists "Owners and admins can manage files." on storage.objects;
-create policy "Owners and admins can manage files."
-  on storage.objects for all
-  using (
-    (bucket_id = 'files' and auth.uid() = owner) or
-    (bucket_id = 'files' and exists (select 1 from public.profiles where id = auth.uid() and role = 'admin'))
-  );
-
-drop policy if exists "Anyone can view public files." on storage.objects;
-create policy "Anyone can view public files."
-    on storage.objects for select
-    using ( bucket_id = 'files' AND (storage.foldername(name))[1] = 'public' );
-
--- Function to keep app_metadata in sync with profiles table
-create or replace function public.sync_user_app_metadata()
-returns trigger
-language plpgsql
-security definer set search_path = public
-as $$
-begin
-  update auth.users
-  set raw_app_meta_data = raw_app_meta_data || jsonb_build_object('role', new.role)
-  where id = new.id;
-  return new;
-end;
-$$;
-
--- Trigger to sync on profile update
-create or replace trigger on_profile_updated
-  after update of role on public.profiles
-  for each row execute procedure public.sync_user_app_metadata();
