@@ -1,11 +1,10 @@
-// src/components/content/ContentManager.tsx
 'use client';
 
 import {useCallback, useEffect, useMemo, useState} from 'react';
-import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/Card';
-import {Button} from '@/components/ui/Button';
-import {Input} from '@/components/ui/Input';
-import { Tooltip } from '@/components/ui/Tooltip';
+import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
+import {Button} from '@/components/ui/button';
+import {Input} from '@/components/ui/input';
+import {Tooltip} from '@/components/ui/tooltip';
 import {
     Calendar,
     ChevronLeft,
@@ -21,18 +20,18 @@ import {
     ArrowDownUp,
 } from 'lucide-react';
 import {format} from 'date-fns';
-import {LoadingSpinner} from '@/components/ui/LoadingSpinner';
+import {LoadingSpinner} from '@/components/ui/loading-spinner';
 import {ContentDetailModal} from "@/components/content/ContentDetailModal";
 import {ContentCard} from "@/components/content/ContentCard";
 import {AdminContentCard} from "@/components/content/AdminContentCard";
-import type { ContentItem } from "types/content";
+import type { ContentItem } from "@/lib/types";
 import {formatFileSize, getStatusBadge, getTypeIcon} from "@/utils/contentUtils";
 import {ContentPreviewTooltip} from '@/components/content/ContentPreviewTooltip';
 import {cn} from '@/lib/utils';
-import {Badge} from "@/components/ui/Badge";
+import {Badge} from "@/components/ui/badge";
 import {ConfirmModal} from '@/components/ui/ConfirmModal';
 import {deleteContent} from '@/app/actions/data-actions';
-import {Alert, AlertDescription, AlertTitle} from '@/components/ui/Alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ServerCrash } from 'lucide-react';
 
 // Props to configure the component's behavior
@@ -555,3 +554,4 @@ export function ContentManager({
         </div>
     );
 }
+```
