@@ -1,120 +1,174 @@
 
+// app/actions/client-overview-action.ts
+
 'use server';
 
 import { createClient } from '@/utils/supabase/server';
-import { SupabaseClient } from '@supabase/supabase-js';
-import { subDays } from 'date-fns';
+import {SupabaseClient} from "@supabase/supabase-js";
 
+// Interfaces remain the same, they are well-defined.
 export interface ClientOverview {
     id: string;
     email: string;
+    role: string;
     created_at: string;
-    stores: { id: string; name: string }[];
-    content_count: number;
-    active_campaigns: number; // This will be a placeholder for now
-    latest_upload: string | null;
+    stores?: {
+        id: string;
+        name: string;
+        brand_company: string;
+    }[];
+    content_count?: number;
+    latest_upload?: string;
+    active_campaigns?: number;
 }
 
 export interface OverviewStats {
     totalClients: number;
-    activeClients: number; // Active in the last 7 days
+    activeClients: number;
     totalUploads: number;
-    recentActivity: number; // Uploads in the last 7 days
+    recentActivity: number;
 }
 
-export async function getClientOverview(): Promise<{
+export interface ClientOverviewResult {
     success: boolean;
     clients: ClientOverview[];
     stats: OverviewStats;
     error?: string;
-}> {
+}
+
+export async function getClientOverview(): Promise<ClientOverviewResult> {
+    console.log("--- [Action Triggered] getClientOverview ---");
+
     try {
-        const supabase = createClient({ useServiceRole: true }) as SupabaseClient;
-        const sevenDaysAgo = subDays(new Date(), 7).toISOString();
+        console.log("[getClientOverview] Creating Supabase client with service role. RLS will be bypassed.");
+        const supabase = await createClient({ useServiceRole: true })as SupabaseClient;
+        console.log('client-overview-action: Supabase client created');
 
-        // 1. Fetch all client profiles with their stores
-        const { data: profiles, error: profileError } = await supabase
-            .from('profiles')
-            .select(`
-                id,
-                email,
-                created_at,
-                stores ( id, name )
-            `)
-            .eq('role', 'client')
-            .order('created_at', { ascending: false });
+        console.log("[getClientOverview] Fetching data from Supabase...");
+        const [statsData, recentClientsData] = await Promise.all([
+            supabase
+                .from('profiles')
+                .select('id, content(user_id, created_at, start_date, end_date)')
+                .eq('role', 'client'),
 
-        if (profileError) {
-            throw new Error(`Failed to fetch client profiles: ${profileError.message}`);
+            supabase
+                .from('profiles')
+                .select(`
+                id, email, role, created_at,
+                stores (id, name, brand_company)
+                `)
+                .eq('role', 'client')
+                .order('created_at', { ascending: false }),
+        ]);
+
+        console.log("[getClientOverview] Data received from Supabase.");
+
+        // --- LOG 3: Log potential errors from Supabase ---
+        if (statsData.error) {
+            console.error("[getClientOverview] ERROR from statsData query:", statsData.error);
+            throw statsData.error; // This will be caught by the main catch block
         }
-        
-        const userIds = profiles.map(p => p.id);
-
-        // 2. Fetch all content in one query
-        const { data: allContent, error: contentError } = await supabase
-            .from('content')
-            .select('user_id, created_at')
-            .in('user_id', userIds);
-        
-        if (contentError) {
-            throw new Error(`Failed to fetch content: ${contentError.message}`);
+        if (recentClientsData.error) {
+            console.error("[getClientOverview] ERROR from recentClientsData query:", recentClientsData.error);
+            throw recentClientsData.error;
         }
-        
-        // 3. Process data in memory
-        const contentByUser = new Map<string, { count: number; latest: string | null; recentCount: number }>();
+        console.log("--- RAW DATA FROM SUPABASE (STATS) ---");
+        console.log(JSON.stringify(statsData.data, null, 2)); // Pretty-print the JSON
+        console.log("--- RAW DATA FROM SUPABASE (CLIENTS) ---");
+        console.log(JSON.stringify(recentClientsData.data, null, 2)); // Pretty-print the JSON
 
-        for (const contentItem of allContent) {
-            if (!contentByUser.has(contentItem.user_id)) {
-                contentByUser.set(contentItem.user_id, { count: 0, latest: null, recentCount: 0 });
-            }
-            const userContent = contentByUser.get(contentItem.user_id)!;
-            userContent.count++;
-            
-            if (contentItem.created_at > (userContent.latest || '')) {
-                userContent.latest = contentItem.created_at;
-            }
-            if (contentItem.created_at >= sevenDaysAgo) {
-                userContent.recentCount++;
-            }
-        }
-        
-        let activeClients = 0;
-        for (const userContent of contentByUser.values()){
-            if (userContent.latest && userContent.latest >= sevenDaysAgo){
-                activeClients++;
-            }
+        console.log(`[getClientOverview] Received ${statsData.data?.length ?? 0} profiles for stats processing.`);
+        console.log(`[getClientOverview] Received ${recentClientsData.data?.length ?? 0} profiles for client list.`);
+
+        if (statsData.data?.length === 0) {
+            console.warn("[getClientOverview] WARNING: The query returned 0 client profiles. This could be because no clients exist or an unexpected issue.");
         }
 
-        const clients: ClientOverview[] = profiles.map(profile => ({
-            id: profile.id,
-            email: profile.email,
-            created_at: profile.created_at,
-            stores: profile.stores,
-            content_count: contentByUser.get(profile.id)?.count || 0,
-            latest_upload: contentByUser.get(profile.id)?.latest || null,
-            active_campaigns: 0, // Placeholder
-        }));
+        // --- Start processing the data... ---
+        const allProfilesWithContent = statsData.data || [];
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+        let totalUploads = 0;
+        let recentActivity = 0;
+        const activeClientIds = new Set<string>();
+        
+        allProfilesWithContent.forEach(profile => {
+            if (Array.isArray(profile.content)) {
+            totalUploads += profile.content.length;
+
+            profile.content.forEach(c => {
+                const createdAt = new Date(c.created_at);
+                if (createdAt >= oneWeekAgo) {
+                    recentActivity++;
+                    activeClientIds.add(c.user_id);
+        }
+        });
+            }
+            });
 
         const stats: OverviewStats = {
-            totalClients: profiles.length,
-            activeClients: activeClients,
-            totalUploads: allContent.length,
-            recentActivity: allContent.filter(c => c.created_at >= sevenDaysAgo).length,
+            totalClients: allProfilesWithContent.length,
+            activeClients: activeClientIds.size,
+            totalUploads,
+            recentActivity,
         };
 
+        // --- Process Recent Clients List ---
+        const recentProfiles = recentClientsData.data || [];
+        const clients: ClientOverview[] = recentProfiles.map(profile => {
+            // Find the content for this specific client from our stats data
+            const profileContent =
+                allProfilesWithContent.find(p => p.id === profile.id)?.content || [];
+
+            let latestUploadDate: string | undefined = undefined;
+            if (profileContent.length > 0) {
+                latestUploadDate = profileContent.reduce((latest, current) =>
+                    new Date(current.created_at) > new Date(latest.created_at)
+                        ? current
+                        : latest
+                ).created_at;
+                }
+
+                const now = new Date();
+            const activeCampaigns = profileContent.filter(item =>
+                    item.start_date && item.end_date && new Date(item.start_date) <= now && new Date(item.end_date) >= now
+                ).length;
+
+                return {
+                ...(profile as Omit<typeof profile, 'stores'>), // Cast to ensure type compatibility
+                stores: profile.stores || [],
+                content_count: profileContent.length,
+                latest_upload: latestUploadDate,
+                    active_campaigns: activeCampaigns,
+                };
+            });
+
+        console.log(`[getClientOverview] Processing complete. Returning ${clients.length} clients and final stats.`);
+        console.log("[getClientOverview] Final Stats:", stats);
+
+        console.log("--- [Action Succeeded] getClientOverview ---");
         return {
             success: true,
-            clients: clients.slice(0, 5), // Return only the 5 most recent clients for the overview
+            clients,
             stats,
         };
 
-    } catch (err: any) {
-        console.error('Error in getClientOverview:', err);
+    } catch (error: any) {
+        console.error("--- [Action Failed] An error occurred in getClientOverview ---");
+        console.error("Error Message:", error.message);
+        console.error("Full Error Object:", error);
+
         return {
             success: false,
             clients: [],
-            stats: { totalClients: 0, activeClients: 0, totalUploads: 0, recentActivity: 0 },
-            error: err.message || 'An unexpected error occurred.',
+            stats: {
+                totalClients: 0,
+                activeClients: 0,
+                totalUploads: 0,
+                recentActivity: 0
+            },
+            error: error.message || 'An unexpected error occurred.',
         };
     }
 }
