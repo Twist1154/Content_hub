@@ -1,7 +1,7 @@
 'use server';
 
 import { generateShareableLink, GenerateShareableLinkInput, GenerateShareableLinkOutput } from "@/ai/flows/generate-shareable-link";
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/utils/supabase/server';
 
 export async function generateLinkAction(
   input: GenerateShareableLinkInput & { uploadPaths: string[] }

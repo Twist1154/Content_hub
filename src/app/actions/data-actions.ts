@@ -2,7 +2,7 @@
 
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/utils/supabase/server';
 import { z } from 'zod';
 import type { ContentItem, ContentType } from '@/lib/types';
 import { SupabaseClient } from '@supabase/supabase-js';

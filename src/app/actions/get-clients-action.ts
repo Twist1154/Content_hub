@@ -1,7 +1,7 @@
 // src/app/actions/get-clients-action.ts
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/utils/supabase/server';
 import { SupabaseClient } from '@supabase/supabase-js';
 
 // Define the Client type locally as it's returned by this action

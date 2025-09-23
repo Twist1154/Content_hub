@@ -1,6 +1,7 @@
+
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/utils/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { sendBulkEmail } from '@/lib/notifications/email';
 
