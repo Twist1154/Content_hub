@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import {useCallback, useEffect, useMemo, useState} from 'react';
@@ -390,14 +391,16 @@ export function ContentManager({
                                         </th>
                                     </tr>
                                     </thead>
-                                    <tbody>{paginatedContent.map(item => (
+                                    <tbody>{paginatedContent.map(item => {
+                                        const Icon = getTypeIcon(item.type);
+                                        return (
                                         <tr key={item.id} className="border-b border-border hover:bg-muted/50">
                                             <td className="p-4">
                                                 <Tooltip position="right"
                                                          content={<ContentPreviewTooltip
                                                              item={item}/>}>
                                                     <div className="flex items-center gap-3 cursor-default">
-                                                        {getTypeIcon(item.type)}
+                                                        <Icon className="w-4 h-4" />
                                                         <div>
                                                             <p className="font-medium text-foreground">{item.title}</p>
                                                             <p className="text-sm text-muted-foreground capitalize">{item.type}</p>
@@ -444,7 +447,7 @@ export function ContentManager({
                                                 </div>
                                             </td>
                                         </tr>
-                                    ))}</tbody>
+                                    )})}</tbody>
                                 </table>
                             </div>
                         </CardContent
@@ -467,11 +470,13 @@ export function ContentManager({
                                             <div key={secondaryKey} className="border-l-2 border-border pl-4">
                                                 <h4 className="font-medium text-foreground mb-4">{secondaryKey}</h4>
                                                 <div
-                                                    className="space-y-6">{Object.entries(typeGroups).map(([type, items]) => (
+                                                    className="space-y-6">{Object.entries(typeGroups).map(([type, items]) => {
+                                                        const Icon = getTypeIcon(type as ContentItem['type']);
+                                                        return (
                                                     <div key={type}>
                                                         <div
                                                             className="flex items-center gap-2 text-md font-semibold text-foreground mb-3">
-                                                            {getTypeIcon(type)}
+                                                            <Icon className="w-4 h-4" />
                                                             <span className="capitalize">
                                                 {type}
                                             </span>
@@ -489,7 +494,7 @@ export function ContentManager({
                                                                 />)}
                                                         </div>
                                                     </div>
-                                                ))}</div>
+                                                )})}</div>
                                             </div>
                                         ))}</div>
                                 </CardContent></Card>
