@@ -1,4 +1,4 @@
-
+// components/client/StoreForm.tsx
 'use client';
 
 import { useState } from 'react';
