@@ -1,9 +1,8 @@
 // components/ui/StatCard.tsx
 import { Card, CardContent } from '@/components/ui/card';
-import type { LucideIcon } from 'lucide-react';
 
 interface StatCardProps {
-    icon: LucideIcon;
+    icon: React.ElementType;
     value: string | number;
     label: string;
     iconColorClass?: string;
