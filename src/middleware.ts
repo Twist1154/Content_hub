@@ -1,13 +1,15 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
-import { updateSession } from '@/utils/supabase/middleware';
-import { createClient } from '@/utils/supabase/server';
+import { createClient } from '@/utils/supabase/middleware';
 
 export async function middleware(request: NextRequest) {
-  // First, refresh the session. This also attaches cookies to the response.
-  let response = await updateSession(request);
-  const supabase = createClient(); // Use the server utility which reads from cookies
+  // This createClient call will also refresh the user's session cookie
+  // if it's expired.
+  const { supabase, response } = createClient(request);
 
+  // This is the only call we need to make in middleware to refresh the session
+  await supabase.auth.getSession();
+  
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -19,12 +21,6 @@ export async function middleware(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-pathname', pathname);
   
-  response = NextResponse.next({
-    request: {
-      headers: requestHeaders,
-    },
-  });
-
   // Let the dedicated /auth/callback route handle the code exchange
   if (pathname.startsWith('/auth/callback')) {
     return response;
@@ -32,8 +28,8 @@ export async function middleware(request: NextRequest) {
   
   // If a client is logged in but hasn't set up a store, redirect them.
   if (session && !pathname.startsWith('/auth/setup-store') && userRole === 'client') {
-      const { data: stores } = await supabase.from('stores').select('id', { count: 'exact', head: true }).eq('user_id', session.user.id);
-      if (stores?.length === 0) {
+      const { data: stores, count } = await supabase.from('stores').select('id', { count: 'exact', head: true }).eq('user_id', session.user.id);
+      if (count === 0) {
         return NextResponse.redirect(new URL('/auth/setup-store', request.url));
       }
   }
