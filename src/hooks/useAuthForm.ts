@@ -1,8 +1,7 @@
-
 // src/hooks/useAuthForm.ts
 'use client';
 
-import { useState, useActionState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from './use-toast';
 import { signInUser, registerUser, getUserAndProfile } from '@/app/actions/auth-actions';
@@ -13,10 +12,7 @@ type UserType = 'client' | 'admin';
 export function useAuthForm(mode: AuthMode, userType: UserType = 'client') {
     const router = useRouter();
     const { toast } = useToast();
-
-    // Use useActionState for form submissions
-    const [signInState, signInAction, isSignInPending] = useActionState(signInUser, null);
-    const [registerState, registerAction, isRegisterPending] = useActionState(registerUser, null);
+    const [loading, setLoading] = useState(false);
 
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -31,8 +27,6 @@ export function useAuthForm(mode: AuthMode, userType: UserType = 'client') {
     const [errors, setErrors] = useState<Partial<typeof formData>>({});
 
 
-    const loading = isSignInPending || isRegisterPending;
-
     const handleInputChange = (field: keyof typeof formData, value: string) => {
         setFormData(prev => ({...prev, [field]: value}));
     };
@@ -41,13 +35,33 @@ export function useAuthForm(mode: AuthMode, userType: UserType = 'client') {
         // basic validation
     };
 
-    // --- EFFECT TO HANDLE SIGN-IN RESULT ---
-    useEffect(() => {
-        if (!signInState) return;
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        setLoading(true);
 
-        if (signInState.success && signInState.user) {
-            // After successful sign-in, fetch the user's role to redirect correctly.
-            const fetchRoleAndRedirect = async () => {
+        const formElement = e.currentTarget;
+        const submissionData = new FormData(formElement);
+
+        if (mode === 'signup') {
+            if(submissionData.get('password') !== submissionData.get('confirmPassword')) {
+                toast({ variant: 'destructive', title: 'Passwords do not match' });
+                setLoading(false);
+                return;
+            }
+            submissionData.set('role', userType);
+            const registerState = await registerUser(null, submissionData);
+            
+            if (registerState.success) {
+                toast({ title: 'Account Created', description: 'Please check your email to verify your account.' });
+                router.push(`/auth/${userType}/signin`);
+            } else if (registerState.error) {
+                toast({ variant: 'destructive', title: 'Sign Up Failed', description: registerState.error });
+            }
+
+        } else { // 'signin' mode
+            const signInState = await signInUser(null, submissionData);
+
+            if (signInState.success && signInState.user) {
                 const profileResult = await getUserAndProfile(signInState.user.id);
                 if (profileResult.success) {
                     toast({ title: 'Sign In Successful', description: 'Welcome back!' });
@@ -57,47 +71,14 @@ export function useAuthForm(mode: AuthMode, userType: UserType = 'client') {
                         router.push('/dashboard');
                     }
                 } else {
-                    // This can happen if the profile wasn't created correctly.
                     toast({ variant: 'destructive', title: 'Sign In Error', description: profileResult.error || 'Could not determine user role.' });
                 }
-            };
-            fetchRoleAndRedirect();
-        } else if (signInState.error) {
-            toast({ variant: 'destructive', title: 'Sign In Failed', description: signInState.error });
-        }
-    }, [signInState, toast, router]);
-
-
-    // --- EFFECT TO HANDLE REGISTRATION RESULT ---
-    useEffect(() => {
-        if (!registerState) return;
-
-        if (registerState.success) {
-            toast({ title: 'Account Created', description: 'Please check your email to verify your account.' });
-            router.push(`/auth/${userType}/signin`);
-        } else if (registerState.error) {
-            toast({ variant: 'destructive', title: 'Sign Up Failed', description: registerState.error });
-        }
-    }, [registerState, toast, router, userType]);
-
-
-    // --- FORM SUBMISSION HANDLER ---
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-
-        const formElement = e.currentTarget;
-        const formData = new FormData(formElement);
-
-        if (mode === 'signup') {
-            if(formData.get('password') !== formData.get('confirmPassword')) {
-                toast({ variant: 'destructive', title: 'Passwords do not match' });
-                return;
+            } else if (signInState.error) {
+                toast({ variant: 'destructive', title: 'Sign In Failed', description: signInState.error });
             }
-            formData.set('role', userType);
-            registerAction(formData);
-        } else {
-            signInAction(formData);
         }
+
+        setLoading(false);
     };
 
     return {

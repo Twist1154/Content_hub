@@ -3,9 +3,11 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { SupabaseClient } from '@supabase/supabase-js';
+import { getAllClients as fetchAllClients } from '@/app/actions/get-clients-action';
+import { registerUser } from '@/app/actions/auth-actions';
 
 export async function getCurrentUser() {
-    const supabase = await createClient();
+    const supabase = await createClient() as SupabaseClient;
     try {
         const { data: { user } } = await supabase.auth.getUser();
 
@@ -13,9 +15,7 @@ export async function getCurrentUser() {
             return null;
         }
 
-        // Use a service role client here to ensure we can fetch any profile,
-        // especially when an admin is checking another user's details.
-        const serviceClient = await createClient({ useServiceRole: true });
+        const serviceClient = await createClient({ useServiceRole: true }) as SupabaseClient;
         const { data: profile, error: profileError } = await serviceClient
             .from('profiles')
             .select('*')
@@ -37,46 +37,20 @@ export async function getCurrentUser() {
 
 
 export async function getAllClients() {
-    const supabase = await createClient({ useServiceRole: true }) as SupabaseClient;
+    return fetchAllClients();
+}
 
-    const { data: profiles, error: profileError } = await supabase
-        .from('profiles')
-        .select(`
-            id,
-            email,
-            created_at,
-            role,
-            stores ( id, name, brand_company )
-        `)
-        .eq('role', 'client');
+export async function signUp(email: string, password: string, role: 'client' | 'admin' = 'client') {
+  const formData = new FormData();
+  formData.append('email', email);
+  formData.append('password', password);
+  formData.append('role', role);
 
-    if (profileError) {
-        console.error('Error fetching clients:', profileError);
-        return { success: false, clients: [], error: profileError.message };
-    }
+  // We can't use the result of registerUser directly here as it's a form action state.
+  // We just call it. Error handling will happen on the client form.
+  await registerUser(null, formData);
 
-    const { data: contentCounts, error: countError } = await supabase
-        .rpc('get_user_content_counts');
-
-    if (countError) {
-        console.error('Error fetching content counts:', countError);
-        return { success: false, clients: [], error: countError.message };
-    }
-
-    const countsMap = new Map(contentCounts.map((c: any) => [c.user_id, {
-        content_count: c.content_count,
-        latest_upload: c.latest_upload,
-    }]));
-
-    const clients = profiles.map(profile => ({
-        id: profile.id,
-        email: profile.email,
-        created_at: profile.created_at,
-        role: 'client' as const,
-        stores: profile.stores,
-        content_count: countsMap.get(profile.id)?.content_count || 0,
-        latest_upload: countsMap.get(profile.id)?.latest_upload || null,
-    }));
-
-    return { success: true, clients };
+  // After sign-up, you typically don't have an active session until verification,
+  // so fetching the user might not be necessary here. The flow redirects to sign-in.
+  return { success: true, message: 'Sign-up initiated. Please check email for verification.' };
 }
