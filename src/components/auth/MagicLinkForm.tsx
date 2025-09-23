@@ -1,53 +1,74 @@
+// components/auth/MagicLinkForm.tsx
 
 'use client';
 
-import { useActionState, useEffect } from 'react';
-import { useFormStatus } from 'react-dom';
-import { sendMagicLink } from '@/app/actions/auth-actions';
-import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Loader2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FormField } from '@/components/ui/form-field';
+import { Mail } from 'lucide-react';
+import { useMagicLinkAuth, UserType } from '@/hooks/useMagicLinkAuth';
+import Link from 'next/link';
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" className="w-full" disabled={pending}>
-      {pending && <Loader2 className="mr-2 animate-spin" />}
-      Send Magic Link
-    </Button>
-  );
+interface MagicLinkFormProps {
+  userType?: UserType;
 }
 
-export function MagicLinkForm() {
-  const { toast } = useToast();
-  const [state, formAction] = useActionState(sendMagicLink, null);
-
-  useEffect(() => {
-    if (!state) return;
-    
-    if (state.success) {
-      toast({
-        title: 'Check your email',
-        description: state.message,
-      });
-    } else {
-      toast({
-        title: 'Error',
-        description: state.error,
-        variant: 'destructive',
-      });
-    }
-  }, [state, toast]);
+export function MagicLinkForm({ userType = 'client' }: MagicLinkFormProps) {
+  const { email, setEmail, loading, sent, sendMagicLink } = useMagicLinkAuth(userType);
 
   return (
-    <form action={formAction} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" name="email" type="email" placeholder="you@example.com" required />
-      </div>
-      <SubmitButton />
-    </form>
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle className="text-center">Sign in with Magic Link</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {!sent ? (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              sendMagicLink(userType);
+            }}
+            className="space-y-4"
+          >
+            <FormField label="Email" icon={Mail}>
+              <Input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="pl-10"
+              />
+            </FormField>
+
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? 'Sending…' : 'Send Magic Link'}
+            </Button>
+
+            <div className="text-center text-sm text-muted-foreground">
+              Prefer password sign in?{' '}
+              <Link
+                href={userType === 'admin' ? '/auth/admin/signin' : '/auth/client/signin'}
+                className="text-primary hover:underline"
+              >
+                Go back
+              </Link>
+            </div>
+          </form>
+        ) : (
+          <div className="space-y-4 text-center">
+            <p className="text-foreground">We've sent a magic sign-in link to:</p>
+            <p className="font-medium break-all">{email}</p>
+            <p className="text-muted-foreground text-sm">
+              Open your email on this device and click the link to complete sign-in.
+            </p>
+            <Button type="button" variant="outline" className="w-full" disabled>
+              Waiting for confirmation…
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
