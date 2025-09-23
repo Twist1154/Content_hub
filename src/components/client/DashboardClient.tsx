@@ -1,4 +1,3 @@
-
 // src/components/client/DashboardClient.tsx
 'use client';
 
@@ -7,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { ContentManager } from '@/components/content/ContentManager';
 import { fetchContentForUser } from '@/app/actions/data-actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Store, Upload, TrendingUp, Calendar, Trash2, Plus } from 'lucide-react';
+import { Store, Upload, TrendingUp, Calendar, Trash2, Plus, ArrowLeft } from 'lucide-react';
 import { StoreForm } from '@/components/client/StoreForm';
 import { ContentUpload } from '@/components/client/ContentUpload';
 import { StatCard } from '@/components/ui/StatCard';
@@ -67,6 +66,14 @@ export function DashboardClient({
     return (
         <>
         <main className="container mx-auto px-4 py-8 space-y-8">
+                {isAdminView && (
+                    <div className="mb-4">
+                        <Button variant="outline" onClick={() => router.push('/admin/clients')}>
+                            <ArrowLeft className="w-4 h-4 mr-2" />
+                            Back to Client Management
+                        </Button>
+                    </div>
+                )}
                 {/* Stats Overview */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <StatCard
