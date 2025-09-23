@@ -1,4 +1,3 @@
-
 // src/lib/auth.ts
 'use server';
 
@@ -6,7 +5,7 @@ import { createClient } from '@/utils/supabase/server';
 import { SupabaseClient } from '@supabase/supabase-js';
 
 export async function getCurrentUser() {
-    const supabase = createClient();
+    const supabase = await createClient();
     try {
         const { data: { user } } = await supabase.auth.getUser();
 
@@ -16,7 +15,7 @@ export async function getCurrentUser() {
 
         // Use a service role client here to ensure we can fetch any profile,
         // especially when an admin is checking another user's details.
-        const serviceClient = createClient({ useServiceRole: true });
+        const serviceClient = await createClient({ useServiceRole: true });
         const { data: profile, error: profileError } = await serviceClient
             .from('profiles')
             .select('*')
@@ -38,7 +37,7 @@ export async function getCurrentUser() {
 
 
 export async function getAllClients() {
-    const supabase = createClient({ useServiceRole: true }) as SupabaseClient;
+    const supabase = await createClient({ useServiceRole: true }) as SupabaseClient;
 
     const { data: profiles, error: profileError } = await supabase
         .from('profiles')

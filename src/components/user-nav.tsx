@@ -1,11 +1,15 @@
+// components/ui/UserNav.tsx 
+
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Tooltip } from '@/components/ui/tooltip';
 import { User, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+// We create sub-components for a flexible API
 interface UserNavProps {
     email: string;
     children: React.ReactNode;

@@ -1,3 +1,4 @@
+
 // hooks/useMagicLinkAuth.ts
 
 'use client';

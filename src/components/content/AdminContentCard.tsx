@@ -2,9 +2,9 @@
 'use client';
 
 import Image from 'next/image';
-import { Button } from '@/components/ui/Button';
-import { Tooltip } from '@/components/ui/Tooltip';
-import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/button';
+import { Tooltip } from '@/components/ui/tooltip';
+import { Badge } from '@/components/ui/badge';
 import { Download, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 import type { ContentItem } from 'types/content';

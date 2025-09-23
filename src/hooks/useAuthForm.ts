@@ -20,8 +20,26 @@ export function useAuthForm(mode: AuthMode, userType: UserType = 'client') {
 
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [formData, setFormData] = useState({
+        fullName: '',
+        username: '',
+        email: '',
+        phoneNumber: '',
+        password: '',
+        confirmPassword: ''
+    });
+    const [errors, setErrors] = useState<Partial<typeof formData>>({});
+
 
     const loading = isSignInPending || isRegisterPending;
+
+    const handleInputChange = (field: keyof typeof formData, value: string) => {
+        setFormData(prev => ({...prev, [field]: value}));
+    };
+    
+    const handleBlur = (field: keyof typeof formData) => {
+        // basic validation
+    };
 
     // --- EFFECT TO HANDLE SIGN-IN RESULT ---
     useEffect(() => {
@@ -67,15 +85,14 @@ export function useAuthForm(mode: AuthMode, userType: UserType = 'client') {
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        // Basic client-side validation
-        if (mode === 'signup' && password !== confirmPassword) {
-            toast({ variant: 'destructive', title: 'Passwords do not match' });
-            return;
-        }
-
-        const formData = new FormData(e.currentTarget);
+        const formElement = e.currentTarget;
+        const formData = new FormData(formElement);
 
         if (mode === 'signup') {
+            if(formData.get('password') !== formData.get('confirmPassword')) {
+                toast({ variant: 'destructive', title: 'Passwords do not match' });
+                return;
+            }
             formData.set('role', userType);
             registerAction(formData);
         } else {
@@ -84,11 +101,15 @@ export function useAuthForm(mode: AuthMode, userType: UserType = 'client') {
     };
 
     return {
+        formData,
+        errors,
         password,
         setPassword,
         confirmPassword,
         setConfirmPassword,
         loading,
+        handleInputChange,
+        handleBlur,
         handleSubmit,
     };
 }
