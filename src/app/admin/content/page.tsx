@@ -1,3 +1,4 @@
+// app/admin/content/page.tsx
 
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
@@ -23,10 +24,21 @@ export default async function AdminContentPage() {
     }
     
     return (
+        // THEME: Use theme variables for the background.
         <div className="min-h-screen bg-background">
+            <AdminHeader
+                user={user}
+                title="Content Library"
+                breadcrumbItems={[
+                                        { label: 'Admin Dashboard', href: '/admin' },
+                                        { label: 'Content Library', current: true }
+                                    ]}
+                                />
+
             <main className="container mx-auto px-4 py-8">
                 <div className="mb-8">
                     <div className="flex items-center gap-2 mb-2">
+                        {/* THEME: Use theme colors */}
                         <Database className="w-6 h-6 text-primary" />
                         <h2 className="text-xl font-semibold text-foreground">All Content</h2>
                         <Tooltip content="View and organize all client-submitted content">
@@ -38,11 +50,12 @@ export default async function AdminContentPage() {
                     </p>
                 </div>
 
+                {/* REFACTOR: Replace ContentViewer with ContentManager */}
                 <ContentManager
                     fetchAction={fetchAllContent}
                     showGrouping={true}
                     defaultView="company"
-                    isAdminView={true}
+                    isAdminView={true} // Use the AdminContentCard
                 />
             </main>
         </div>
