@@ -31,7 +31,7 @@ export async function registerUser(prevState: any, formData: FormData) {
     }
     
     // We must use the service role client to be able to set the user's role on creation.
-    const supabase = createClient({ useServiceRole: true });
+    const supabase = await createClient({ useServiceRole: true });
 
     const { data, error } = await supabase.auth.admin.createUser({
         email,
@@ -66,7 +66,7 @@ export async function signInUser(prevState: any, formData: FormData) {
         return { success: false, error: 'Invalid email or password format.' };
     }
     
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -83,7 +83,7 @@ export async function signInUser(prevState: any, formData: FormData) {
  * Signs out the currently authenticated user.
  */
 export async function signOut() {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { error } = await supabase.auth.signOut();
     if (error) {
         return { success: false, error: error.message };
@@ -101,7 +101,7 @@ export async function getUserAndProfile(userId: string) {
         return { success: false, error: 'User ID is required.' };
     }
 
-    const supabase = createClient({ useServiceRole: true });
+    const supabase = await createClient({ useServiceRole: true });
     const { data, error } = await supabase
         .from('profiles')
         .select('role')
@@ -117,7 +117,7 @@ export async function getUserAndProfile(userId: string) {
 
 
 export async function switchUserRole(userId: string, newRole: 'client' | 'admin') {
-    const supabase = createClient({ useServiceRole: true }) as SupabaseClient;
+    const supabase = await createClient({ useServiceRole: true }) as SupabaseClient;
 
     const { error: profileError } = await supabase
         .from('profiles')

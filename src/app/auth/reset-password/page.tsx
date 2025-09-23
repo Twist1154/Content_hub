@@ -1,16 +1,22 @@
 
+// app/auth/reset-password/page.tsx
+
 'use client';
 
-import { usePasswordResetFlow } from '@/hooks/usePasswordResetFlow';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Suspense } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { BackButton } from '@/components/ui/back-button';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { CheckCircle, AlertTriangle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Key } from 'lucide-react';
+import { usePasswordResetFlow } from '@/hooks/usePasswordResetFlow';
 import { PasswordForm } from '@/components/auth/PasswordForm';
+import { Input } from '@/components/ui/input';
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
     const {
         status,
+        isNewUser,
         userEmail,
         password,
         setPassword,
@@ -18,80 +24,68 @@ export default function ResetPasswordPage() {
         setConfirmPassword,
         handleSubmit,
     } = usePasswordResetFlow();
-    
 
-    if (status === 'validating') {
+    // Render UI based on the current status from the hook
+    const renderContent = () => {
+        switch (status) {
+            case 'validating':
+                return <LoadingSpinner size="lg" text="Validating link..." />;
+            case 'error':
+                return <p className="text-destructive">This link is invalid or has expired. Please request a new one.</p>;
+            case 'ready':
+            case 'submitting':
         return (
-            <div className="min-h-screen bg-background flex items-center justify-center">
-                <Card className="w-full max-w-md">
-                    <CardContent className="p-8">
-                        <LoadingSpinner size="lg" text="Validating link..." />
+                    <>
+                        <CardHeader>
+                            <CardTitle className="text-center flex items-center justify-center gap-2"><Key className="w-6 h-6" />{isNewUser ? 'Set Your Password' : 'Reset Your Password'}</CardTitle>
+                            {isNewUser && (
+                                <p className="text-center text-sm text-muted-foreground mt-2">
+                                    Welcome! Set a password for: <strong className="text-foreground">{userEmail}</strong>
+                                </p>
+                            )}
+                        </CardHeader>
+                        <CardContent>
+                            {isNewUser && (
+                                <div className="space-y-2 mb-4">
+                                    <label className="block text-sm font-medium text-muted-foreground">Email</label>
+                                    <Input type="email" value={userEmail || ''} readOnly className="bg-muted cursor-not-allowed" />
+                                </div>
+                            )}
+                            <PasswordForm
+                                isNewUser={isNewUser}
+                                onSubmit={handleSubmit}
+                                password={{ value: password, set: setPassword }}
+                                confirmPassword={{ value: confirmPassword, set: setConfirmPassword }}
+                                isLoading={status === 'submitting'}
+                            />
                     </CardContent>
-                </Card>
-            </div>
+                    </>
         );
+            case 'success':
+                 return <p className="text-primary">Success! Redirecting you now...</p>;
     }
-    
-    if (status === 'error') {
-         return (
-            <div className="min-h-screen bg-background flex items-center justify-center">
-                <Card className="w-full max-w-md text-center">
-                    <CardHeader>
-                        <AlertTriangle className="w-12 h-12 mx-auto text-destructive" />
-                        <CardTitle>Link Invalid or Expired</CardTitle>
-                        <CardDescription>
-                            The password reset link is not valid. Please request a new one.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Button onClick={() => window.location.href = '/auth/client/signin'}>
-                            Back to Sign In
-                        </Button>
-                    </CardContent>
-                </Card>
-            </div>
-        );
-    }
-    
-    if (status === 'success') {
-         return (
-            <div className="min-h-screen bg-background flex items-center justify-center">
-                <Card className="w-full max-w-md text-center">
-                    <CardHeader>
-                        <CheckCircle className="w-12 h-12 mx-auto text-chart-2" />
-                        <CardTitle>Password Updated!</CardTitle>
-                        <CardDescription>
-                            Your password has been changed successfully. You will be redirected to sign in.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                         <LoadingSpinner size="md" />
-                    </CardContent>
-                </Card>
-            </div>
-        );
-    }
-
+    };
 
     return (
         <div className="min-h-screen bg-background flex items-center justify-center p-4">
-            <Card className="w-full max-w-md">
-                <CardHeader>
-                    <CardTitle>Reset Your Password</CardTitle>
-                    <CardDescription>
-                        Enter a new password for {userEmail}.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <PasswordForm
-                        isNewUser={false}
-                        onSubmit={handleSubmit}
-                        password={{ value: password, set: setPassword }}
-                        confirmPassword={{ value: confirmPassword, set: setConfirmPassword }}
-                        isLoading={status === 'submitting'}
-                    />
-                </CardContent>
-            </Card>
+            <div className="w-full max-w-md">
+                <div className="mb-4">
+                    <BackButton href="/auth/client/signin" label="Back to sign in" />
+                </div>
+
+                <Card>
+                    <div className="p-8">{renderContent()}</div>
+                </Card>
+            </div>
         </div>
+    );
+}
+
+// The outer page component remains the same
+export default function ResetPasswordPage() {
+    return (
+        <Suspense fallback={<LoadingSpinner />}>
+          <ResetPasswordContent />
+    </Suspense>
     );
 }
