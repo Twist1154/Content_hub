@@ -12,14 +12,14 @@ import { format } from 'date-fns';
 import { FormField } from '@/components/ui/FormField';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/Toast';
 import { deleteUser, sendPasswordReset } from '@/app/actions/user-management-actions';
 
 export default function ProfilePage() {
     const { user, loading } = useUser();
     const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
     const router = useRouter();
-    const { toast } = useToast();
+    const { addToast } = useToast();
 
     useEffect(() => {
         if (!loading && !user) {
@@ -37,26 +37,26 @@ export default function ProfilePage() {
 
     const handleChangePassword = async () => {
         if (!user.email) {
-             toast({ variant: 'destructive', title: 'Error', description: 'User email not available.' });
+             addToast({ type: 'error', title: 'Error', message: 'User email not available.' });
              return;
         }
         const result = await sendPasswordReset(user.email);
         if (result.success) {
-            toast({ title: 'Password Reset Link Sent', description: 'Please check your email to continue.' });
+            addToast({ type: 'success', title: 'Password Reset Link Sent', message: 'Please check your email to continue.' });
         } else {
-            toast({ variant: 'destructive', title: 'Error', description: result.error || 'Failed to send reset link.' });
+            addToast({ type: 'error', title: 'Error', message: result.error || 'Failed to send reset link.' });
         }
     };
 
     const handleDeleteAccount = async () => {
         const result = await deleteUser(user.id);
         if (result.success) {
-            toast({ title: 'Account Deleted', description: 'Your account is being deleted. You will be logged out.' });
+            addToast({ type: 'success', title: 'Account Deleted', message: 'Your account is being deleted. You will be logged out.' });
             // The signout is handled by Supabase, the redirect will happen automatically
             // after the session is terminated by the middleware.
             router.push('/');
         } else {
-             toast({ variant: 'destructive', title: 'Deletion Failed', description: result.error || 'Could not delete your account.' });
+             addToast({ type: 'error', title: 'Deletion Failed', message: result.error || 'Could not delete your account.' });
         }
         setDeleteModalOpen(false);
     };

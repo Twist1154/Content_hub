@@ -1,3 +1,4 @@
+
 // components/client/StoreForm.tsx
 'use client';
 
@@ -5,7 +6,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/Toast';
 import { Store, Building, MapPin } from 'lucide-react';
 import { addStore } from '@/app/actions/data-actions';
 import type { StoreData } from '@/app/actions/data-actions';
@@ -23,7 +24,7 @@ export function StoreForm({ userId, onSuccess }: StoreFormProps) {
         address: ''
     });
     const [loading, setLoading] = useState(false);
-    const { toast } = useToast();
+    const { addToast } = useToast();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -37,9 +38,10 @@ export function StoreForm({ userId, onSuccess }: StoreFormProps) {
                 throw new Error(result.error);
             }
 
-            toast({
+            addToast({
+                type: 'success',
                 title: 'Store Added!',
-                description: 'Your new store has been saved successfully.'
+                message: 'Your new store has been saved successfully.'
             });
 
             if (onSuccess) {
@@ -47,10 +49,10 @@ export function StoreForm({ userId, onSuccess }: StoreFormProps) {
             }
 
         } catch (err: any) {
-            toast({
-                variant: 'destructive',
+            addToast({
+                type: 'error',
                 title: 'Failed to Add Store',
-                description: err.message || 'An unexpected error occurred.'
+                message: err.message || 'An unexpected error occurred.'
             });
         } finally {
             setLoading(false);
