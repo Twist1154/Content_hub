@@ -28,6 +28,17 @@ export function AuthForm({ mode, userType = 'client' }: AuthFormProps) {
 
   return (
     <>
+      <div className="relative my-4">
+        <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-border" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-card px-2 text-muted-foreground">
+                Or continue with email
+            </span>
+        </div>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-4">
         {mode === 'signup' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -38,7 +49,6 @@ export function AuthForm({ mode, userType = 'client' }: AuthFormProps) {
                 value={formData.fullName || ''}
                 onChange={(e) => handleInputChange('fullName', e.target.value)}
                 onBlur={() => handleBlur('fullName')}
-                required
               />
             </FormField>
             <FormField label="Username" error={errors.username}>
@@ -48,7 +58,6 @@ export function AuthForm({ mode, userType = 'client' }: AuthFormProps) {
                 value={formData.username || ''}
                 onChange={(e) => handleInputChange('username', e.target.value)}
                 onBlur={() => handleBlur('username')}
-                required
               />
             </FormField>
           </div>
@@ -76,7 +85,6 @@ export function AuthForm({ mode, userType = 'client' }: AuthFormProps) {
               value={formData.phoneNumber || ''}
               onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
               onBlur={() => handleBlur('phoneNumber')}
-              required
             />
           </FormField>
         )}
@@ -132,7 +140,7 @@ export function AuthForm({ mode, userType = 'client' }: AuthFormProps) {
             disabled={loading}
         >
             {loading && <Loader2 className="animate-spin mr-2" />}
-            {mode === 'signin' ? 'Sign In' : 'Sign Up'}
+            {mode === 'signin' ? 'Sign In' : 'Create Account'}
         </Button>
       </form>
     </>
