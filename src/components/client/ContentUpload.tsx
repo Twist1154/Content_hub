@@ -6,22 +6,15 @@ import {useDropzone} from 'react-dropzone';
 import {createClient} from '@/utils/supabase/client';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
-import { Tooltip } from '@/components/ui/tooltip';
+import {Tooltip} from '@/components/ui/tooltip';
 import {Card, CardContent, CardHeader} from '@/components/ui/card';
 import {File, Upload} from 'lucide-react';
 import type {ContentData} from '@/app/actions/data-actions';
 import {insertContent} from '@/app/actions/data-actions';
 import {LoadingSpinner} from '@/components/ui/loading-spinner';
 import {cn} from '@/lib/utils';
-import type { ContentItem } from '@/lib/types';
+import type { Store as StoreType } from '@/types/content';
 import { notifyAdminsOfContentUpload } from '@/app/actions/notification-actions';
-
-// The store type is part of ContentItem, but let's define a simple one for props
-interface StoreType {
-    id: string;
-    name: string;
-    brand_company: string;
-}
 
 interface ContentUploadProps {
     userId: string;
