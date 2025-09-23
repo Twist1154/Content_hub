@@ -1,10 +1,10 @@
 
 // src/components/content/ClientContentCard.tsx
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
 import FileIcon from '@/components/FileIcon';
 import { formatBytes, cn } from '@/lib/utils';
-import type { ContentItem, ViewMode } from '@/lib/types';
+import type { ContentItem, ViewMode } from '@/types/content';
 import Image from 'next/image';
 
 interface ClientContentCardProps {
@@ -27,8 +27,8 @@ export function ClientContentCard({ item, viewMode }: ClientContentCardProps) {
             )}>
                  {isImage ? (
                     <Image
-                        src={item.url}
-                        alt={item.name}
+                        src={item.file_url}
+                        alt={item.title}
                         fill
                         className={cn(
                             "object-cover",
@@ -46,13 +46,13 @@ export function ClientContentCard({ item, viewMode }: ClientContentCardProps) {
             </CardHeader>
             <div className="flex flex-col flex-grow min-w-0">
                 <CardContent className={cn("flex-grow", isListView ? "p-3" : "p-4")}>
-                    <CardTitle className="text-sm font-medium leading-tight truncate">{item.name}</CardTitle>
+                    <CardTitle className="text-sm font-medium leading-tight truncate">{item.title}</CardTitle>
                 </CardContent>
                 <CardFooter className={cn(
                     "flex justify-between items-center text-xs text-muted-foreground",
                      isListView ? "p-3 pt-0" : "p-4 pt-0"
                 )}>
-                    <span>{formatBytes(item.size)}</span>
+                    <span>{formatBytes(item.file_size)}</span>
                     <Badge variant="outline" className="capitalize">{item.type.split('/')[1] || 'File'}</Badge>
                 </CardFooter>
             </div>

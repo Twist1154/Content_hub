@@ -1,9 +1,10 @@
 
 // app/terms/page.tsx
 
-import { BackButton } from '@/components/ui/back-button';
-import { Breadcrumb } from '@/components/ui/breadcrumb';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+import { BackButton } from '@/components/ui/BackButton';
+import { Breadcrumb } from '@/components/ui/Breadcrumb';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { FileText, Users, Shield, AlertTriangle, Mail } from 'lucide-react';
 
 const PolicySection = ({ icon: Icon, title, children, iconColorClass = 'text-primary' }: { icon: React.ElementType, title: string, children: React.ReactNode, iconColorClass?: string }) => (

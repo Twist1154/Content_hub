@@ -2,8 +2,8 @@
 'use client';
 
 import { RegistrationForm } from '@/components/auth/RegistrationForm';
-import { BackButton } from '@/components/ui/back-button';
-import { Breadcrumb } from '@/components/ui/breadcrumb';
+import { BackButton } from '@/components/ui/BackButton';
+import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import Link from 'next/link';
 
 export default function ClientSignUp() {

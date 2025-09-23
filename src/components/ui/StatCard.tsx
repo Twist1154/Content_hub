@@ -1,5 +1,5 @@
 // components/ui/StatCard.tsx
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/Card';
 
 interface StatCardProps {
     icon: React.ElementType;

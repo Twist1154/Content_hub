@@ -1,6 +1,6 @@
 // src/lib/content-utils.tsx
-import { Badge } from "@/components/ui/badge";
-import type { ContentItem, ContentType } from "./types";
+import { Badge } from "@/components/ui/Badge";
+import type { ContentItem, ContentType } from "../types/content";
 import { File, Video, Music, Image as ImageIcon, Book } from "lucide-react";
 
 export function formatFileSize(bytes: number, decimals = 2) {

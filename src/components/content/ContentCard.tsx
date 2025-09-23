@@ -3,9 +3,9 @@
 'use client';
 
 import Image from 'next/image';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Tooltip } from '@/components/ui/tooltip';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Tooltip } from '@/components/ui/Tooltip';
 import { format } from 'date-fns';
 import { CheckSquare, Square, ExternalLink, Video, Music, Trash2 } from 'lucide-react'; // --- NEW: Import Trash2 ---
 import { cn } from '@/lib/utils';

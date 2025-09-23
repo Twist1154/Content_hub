@@ -1,7 +1,7 @@
 // src/components/admin/client-management/ClientList.tsx
 'use client';
 
-import { Client } from '@/lib/types';
+import { Client } from "@/types/content";
 import { ClientCard } from './ClientCard';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { Button } from '@/components/ui/Button';

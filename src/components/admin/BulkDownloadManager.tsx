@@ -12,7 +12,7 @@ import {Archive, Filter, FileArchive} from 'lucide-react';
 import {format} from 'date-fns';
 import {fetchAllContent} from '@/app/actions/data-actions';
 import {ContentCard} from '@/components/content/ContentCard';
-import type {ContentItem} from '@/lib/types';
+import type {ContentItem} from "@/types/content";
 import {ContentDetailModal} from "@/components/content/ContentDetailModal";
 import {formatFileSize} from "@/lib/content-utils";
 import {cn} from '@/lib/utils';

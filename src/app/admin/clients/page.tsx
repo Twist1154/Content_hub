@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
 import { AdminClientManagement } from '@/components/admin/AdminClientManagement';
 import { AdminHeader } from '@/components/admin/AdminHeader';
-import { Tooltip } from '@/components/ui/tooltip';
+import { Tooltip } from '@/components/ui/Tooltip';
 import { Users, Shield } from 'lucide-react';
 
 export default async function AdminClientsPage() {

@@ -4,7 +4,7 @@ import { AuthForm } from '@/components/auth/AuthForm';
 import { BackButton } from '@/components/ui/back-button';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
 import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 
 
 export default function ClientSignIn() {

@@ -2,7 +2,7 @@
 'use client';
 
 import {useEffect, useMemo, useState} from 'react';
-import type {Client} from '@/lib/types';
+import type {Client} from "@/types/content";
 import {useToast} from '@/hooks/use-toast';
 import {useRouter} from 'next/navigation';
 import {getAllClients} from '@/lib/auth';

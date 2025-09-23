@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
 import { AdminHeader } from '@/components/admin/AdminHeader';
-import { Tooltip } from '@/components/ui/tooltip';
+import { Tooltip } from '@/components/ui/Tooltip';
 import { Database, Shield } from 'lucide-react';
 import { ContentManager } from '@/components/content/ContentManager';
 import { fetchAllContent } from '@/app/actions/data-actions';

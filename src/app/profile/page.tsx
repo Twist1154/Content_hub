@@ -4,13 +4,13 @@
 import {useEffect, useState} from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/hooks/useUser';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 import { User, Mail, Calendar, Shield } from 'lucide-react';
 import { format } from 'date-fns';
-import { FormField } from '@/components/ui/form-field';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { FormField } from '@/components/ui/FormField';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { useToast } from '@/hooks/use-toast';
 import { deleteUser, sendPasswordReset } from '@/app/actions/user-management-actions';

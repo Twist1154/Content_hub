@@ -4,7 +4,7 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { z } from 'zod';
-import type { ContentItem, ContentType } from '@/lib/types';
+import type { ContentItem, ContentType } from "@/types/content";
 import { SupabaseClient } from '@supabase/supabase-js';
 import { startOfMonth, endOfMonth } from 'date-fns';
 
@@ -17,7 +17,7 @@ const storeSchema = z.object({
 export type StoreData = z.infer<typeof storeSchema>;
 
 export async function addStore(storeData: StoreData, userId: string) {
-  const supabase = createClient() as SupabaseClient;
+  const supabase = await createClient() as SupabaseClient;
 
   const validatedFields = storeSchema.safeParse(storeData);
 

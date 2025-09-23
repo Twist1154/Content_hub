@@ -7,7 +7,7 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { deleteUser } from '@/app/actions/user-management-actions';
-import { Client } from '@/lib/types';
+import { Client } from "@/types/content";
 
 interface DeleteConfirmationModalProps {
     client: Client | null;

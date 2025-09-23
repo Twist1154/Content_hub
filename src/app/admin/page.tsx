@@ -5,7 +5,7 @@ import {redirect} from 'next/navigation';
 import {getCurrentUser} from '@/lib/auth';
 import {AdminClientOverview} from '@/components/admin/AdminClientOverview';
 import {AdminHeader} from '@/components/admin/AdminHeader';
-import {Tooltip} from '@/components/ui/tooltip';
+import {Tooltip} from '@/components/ui/Tooltip';
 import {Database, Download, Shield, Users} from 'lucide-react';
 import Link from 'next/link';
 // REFACTOR: Import the new ContentManager and its data fetching action

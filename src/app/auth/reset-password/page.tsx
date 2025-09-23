@@ -4,14 +4,14 @@
 'use client';
 
 import { Suspense } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BackButton } from '@/components/ui/back-button';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { BackButton } from '@/components/ui/BackButton';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { Key } from 'lucide-react';
 import { usePasswordResetFlow } from '@/hooks/usePasswordResetFlow';
 import { PasswordForm } from '@/components/auth/PasswordForm';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/Input';
 
 function ResetPasswordContent() {
     const {

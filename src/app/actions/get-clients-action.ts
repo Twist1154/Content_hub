@@ -21,7 +21,7 @@ export interface Client {
 
 
 export async function getAllClients(): Promise<{ success: boolean, clients: Client[], error?: string }> {
-    const supabase = createClient({ useServiceRole: true }) as SupabaseClient;
+    const supabase = await createClient({useServiceRole: true}) as SupabaseClient;
 
     // 1. Fetch all client profiles along with their stores
     const { data: profiles, error: profileError } = await supabase

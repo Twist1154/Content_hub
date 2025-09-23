@@ -4,15 +4,15 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { Store, MapPin, Building, User, CheckCircle } from 'lucide-react';
 import { addStore } from '@/app/actions/data-actions';
 import type { StoreData } from '@/app/actions/data-actions';
-import { FormField } from '@/components/ui/form-field';
+import { FormField } from '@/components/ui/FormField';
 
 function SetupStoreContent() {
     const [formData, setFormData] = useState({

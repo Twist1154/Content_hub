@@ -1,7 +1,7 @@
 // src/utils/contentUtils.tsx
-import { Badge } from "@/components/ui/Badge";
-import type { ContentItem, ContentType } from "types/content";
-import { File, Video, Music, Image as ImageIcon, Book } from "lucide-react";
+import {Badge} from "@/components/ui/Badge";
+import type {ContentItem, ContentType} from "@/types/content";
+import {Book, File, Image as ImageIcon, Music, Video} from "lucide-react";
 
 export function formatFileSize(bytes: number, decimals = 2) {
     if (bytes === 0) return "0 Bytes";
@@ -17,15 +17,19 @@ export function formatFileSize(bytes: number, decimals = 2) {
 
 export function getStatusBadge(item: ContentItem) {
     const statusMap = {
-        active: { variant: 'default', className: 'bg-green-500/80 text-white', label: 'Active' },
-        archived: { variant: 'secondary', label: 'Archived' },
-        draft: { variant: 'outline', label: 'Draft' },
-        scheduled: { variant: 'default', className: 'bg-blue-500/80 text-white', label: 'Scheduled' },
+        active: {
+            variant: 'default',
+            className: 'bg-green-500/80 text-white',
+            label: 'Active'
+        },
+        archived: {variant: 'secondary', label: 'Archived'},
+        draft: {variant: 'outline', label: 'Draft'},
+        scheduled: {variant: 'default', className: 'bg-blue-500/80 text-white', label: 'Scheduled'},
     };
 
     const status = item.status || 'draft';
-    const { variant, className, label } = statusMap[status];
-    
+    const {variant, className, label} = statusMap[status];
+
     return <Badge variant={variant as any} className={className}>{label}</Badge>;
 }
 
@@ -36,6 +40,8 @@ export function getTypeIcon(type: ContentType) {
         case 'video':
             return Video;
         case 'audio':
+            return Music;
+        case 'music':
             return Music;
         case 'document':
             return Book;

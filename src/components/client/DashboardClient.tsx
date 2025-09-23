@@ -5,15 +5,15 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ContentManager } from '@/components/content/ContentManager';
 import { fetchContentForUser } from '@/app/actions/data-actions';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Store, Upload, TrendingUp, Calendar, Trash2, Plus } from 'lucide-react';
 import { StoreForm } from '@/components/client/StoreForm';
 import { ContentUpload } from '@/components/client/ContentUpload';
 import { StatCard } from '@/components/ui/StatCard';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { deleteUser } from '@/app/actions/user-management-actions';
-import type { ContentStats, Store as StoreType } from '@/lib/types';
+import type { ContentStats, Store as StoreType } from '@/types/content';
 import { useToast } from '@/hooks/use-toast';
 
 interface DashboardClientProps {
