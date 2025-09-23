@@ -44,7 +44,7 @@ export function AdminClientManagement() {
     // Notification state
     const [notification, setNotification] = useState({
         show: false,
-        type: 'info' as 'success' | 'error' | 'info',
+        type: 'info',
         message: ''
     });
 
@@ -112,7 +112,7 @@ export function AdminClientManagement() {
         <div className="space-y-6">
             <Notification
                 show={notification.show}
-                type={notification.type}
+                type={notification.type as 'success' | 'error' | 'info'}
                 message={notification.message}
                 onClose={() => setNotification(prev => ({...prev, show: false}))}
             />
