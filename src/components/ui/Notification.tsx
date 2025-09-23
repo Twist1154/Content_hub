@@ -1,92 +1,52 @@
-// src/components/ui/Notification.tsx
+
 'use client';
 
-import { useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { CheckCircle, AlertTriangle, Info, X } from 'lucide-react';
-
-const notificationVariants = {
-  success: {
-    bg: 'bg-primary/10',
-    border: 'border-primary/20',
-    iconColor: 'text-primary',
-    textColor: 'text-primary',
-    Icon: CheckCircle,
-  },
-  error: {
-    bg: 'bg-destructive/10',
-    border: 'border-destructive/20',
-    iconColor: 'text-destructive',
-    textColor: 'text-destructive',
-    Icon: AlertTriangle,
-  },
-  info: {
-    bg: 'bg-accent/50',
-    border: 'border-accent',
-    iconColor: 'text-accent-foreground',
-    textColor: 'text-accent-foreground',
-    Icon: Info,
-  },
-};
+import { X, CheckCircle, AlertTriangle, Info } from 'lucide-react'; // Import icons for visual feedback
 
 interface NotificationProps {
-  show: boolean;
-  type: 'success' | 'error' | 'info';
-  message: string;
-  onClose: () => void;
-  duration?: number;
+    show: boolean;
+    type: 'success' | 'error' | 'info';
+    message: string;
+    onClose?: () => void; // REFINEMENT 1: Add an optional close handler
 }
 
-export function Notification({
-  show,
-  type,
-  message,
-  onClose,
-  duration = 5000,
-}: NotificationProps) {
-  useEffect(() => {
-    if (show) {
-      const timer = setTimeout(() => {
-        onClose();
-      }, duration);
-      return () => clearTimeout(timer);
-    }
-  }, [show, duration, onClose]);
+export function Notification({ show, type, message, onClose }: NotificationProps) {
+    if (!show) return null;
 
-  const variant = notificationVariants[type];
-  const Icon = variant.Icon;
+    const typeStyles = {
+        success: 'bg-primary/10 border-primary/20 text-primary',
+        error: 'bg-destructive/10 border-destructive/20 text-destructive',
+        info: 'bg-accent/50 border-accent text-accent-foreground',
+    };
 
-  return (
-    <div
-      className={cn(
-        'fixed top-5 right-5 w-full max-w-sm rounded-lg shadow-lg border-l-4 transition-all transform z-50',
-        variant.bg,
-        variant.border,
-        show ? 'translate-x-0 opacity-100 animate-in fade-in-0 slide-in-from-top-4' : 'translate-x-full opacity-0'
-      )}
-      role="alert"
-    >
-      <div className="flex items-start p-4">
-        <div className="flex-shrink-0">
-          <Icon className={cn('h-6 w-6', variant.iconColor)} aria-hidden="true" />
-        </div>
-        <div className="ml-3 flex-1 pt-0.5">
-          <p className={cn('text-sm font-medium', variant.textColor)}>{message}</p>
-        </div>
-        <div className="ml-4 flex-shrink-0 flex">
-          <button
-            onClick={onClose}
+    const Icons = {
+        success: <CheckCircle className="w-5 h-5" />,
+        error: <AlertTriangle className="w-5 h-5" />,
+        info: <Info className="w-5 h-5" />,
+    };
+
+    return (
+        // REFINEMENT 2: Added animations and a flex container for the icon and close button.
+        <div
             className={cn(
-              'inline-flex rounded-full p-1.5 focus:outline-none focus:ring-2 focus:ring-offset-2 hover:bg-current/10 transition-colors',
-              variant.textColor
+                'p-4 rounded-lg border flex items-start justify-between gap-4 w-full animate-in fade-in-0 slide-in-from-top-4',
+                typeStyles[type]
             )}
-            aria-label="Close notification"
-          >
-            <span className="sr-only">Close</span>
-            <X className="h-5 w-5" />
-          </button>
+        >
+            <div className="flex items-start gap-3">
+                <span className="flex-shrink-0 mt-0.5">{Icons[type]}</span>
+                <p className="text-sm font-medium">{message}</p>
+            </div>
+            {onClose && (
+                <button
+                    onClick={onClose}
+                    className="flex-shrink-0 p-1 -m-1 rounded-full hover:bg-current/10 transition-colors"
+                    aria-label="Close notification"
+                >
+                    <X className="w-4 h-4" />
+                </button>
+            )}
         </div>
-      </div>
-    </div>
-  );
+    );
 }
