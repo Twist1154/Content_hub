@@ -1,7 +1,7 @@
 // src/hooks/useAuthForm.ts
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from './use-toast';
 import { signInUser, registerUser, getUserAndProfile } from '@/app/actions/auth-actions';
@@ -14,8 +14,6 @@ export function useAuthForm(mode: AuthMode, userType: UserType = 'client') {
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
 
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
     const [formData, setFormData] = useState({
         fullName: '',
         username: '',
@@ -26,13 +24,12 @@ export function useAuthForm(mode: AuthMode, userType: UserType = 'client') {
     });
     const [errors, setErrors] = useState<Partial<typeof formData>>({});
 
-
     const handleInputChange = (field: keyof typeof formData, value: string) => {
         setFormData(prev => ({...prev, [field]: value}));
     };
     
     const handleBlur = (field: keyof typeof formData) => {
-        // basic validation
+        // basic validation can go here
     };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -84,10 +81,6 @@ export function useAuthForm(mode: AuthMode, userType: UserType = 'client') {
     return {
         formData,
         errors,
-        password,
-        setPassword,
-        confirmPassword,
-        setConfirmPassword,
         loading,
         handleInputChange,
         handleBlur,
