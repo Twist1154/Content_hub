@@ -5,16 +5,16 @@ echo "Removing unused UI components..."
 
 # List of unused component files to be removed
 UNUSED_COMPONENTS=(
-    "src/components/ui/accordion.tsx"
-    "src/components/ui/alert-dialog.tsx"
-    "src/components/ui/checkbox.tsx"
-    "src/components/ui/collapsible.tsx"
-    "src/components/ui/dropdown-menu.tsx"
-    "src/components/ui/menubar.tsx"
-    "src/components/ui/radio-group.tsx"
-    "src/components/ui/scroll-area.tsx"
-    "src/components/ui/slider.tsx"
-    "src/components/ui/skeleton.tsx"
+    "src/components/ui/Accordion.tsx"
+    "src/components/ui/AlertDialog.tsx"
+    "src/components/ui/Checkbox.tsx"
+    "src/components/ui/Collapsible.tsx"
+    "src/components/ui/DropdownMenu.tsx"
+    "src/components/ui/Menubar.tsx"
+    "src/components/ui/RadioGroup.tsx"
+    "src/components/ui/ScrollArea.tsx"
+    "src/components/ui/Slider.tsx"
+    "src/components/ui/Skeleton.tsx"
 )
 
 # Loop through the array and remove each file
