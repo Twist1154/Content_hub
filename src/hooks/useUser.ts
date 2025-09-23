@@ -1,7 +1,8 @@
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/utils/supabase/client';
 import type { User } from '@supabase/supabase-js';
 
 // Define a type for the user object that includes the profile

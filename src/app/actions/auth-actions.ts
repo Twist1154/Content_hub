@@ -1,400 +1,145 @@
 
-
+// src/app/actions/auth-actions.ts
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/utils/supabase/server';
 import { SupabaseClient } from '@supabase/supabase-js';
+import { z } from 'zod';
 
+const registerSchema = z.object({
+    email: z.string().email(),
+    password: z.string().min(6),
+    role: z.enum(['client', 'admin']),
+});
+
+/**
+ * Registers a new user with email and password.
+ * This is a privileged action and requires the service role key.
+ */
+export async function registerUser(prevState: any, formData: FormData) {
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+    const role = formData.get('role') as 'client' | 'admin';
+
+    const validatedFields = registerSchema.safeParse({ email, password, role });
+
+    if (!validatedFields.success) {
+        return {
+            success: false,
+            error: 'Invalid input.',
+        };
+    }
+    
+    // We must use the service role client to be able to set the user's role on creation.
+    const supabase = createClient({ useServiceRole: true });
+
+    const { data, error } = await supabase.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true, // Send a confirmation email
+        user_metadata: { role },
+        app_metadata: { role },
+    });
+
+    if (error) {
+        return { success: false, error: error.message };
+    }
+
+    return { success: true, message: 'User registered. Please check email for verification.' };
+}
+
+
+const signInSchema = z.object({
+    email: z.string().email(),
+    password: z.string().min(1),
+});
+
+/**
+ * Signs in a user with their email and password.
+ */
+export async function signInUser(prevState: any, formData: FormData) {
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+    
+    const validatedFields = signInSchema.safeParse({ email, password });
+    if (!validatedFields.success) {
+        return { success: false, error: 'Invalid email or password format.' };
+    }
+    
+    const supabase = createClient();
+    const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+    });
+    
+    if (error) {
+        return { success: false, error: error.message };
+    }
+    
+    return { success: true, user: data.user };
+}
+
+/**
+ * Signs out the currently authenticated user.
+ */
 export async function signOut() {
-    try {
-        const supabase = await createClient();
-        const { error } = await supabase.auth.signOut();
-        if (error) {
-            console.error('Error signing out:', error);
-            return { success: false, error: error.message };
-        }
-        return { success: true };
-    } catch (error: any) {
-        console.error('Unexpected error signing out:', error);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signOut();
+    if (error) {
         return { success: false, error: error.message };
     }
+    return { success: true };
 }
 
-// Additional auth-related functions
-export async function signInUser(email: string, password: string): Promise<{
-    success: boolean;
-    user?: any;
-    error?: string
-}> {
-    try {
-        const supabase = await createClient() as SupabaseClient;
-
-        const {data, error} = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
-
-        if (error) {
-            console.error('Error signing in user:', error);
-            return {success: false, error: error.message};
-        }
-
-        return {success: true, user: data.user};
-    } catch (error: any) {
-        console.error('Unexpected error signing in user:', error);
-        return {success: false, error: error.message};
-    }
-}
-
-export async function getUserSession(): Promise<{ success: boolean; session?: any; error?: string }> {
-    try {
-        const supabase = await createClient() as SupabaseClient;
-
-        const {data: {session}, error} = await supabase.auth.getSession();
-
-        if (error) {
-            console.error('Error getting user session:', error);
-            return {success: false, error: error.message};
-        }
-
-        return {success: true, session};
-    } catch (error: any) {
-        console.error('Unexpected error getting user session:', error);
-        return {success: false, error: error.message};
-    }
-}
-
-export async function updateUserPassword(newPassword: string): Promise<{ success: boolean; error?: string }> {
-    try {
-        const supabase = await createClient() as SupabaseClient;
-
-        const {error} = await supabase.auth.updateUser({
-            password: newPassword
-        });
-
-        if (error) {
-            console.error('Error updating user password:', error);
-            return {success: false, error: error.message};
-        }
-
-        return {success: true};
-    } catch (error: any) {
-        console.error('Unexpected error updating user password:', error);
-        return {success: false, error: error.message};
-    }
-}
-
-export async function getUserAndProfile(userId: string, userType: 'client' | 'admin' = 'client'): Promise<{
-    success: boolean;
-    user?: any;
-    error?: string
-}> {
-    try {
-        // Use the service role client to be able to fetch any user's profile, including admins.
-        const supabase = await createClient({ useServiceRole: true }) as SupabaseClient;
-
-        // Fetch the user object from the auth schema
-        const { data: { user }, error: userError } = await supabase.auth.admin.getUserById(userId);
-
-        if (userError || !user) {
-            console.error('Error fetching user by ID:', userError);
-            return { success: false, error: 'No user found or error fetching user.' };
-        }
-
-        // Fetch the corresponding profile from the public schema
-        const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-
-        if (profileError) {
-            // This can happen if a user was created in Auth but the profile trigger failed.
-            // We can attempt to create it here as a fallback.
-            console.warn(`Profile for user ${user.id} not found, attempting to create one.`);
-            const { data: newProfile, error: insertError } = await supabase
-                .from('profiles')
-                .insert({
-                    id: user.id,
-                    email: user.email!,
-                    role: userType // Use the provided userType for the new profile
-                })
-                .select()
-                .single();
-
-            if (insertError) {
-                console.error('Error creating profile as fallback:', insertError);
-                // Return the user object even if profile creation fails
-                return { success: true, user: { ...user, profile: { role: userType } } };
-            }
-             return { success: true, user: { ...user, profile: newProfile } };
-        }
-
-        // Return the user merged with their profile
-        return { success: true, user: { ...user, profile } };
-    } catch (error: any) {
-        console.error('Unexpected error in getUserAndProfile:', error);
-        return { success: false, error: error.message };
-    }
-}
-
-interface AuthResult {
-    success: boolean;
-    message: string;
-    error?: string;
-    userId?: string;
-}
 
 /**
- * Register a new user with email and password
- * Sets both user_metadata and app_metadata with the role
+ * Fetches the user and their corresponding profile role.
+ * This is used after sign-in to determine the correct redirect path.
  */
-export async function registerUser(
-    email: string,
-    password: string,
-    role: 'client' | 'admin' = 'client'
-): Promise<AuthResult> {
-    try {
-        const supabase = await createClient({useServiceRole: true}) as SupabaseClient;  // Request service role key for admin operations
-
-        // First, create the user with user_metadata
-        const {data, error} = await supabase.auth.admin.createUser({
-            email,
-            password,
-            email_confirm: true, // Auto-confirm the email
-            user_metadata: {
-                role: role // Keep user_metadata for backward compatibility
-            },
-            app_metadata: {
-                role: role // Set app_metadata for RLS policies
-            }
-        });
-
-        if (error) {
-            console.error('Error registering user:', error);
-            return {
-                success: false,
-                message: 'Failed to register user',
-                error: error.message
-            };
-        }
-
-        if (!data.user) {
-            return {
-                success: false,
-                message: 'User creation failed with no error',
-                error: 'No user returned from createUser'
-            };
-        }
-
-        // Create profile record
-        const {error: profileError} = await supabase
-            .from('profiles')
-            .upsert({
-                id: data.user.id,
-                email: data.user.email!,
-                role: role
-            });
-
-        if (profileError) {
-            console.error('Error creating profile:', profileError);
-            // Don't fail the entire operation, just log the warning
-            console.warn('Profile creation failed, but user was created successfully');
-        }
-
-        return {
-            success: true,
-            message: 'User registered successfully',
-            userId: data.user.id
-        };
-    } catch (error: any) {
-        console.error('Unexpected error in registerUser:', error);
-        return {
-            success: false,
-            message: 'An unexpected error occurred during registration',
-            error: error.message
-        };
+export async function getUserAndProfile(userId: string) {
+    if (!userId) {
+        return { success: false, error: 'User ID is required.' };
     }
+
+    const supabase = createClient({ useServiceRole: true });
+    const { data, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .single();
+    
+    if (error) {
+        return { success: false, error: 'Failed to fetch user profile.' };
+    }
+
+    return { success: true, role: data.role };
 }
 
-/**
- * Update a user's app_metadata after OAuth sign-in
- * This is called from the auth callback handler
- */
-export async function updateUserAfterOAuth(
-    userId: string,
-    email: string,
-    role: 'client' | 'admin' = 'client'
-): Promise<AuthResult> {
-    try {
-        const supabase = await createClient({useServiceRole: true}) as SupabaseClient;  // Request service role key for admin operations
 
-        // Update user's app_metadata
-        const {error} = await supabase.auth.admin.updateUserById(userId, {
-            app_metadata: {
-                role: role
-            }
-        });
+export async function switchUserRole(userId: string, newRole: 'client' | 'admin') {
+    const supabase = createClient({ useServiceRole: true }) as SupabaseClient;
 
-        if (error) {
-            console.error('Error updating user app_metadata after OAuth:', error);
-            return {
-                success: false,
-                message: 'Failed to update user metadata',
-                error: error.message
-            };
-        }
-
-        // Ensure profile exists
-        const {error: profileError} = await supabase
-            .from('profiles')
-            .upsert({
-                id: userId,
-                email: email,
-                role: role
-            });
-
-        if (profileError) {
-            console.error('Error creating/updating profile after OAuth:', profileError);
-            // Don't fail the entire operation, just log the warning
-            console.warn('Profile update failed, but user metadata was updated successfully');
-        }
-
-        return {
-            success: true,
-            message: 'User metadata updated successfully after OAuth',
-            userId: userId
-        };
-    } catch (error: any) {
-        console.error('Unexpected error in updateUserAfterOAuth:', error);
-        return {
-            success: false,
-            message: 'An unexpected error occurred while updating user after OAuth',
-            error: error.message
-        };
+    const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ role: newRole })
+        .eq('id', userId);
+    
+    if (profileError) {
+        return { success: false, error: profileError.message };
     }
-}
 
-/**
- * Switch a user's role between 'client' and 'admin'. Only admins may perform this action.
- * Updates both auth app_metadata and the profiles table to keep data consistent.
- */
-export async function switchUserRole(
-    targetUserId: string,
-    newRole: 'client' | 'admin'
-): Promise<{ success: boolean; message?: string; error?: string }>
-{
-    try {
-        // 1) Validate input
-        if (!targetUserId) {
-            return { success: false, error: 'Target user id is required' };
-        }
-        if (newRole !== 'client' && newRole !== 'admin') {
-            return { success: false, error: 'Invalid role. Must be "client" or "admin"' };
-        }
+    const { error: authError } = await supabase.auth.admin.updateUserById(userId, {
+        app_metadata: { role: newRole }
+    });
 
-        // 2) Create a standard client to identify and authorize the requester
-        const requesterClient = await createClient() as SupabaseClient;
-        const { data: { user: requester }, error: getUserError } = await requesterClient.auth.getUser();
-        if (getUserError) {
-            console.error('switchUserRole: Failed to get current user:', getUserError);
-            return { success: false, error: getUserError.message };
-        }
-        if (!requester) {
-            return { success: false, error: 'Not authenticated' };
-        }
-
-        // 3) Ensure requester is an admin (check profiles)
-        const { data: requesterProfile, error: profileError } = await requesterClient
+    if (authError) {
+        // Attempt to revert the profile change
+        await supabase
             .from('profiles')
-            .select('role')
-            .eq('id', requester.id)
-            .single();
-
-        if (profileError) {
-            console.error('switchUserRole: Failed to fetch requester profile:', profileError);
-            return { success: false, error: profileError.message };
-        }
-        if (requesterProfile?.role !== 'admin') {
-            return { success: false, error: 'Permission denied. Admin role required.' };
-        }
-
-        // Optional safety: prevent an admin from demoting themselves to avoid lockout
-        if (requester.id === targetUserId && newRole === 'client') {
-            return { success: false, error: 'Admins cannot demote themselves.' };
-        }
-
-        // 4) Use service role for privileged updates
-        const adminClient = await createClient({ useServiceRole: true }) as SupabaseClient;
-
-        // 4a) Update auth app_metadata.role
-        const { error: authUpdateError } = await adminClient.auth.admin.updateUserById(targetUserId, {
-            app_metadata: { role: newRole },
-            user_metadata: { role: newRole }
-        });
-        if (authUpdateError) {
-            console.error('switchUserRole: Failed to update auth app_metadata:', authUpdateError);
-            return { success: false, error: authUpdateError.message };
-        }
-
-        // 4b) Update profiles.role to keep in sync
-        const { error: profileUpdateError } = await adminClient
-            .from('profiles')
-            .update({ role: newRole })
-            .eq('id', targetUserId);
-        if (profileUpdateError) {
-            console.error('switchUserRole: Failed to update profile role:', profileUpdateError);
-            return { success: false, error: profileUpdateError.message };
-        }
-
-        return { success: true, message: `Role updated to '${newRole}' for user ${targetUserId}` };
-    } catch (error: any) {
-        console.error('switchUserRole: Unexpected error:', error);
-        return { success: false, error: error.message };
+            .update({ role: newRole === 'admin' ? 'client' : 'admin' })
+            .eq('id', userId);
+        return { success: false, error: authError.message };
     }
-}
 
-export async function sendMagicLink(prevState: any, formData: FormData) {
-    try {
-        const email = formData.get('email') as string;
-        if (!email) {
-            return { success: false, error: 'Email is required.' };
-        }
-
-        // Use service role to check profile without user being logged in
-        const supabaseAdmin = await createClient({ useServiceRole: true }) as SupabaseClient;
-
-        // Determine the redirect path based on user role
-        const { data: profile, error: profileError } = await supabaseAdmin
-            .from('profiles')
-            .select('role')
-            .eq('email', email)
-            .single();
-
-        if (profileError || !profile) {
-            // Default to client if profile doesn't exist or on error
-            console.warn(`Magic link for non-existent or error profile: ${email}. Defaulting to client.`);
-        }
-
-        const redirectTo = profile?.role === 'admin'
-            ? `/admin`
-            : `/dashboard`;
-
-
-        const supabase = await createClient();
-        const { error } = await supabase.auth.signInWithOtp({
-            email,
-            options: {
-                // The magic link will redirect to the callback, which then handles the final redirect
-                emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=${redirectTo}`,
-            },
-        });
-
-        if (error) throw error;
-
-        return { success: true, message: 'Magic link sent! Check your email.' };
-    } catch (error: any) {
-        console.error('Magic link error:', error);
-        return { success: false, error: error.message };
-    }
+    return { success: true, message: 'User role switched successfully.' };
 }

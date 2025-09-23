@@ -1,174 +1,94 @@
 
+// src/hooks/useAuthForm.ts
 'use client';
 
-import { useState, useMemo, FormEvent } from 'react';
+import { useState, useActionState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from './use-toast';
 import { signInUser, registerUser, getUserAndProfile } from '@/app/actions/auth-actions';
 
-// Define types for the hook's state and props
 type AuthMode = 'signin' | 'signup';
 type UserType = 'client' | 'admin';
 
-interface FormData {
-    fullName?: string;
-    username?: string;
-    email: string;
-    password: string;
-    confirmPassword?: string;
-    phoneNumber?: string;
-}
-
-interface FormErrors {
-    fullName?: string;
-    username?: string;
-    email?: string;
-    password?: string;
-    confirmPassword?: string;
-    phoneNumber?: string;
-}
-
 export function useAuthForm(mode: AuthMode, userType: UserType = 'client') {
-    const [formData, setFormData] = useState<Partial<FormData>>({ email: '', password: '' });
-    const [errors, setErrors] = useState<FormErrors>({});
-    const [loading, setLoading] = useState(false);
     const router = useRouter();
-    const { addToast } = useToast();
+    const { toast } = useToast();
 
-    const handleInputChange = (name: keyof FormData, value: string) => {
-        setFormData(prev => ({ ...prev, [name]: value }));
-        if (errors[name]) setErrors(prev => ({ ...prev, [name]: undefined }));
-    };
+    // Use useActionState for form submissions
+    const [signInState, signInAction, isSignInPending] = useActionState(signInUser, null);
+    const [registerState, registerAction, isRegisterPending] = useActionState(registerUser, null);
 
-    // --- All validation logic now lives inside the hook ---
-    const validateField = (name: keyof FormData, value: string): string | undefined => {
-        switch (name) {
-            case 'fullName': {
-                if (mode !== 'signup') return undefined;
-                if (!value || value.trim().length === 0) return 'Full name is required.';
-                if (value.trim().length < 2) return 'Full name must be at least 2 characters.';
-                return undefined;
-            }
-            case 'username': {
-                if (mode !== 'signup') return undefined;
-                if (!value || value.trim().length === 0) return 'Username is required.';
-                const username = value.trim();
-                if (username.length < 3 || username.length > 20) {
-                    return 'Username must be 3-20 characters long.';
-                }
-                if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-                    return 'Username can only contain letters, numbers, and underscores.';
-                }
-                return undefined;
-            }
-            case 'email': {
-                if (!value || value.trim().length === 0) return 'Email is required.';
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-                if (!emailRegex.test(value.trim())) return 'Please enter a valid email address.';
-                return undefined;
-            }
-            case 'password': {
-                if (!value) return 'Password is required.';
-                if (mode === 'signup') {
-                    if (value.length < 8) return 'Password must be at least 8 characters.';
-                    if (!/[A-Za-z]/.test(value) || !/[0-9]/.test(value)) {
-                        return 'Password should include at least one letter and one number.';
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+
+    const loading = isSignInPending || isRegisterPending;
+
+    // --- EFFECT TO HANDLE SIGN-IN RESULT ---
+    useEffect(() => {
+        if (!signInState) return;
+
+        if (signInState.success && signInState.user) {
+            // After successful sign-in, fetch the user's role to redirect correctly.
+            const fetchRoleAndRedirect = async () => {
+                const profileResult = await getUserAndProfile(signInState.user.id);
+                if (profileResult.success) {
+                    toast({ title: 'Sign In Successful', description: 'Welcome back!' });
+                    if (profileResult.role === 'admin') {
+                        router.push('/admin');
+                    } else {
+                        router.push('/dashboard');
                     }
+                } else {
+                    // This can happen if the profile wasn't created correctly.
+                    toast({ variant: 'destructive', title: 'Sign In Error', description: profileResult.error || 'Could not determine user role.' });
                 }
-                return undefined;
-            }
-            case 'confirmPassword': {
-                if (mode !== 'signup') return undefined;
-                const pwd = formData.password || '';
-                if (!value) return 'Please confirm your password.';
-                if (value !== pwd) return 'Passwords do not match.';
-                return undefined;
-            }
-            case 'phoneNumber': {
-                 if (mode !== 'signup') return undefined;
-                if (!value || value.trim().length === 0) return 'Phone number is required.';
-                const digits = value.replace(/\D/g, '');
-                if (digits.length < 10 || digits.length > 15) return 'Please enter a valid phone number.';
-                return undefined;
-            }
-            default:
-                return undefined;
+            };
+            fetchRoleAndRedirect();
+        } else if (signInState.error) {
+            toast({ variant: 'destructive', title: 'Sign In Failed', description: signInState.error });
         }
-    };
+    }, [signInState, toast, router]);
 
-    const handleBlur = (name: keyof FormData) => {
-        const error = validateField(name, formData[name] || '');
-        setErrors(prev => ({ ...prev, [name]: error }));
-    };
 
-    const validateForm = (): boolean => {
-        let fieldsToValidate: (keyof FormData)[] = ['email', 'password'];
-        if (mode === 'signup') {
-            fieldsToValidate = [
-                'fullName',
-                'username',
-                'email',
-                'password',
-                'confirmPassword',
-                'phoneNumber',
-            ];
+    // --- EFFECT TO HANDLE REGISTRATION RESULT ---
+    useEffect(() => {
+        if (!registerState) return;
+
+        if (registerState.success) {
+            toast({ title: 'Account Created', description: 'Please check your email to verify your account.' });
+            router.push(`/auth/${userType}/signin`);
+        } else if (registerState.error) {
+            toast({ variant: 'destructive', title: 'Sign Up Failed', description: registerState.error });
         }
+    }, [registerState, toast, router, userType]);
 
-        const newErrors: FormErrors = {};
-        for (const field of fieldsToValidate) {
-            const value = (formData[field as keyof typeof formData] as string) || '';
-            const error = validateField(field, value);
-            if (error) newErrors[field] = error;
-        }
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
 
-    // --- Submission Handlers ---
-    const handleSubmit = async (e: FormEvent) => {
+    // --- FORM SUBMISSION HANDLER ---
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        const formIsValid = validateForm();
-        if (!formIsValid) {
-            addToast({ variant: 'destructive', title: 'Validation Error', description: 'Please fix the errors before submitting.' });
+
+        // Basic client-side validation
+        if (mode === 'signup' && password !== confirmPassword) {
+            toast({ variant: 'destructive', title: 'Passwords do not match' });
             return;
         }
 
-        setLoading(true);
+        const formData = new FormData(e.currentTarget);
 
-        try {
-            if (mode === 'signup') {
-                const result = await registerUser(formData.email!, formData.password!, userType);
-                if (!result.success) throw new Error(result.error || 'Sign up failed.');
-                
-                addToast({ title: 'Account Created', description: 'Please check your email to verify your account and then sign in.' });
-                router.push(`/auth/${userType}/signin`);
-
-            } else { // Signin mode
-                const result = await signInUser(formData.email!, formData.password!);
-                if (!result.success || !result.user) throw new Error(result.error || 'Sign in failed.');
-                
-                addToast({ title: 'Sign In Successful', description: 'Welcome back!' });
-                
-                const userResult = await getUserAndProfile(result.user.id, userType);
-                if (userResult.success && userResult.user) {
-                     router.push(userResult.user.profile?.role === 'admin' ? '/admin' : '/dashboard');
-                } else {
-                    router.push('/dashboard');
-                }
-            }
-        } catch (err: any) {
-            addToast({ variant: 'destructive', title: mode === 'signin' ? 'Sign In Failed' : 'Sign Up Failed', description: err.message });
-        } finally {
-            setLoading(false);
+        if (mode === 'signup') {
+            formData.set('role', userType);
+            registerAction(formData);
+        } else {
+            signInAction(formData);
         }
     };
 
     return {
-        formData,
-        errors,
+        password,
+        setPassword,
+        confirmPassword,
+        setConfirmPassword,
         loading,
-        handleInputChange,
-        handleBlur,
         handleSubmit,
     };
 }

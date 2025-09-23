@@ -1,20 +1,16 @@
 // components/content/ContentCard.tsx
-
 'use client';
 
 import Image from 'next/image';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Tooltip } from '@/components/ui/tooltip';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Tooltip } from '@/components/ui/Tooltip';
 import { format } from 'date-fns';
 import { CheckSquare, Square, ExternalLink, Video, Music, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatFileSize, getStatusBadge } from '@/utils/contentUtils';
+import type { ContentItem } from 'types/content';
 
-// ---  these are now in a shared utils file ---
-import { formatFileSize, getStatusBadge } from '@/lib/content-utils';
-import { ContentItem } from '@/lib/types';
-
-// --- NEW: Updated props to include admin functionality ---
 interface ContentCardProps {
     item: ContentItem;
     isSelected: boolean;
@@ -29,8 +25,8 @@ export function ContentCard({
     isSelected,
     onSelectItem,
     onViewDetails,
-    isAdminView = false, // --- NEW: Default to false ---
-    onDeleteItem         // --- NEW: Added delete handler ---
+    isAdminView = false,
+    onDeleteItem
 }: ContentCardProps) {
 
     const handleCardClick = () => {
@@ -42,9 +38,8 @@ export function ContentCard({
         onSelectItem(item.id, e.shiftKey);
     };
 
-    // --- NEW: Handler for the delete button ---
     const handleDeleteClick = (e: React.MouseEvent) => {
-        e.stopPropagation(); // Prevent card click
+        e.stopPropagation();
         if (onDeleteItem) {
             onDeleteItem(item);
         }

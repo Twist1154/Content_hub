@@ -1,4 +1,4 @@
-// src/lib/types.ts
+// types/content.ts
 
 export type ViewMode = 'grid' | 'list';
 export type GroupingMode = 'company' | 'store' | 'none';
@@ -16,7 +16,7 @@ export interface ContentItem {
     created_at: string;
     status: ContentStatus;
     user_id?: string;
-    user_email?: string;
+    user_email?: string; // This might come from a join
     stores?: {
         name: string;
         brand_company: string;
@@ -27,6 +27,9 @@ export interface ContentItem {
         start_date: string;
         end_date: string;
     } | null;
+    // Adding start_date and end_date which seem to be used by determineStatus
+    start_date?: string | null;
+    end_date?: string | null;
 }
 
 export interface Store {

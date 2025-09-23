@@ -2,13 +2,13 @@
 'use client';
 
 import Image from 'next/image';
-import { Button } from '@/components/ui/button';
-import { Tooltip } from '@/components/ui/tooltip';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/Button';
+import { Tooltip } from '@/components/ui/Tooltip';
+import { Badge } from '@/components/ui/Badge';
 import { Download, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
-import { ContentItem } from '@/lib/types';
-import { getStatusBadge, formatFileSize, getTypeIcon } from '@/lib/content-utils';
+import type { ContentItem } from 'types/content';
+import { getStatusBadge, formatFileSize, getTypeIcon } from '@/utils/contentUtils';
 
 interface AdminContentCardProps {
     item: ContentItem;

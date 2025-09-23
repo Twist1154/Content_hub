@@ -1,11 +1,11 @@
-
+// src/components/auth/AuthForm.tsx
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { FormField } from '@/components/ui/form-field';
-import { Mail, Lock, Eye, EyeOff, Loader2, User, Smartphone } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { FormField } from '@/components/ui/FormField';
+import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useAuthForm } from '@/hooks/useAuthForm';
 import Link from 'next/link';
 
@@ -41,7 +41,7 @@ export function AuthForm({ mode, userType = 'client' }: AuthFormProps) {
                 required
               />
             </FormField>
-             <FormField label="Username" error={errors.username}>
+            <FormField label="Username" error={errors.username}>
               <Input
                 name="username"
                 placeholder="e.g., jane_doe"
@@ -68,7 +68,7 @@ export function AuthForm({ mode, userType = 'client' }: AuthFormProps) {
         </FormField>
         
         {mode === 'signup' && (
-          <FormField label="Phone Number" icon={Smartphone} error={errors.phoneNumber}>
+          <FormField label="Phone Number" error={errors.phoneNumber}>
             <Input
               name="phoneNumber"
               type="tel"
@@ -77,7 +77,6 @@ export function AuthForm({ mode, userType = 'client' }: AuthFormProps) {
               onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
               onBlur={() => handleBlur('phoneNumber')}
               required
-              className="pl-10"
             />
           </FormField>
         )}

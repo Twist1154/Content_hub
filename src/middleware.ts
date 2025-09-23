@@ -1,62 +1,47 @@
-import { type NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { updateSession } from '@/lib/supabase/middleware';
 
+import { type NextRequest, NextResponse } from 'next/server';
+import { updateSession } from '@/utils/supabase/middleware';
+import { createClient } from '@/utils/supabase/server';
 
 export async function middleware(request: NextRequest) {
-  // First, run the session refresher.
+  // First, refresh the session. This also attaches cookies to the response.
   let response = await updateSession(request);
-
-  // Now, create a client to check the session for routing logic.
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
-        },
-      },
-    }
-  );
+  const supabase = createClient(); // Use the server utility which reads from cookies
 
   const {
     data: { session },
   } = await supabase.auth.getSession();
   
   const userRole = session?.user?.user_metadata?.role;
-  const { pathname, search } = request.nextUrl;
+  const { pathname } = request.nextUrl;
   
-  // Add pathname and search to request headers for use in server components
+  // Add x-pathname to request headers for use in server components
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-pathname', pathname);
-  requestHeaders.set('x-search', search);
-
-  // Use NextResponse.next() to apply the new headers
-   response = NextResponse.next({
+  
+  response = NextResponse.next({
     request: {
       headers: requestHeaders,
     },
   });
 
   // Let the dedicated /auth/callback route handle the code exchange
-  if (pathname === '/auth/callback') {
+  if (pathname.startsWith('/auth/callback')) {
     return response;
   }
   
-  if (session && pathname !== '/auth/setup-store' && userRole === 'client') {
-      const { data: stores } = await supabase.from('stores').select('id').eq('user_id', session.user.id);
-      if(!stores || stores.length === 0) {
+  // If a client is logged in but hasn't set up a store, redirect them.
+  if (session && !pathname.startsWith('/auth/setup-store') && userRole === 'client') {
+      const { data: stores } = await supabase.from('stores').select('id', { count: 'exact', head: true }).eq('user_id', session.user.id);
+      if (stores?.length === 0) {
         return NextResponse.redirect(new URL('/auth/setup-store', request.url));
       }
   }
 
-
   // Protect dashboard routes
-  if (pathname.startsWith('/dashboard') || pathname.startsWith('/profile') || pathname.startsWith('/settings')) {
-    if (!session) {
-      return NextResponse.redirect(new URL('/auth/client/signin', request.url));
-    }
+  const isProtectedClientRoute = pathname.startsWith('/dashboard') || pathname.startsWith('/profile') || pathname.startsWith('/settings');
+  if (isProtectedClientRoute && !session) {
+    return NextResponse.redirect(new URL('/auth/client/signin', request.url));
   }
 
   // Protect admin routes
@@ -70,7 +55,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Redirect signed-in users from public auth pages to their dashboard
+  // Redirect authenticated users away from public-only pages
   if (session && (pathname.startsWith('/auth/client') || pathname.startsWith('/auth/admin'))) {
      if (userRole === 'admin') {
         return NextResponse.redirect(new URL('/admin', request.url));
@@ -78,7 +63,7 @@ export async function middleware(request: NextRequest) {
      return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
-  // Redirect signed-in users from the landing page to their dashboard
+  // Redirect authenticated users from the landing page to their respective dashboards
   if (session && pathname === '/') {
     if (userRole === 'admin') {
       return NextResponse.redirect(new URL('/admin', request.url));
