@@ -13,7 +13,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/Sheet";
-import { Logo } from "./logo";
+import { Logo } from "./Logo";
 import { ThemeSwitcher } from "./ui/ThemeSwitcher";
 import { useRouter } from "next/navigation";
 import { signOut } from "@/app/actions/auth-actions";

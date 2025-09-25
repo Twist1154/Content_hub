@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Button } from './ui/Button';
-import { Logo } from './logo';
+import { Logo } from './Logo';
 import { MobileNav } from './mobile-nav';
 import { ThemeSwitcher } from './ui/ThemeSwitcher';
 import { signOut } from '@/app/actions/auth-actions';

@@ -7,7 +7,6 @@ import { Suspense } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { BackButton } from '@/components/ui/BackButton';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { useToast } from '@/components/ui/use-toast';
 import { Key } from 'lucide-react';
 import { usePasswordResetFlow } from '@/hooks/usePasswordResetFlow';
 import { PasswordForm } from '@/components/auth/PasswordForm';

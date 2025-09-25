@@ -10,6 +10,7 @@ import Link from 'next/link';
 // REFACTOR: Import the new ContentManager and its data fetching action
 import {ContentManager} from '@/components/content/ContentManager';
 import {fetchAllContent} from '@/app/actions/data-actions';
+//import {AdminHeader} from "@/components/admin/AdminHeader";
 
 // This is a custom component we'll create for the dashboard links to avoid repeating styles.
 const DashboardLinkCard = ({href, icon: Icon, title, description, iconColorClass}: {href: string; icon: React.ElementType; title: string; description: string; iconColorClass?: string;}) => (
@@ -38,6 +39,11 @@ export default async function AdminDashboard() {
     return (
         // THEME: Use theme variables for the background.
         <div className="min-h-screen bg-background">
+            {/* <AdminHeader
+                user={user}
+                title="Marketing Admin Dashboard"
+            />*/}
+
             <main className="container mx-auto px-4 py-8">
                 {/* THEME: Themed the link cards and extracted them to a small sub-component for cleanliness. */}
                 <div className="grid lg:grid-cols-4 gap-6 mb-8">
