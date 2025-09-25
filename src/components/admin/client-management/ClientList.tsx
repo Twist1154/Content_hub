@@ -16,6 +16,7 @@ interface ClientListProps {
     onSyncClick: () => void;
     onUserSelect: (user: User) => void;
     onDownloadData: (userId: string, userEmail: string) => void;
+    isDownloading: boolean;
 }
 
 export function ClientList({
@@ -25,7 +26,8 @@ export function ClientList({
    onInviteClick,
    onSyncClick,
    onUserSelect,
-   onDownloadData
+   onDownloadData,
+   isDownloading,
 }: ClientListProps) {
     return (
         <div className="space-y-6">
@@ -72,6 +74,7 @@ export function ClientList({
                         user={user}
                         onSelect={onUserSelect}
                         onDownloadData={onDownloadData}
+                        isDownloading={isDownloading}
                     />
                 ))}
             </div>

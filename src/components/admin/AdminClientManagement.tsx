@@ -12,13 +12,16 @@ import {SyncModal} from '@/components/admin/client-management/SyncModal';
 import {Notification} from '@/components/ui/Notification';
 import type {User} from '@/app/actions/get-clients-action';
 import {getAllUsers} from '@/app/actions/get-clients-action';
-import {getClientDataAsCsv} from '@/app/actions/download-data-action';
+import { fetchContentForUser } from '@/app/actions/data-actions';
+import { useToast } from '@/components/ui/Toast';
+import { format } from 'date-fns';
 
 export function AdminClientManagement() {
     // --- STATE MANAGEMENT ---
     // Data and loading state
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isDownloading, setIsDownloading] = useState(false);
 
     // Search and filtering
     const [searchTerm, setSearchTerm] = useState('');
@@ -42,17 +45,9 @@ export function AdminClientManagement() {
     const [isSyncModalOpen, setSyncModalOpen] = useState(false);
 
     // Notification state
-    const [notification, setNotification] = useState({
-        show: false,
-        type: 'info',
-        message: ''
-    });
-
+    const { addToast } = useToast();
     const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
-        setNotification({show: true, type, message});
-        setTimeout(() =>
-                setNotification(prev => ({...prev, show: false}))
-            , 5000);
+        addToast({ type: type, title: type.charAt(0).toUpperCase() + type.slice(1), message });
     };
 
     // --- DATA FETCHING ---
@@ -69,7 +64,7 @@ export function AdminClientManagement() {
             showNotification('error', 'An unexpected error occurred while fetching users');
         }
         setLoading(false);
-    }, []);
+    }, [addToast]);
 
     useEffect(() => {
         fetchUsers();
@@ -77,19 +72,45 @@ export function AdminClientManagement() {
 
     // --- HANDLERS ---
     const handleDownloadData = async (userId: string, userEmail: string) => {
-        const result = await getClientDataAsCsv(userId, userEmail);
-        if (result.success && result.csvString) {
-            const blob = new Blob([result.csvString], {type: 'text/csv'});
+        setIsDownloading(true);
+        showNotification('info', 'Preparing download...');
+
+        try {
+            const contentResult = await fetchContentForUser(userId, { useServiceRole: true });
+            if (!contentResult.success || !contentResult.content || contentResult.content.length === 0) {
+                throw new Error('No content found for this client.');
+            }
+
+            const fileUrls = contentResult.content.map(item => item.file_url);
+
+            const response = await fetch('/api/download-zip', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fileUrls }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: 'Failed to download files.' }));
+                throw new Error(errorData.error);
+            }
+
+            const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = result.fileName || 'user-data.csv';
+            const safeEmail = userEmail.split('@')[0];
+            a.download = `hapohub-data-${safeEmail}-${format(new Date(), 'yyyy-MM-dd')}.zip`;
             document.body.appendChild(a);
-            a.click();
+a.click();
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
-        } else {
-            showNotification('error', result.error || 'Failed to download user data');
+
+            showNotification('success', 'Your download has started.');
+
+        } catch (error: any) {
+            showNotification('error', error.message || 'Failed to prepare download.');
+        } finally {
+            setIsDownloading(false);
         }
     };
 
@@ -110,13 +131,6 @@ export function AdminClientManagement() {
 
     return (
         <div className="space-y-6">
-            <Notification
-                show={notification.show}
-                type={notification.type as 'success' | 'error' | 'info'}
-                message={notification.message}
-                onClose={() => setNotification(prev => ({...prev, show: false}))}
-            />
-
             <ClientList
                 users={filteredUsers}
                 searchTerm={searchTerm}
@@ -125,18 +139,15 @@ export function AdminClientManagement() {
                 onSyncClick={() => setSyncModalOpen(true)}
                 onUserSelect={setManagingUser}
                 onDownloadData={handleDownloadData}
+                isDownloading={isDownloading}
             />
-
-            {/* --- MODALS --- */}
-            {/* Each modal now controls its own state and logic. The parent just toggles visibility */}
-            {/* and provides callbacks for when actions are completed successfully. */}
 
             {managingUser && (
                 <ClientManagementModal
                     user={managingUser}
                     onClose={() => setManagingUser(null)}
-                    onUpdate={fetchUsers} // Tell the modal to call this to refresh the user list
-                    onDeleteRequest={handleDeleteRequest} // A special handler to open the delete modal
+                    onUpdate={fetchUsers}
+                    onDeleteRequest={handleDeleteRequest}
                     showNotification={showNotification}
                 />
             )}

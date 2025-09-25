@@ -9,14 +9,16 @@ import { Tooltip } from '@/components/ui/Tooltip';
 import { Badge } from '@/components/ui/Badge';
 import { Calendar, Download, Eye, Settings, Store, Upload } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 interface ClientCardProps {
   user: User;
   onSelect: (user: User) => void;
   onDownloadData: (userId: string, userEmail: string) => void;
+  isDownloading: boolean;
 }
 
-export function ClientCard({ user, onSelect, onDownloadData }: ClientCardProps) {
+export function ClientCard({ user, onSelect, onDownloadData, isDownloading }: ClientCardProps) {
   return (
     <Card className="hover:shadow-lg transition-shadow duration-200">
       <CardContent className="p-6">
@@ -73,14 +75,21 @@ export function ClientCard({ user, onSelect, onDownloadData }: ClientCardProps) 
                 </Link>
               </Tooltip>
             )}
-            <Tooltip content="Download user data as CSV">
+            <Tooltip content="Download user data as ZIP">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => onDownloadData(user.id, user.email)}
+                disabled={isDownloading}
               >
-                <Download className="w-4 h-4 mr-2" />
-                Download Data
+                {isDownloading ? (
+                  <LoadingSpinner size="sm" text="Zipping..." />
+                ) : (
+                  <>
+                    <Download className="w-4 h-4 mr-2" />
+                    Download Data
+                  </>
+                )}
               </Button>
             </Tooltip>
             <Tooltip content="Manage user account">

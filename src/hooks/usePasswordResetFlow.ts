@@ -1,4 +1,5 @@
 
+// src/hooks/usePasswordResetFlow.ts
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -27,10 +28,10 @@ export function usePasswordResetFlow() {
                 if (session?.user) {
                     setUserEmail(session.user.email || '');
                     setStatus('ready');
-                } else {
-                    setStatus('error');
-                    addToast({ type: 'error', title: 'Invalid Link', message: 'The session is invalid. Please try again.' });
-                }
+                 } else {
+                     setStatus('error');
+                     addToast({ type: 'error', title: 'Invalid Link', message: 'This link is invalid or has expired. Please try again.' });
+                 }
             } else if (event === 'SIGNED_IN') {
                  // This handles invite links which also land here
                 try {
@@ -43,21 +44,22 @@ export function usePasswordResetFlow() {
 
                     if (error && error.code === 'PGRST116') {
                         setIsNewUser(true);
-                        await supabase.from('profiles').insert({ id: user.id, email: user.email!, role: 'client' });
+                        // Profile does not exist, it will be created if they set a password.
+                        //await supabase.from('profiles').insert({ id: user.id, email: user.email!, role: 'client' });
                     } else if (error) {
                         throw error;
                     }
 
                     setStatus('ready');
                 } catch (err: any) {
-                    console.error('Validation Error on SIGNED_IN:', err);
-                    addToast({ type: 'error', title: 'Invalid Link', message: 'This link is invalid or has expired.' });
+                    console.error('Validation Error:', err);
+                    addToast({ type: 'error', title: 'Invalid Link', message: 'This link is invalid or has expired. Please try again.' });
                     setStatus('error');
                 }
             }
         });
 
-        // Handle the case where the user lands on the page without a valid token in the URL
+        // If no auth event fires after a few seconds, the link is likely bad.
         const timer = setTimeout(() => {
             if (status === 'validating') {
                 setStatus('error');
