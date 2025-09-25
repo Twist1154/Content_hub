@@ -31,23 +31,37 @@ const CardHeader = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
 );
 CardHeader.displayName = 'CardHeader';
 
-// THEME: Added 'text-foreground' to ensure the title always uses the primary text color,
-// making it distinct and robust against parent color inheritance.
-const CardTitle = forwardRef<HTMLParagraphElement, HTMLAttributes<HTMLHeadingElement>>(
-  ({ className, ...props }, ref) => (
-    <h3
-      ref={ref}
-      className={cn(
-        'text-2xl font-semibold leading-none tracking-tight text-foreground',
-        className
-      )}
-      {...props}
-    />
-  )
-);
+// THEME: Added 'text-foreground' to ensure the title always uses the primary text color.
+const CardTitle = forwardRef<
+  HTMLParagraphElement,
+  HTMLAttributes<HTMLHeadingElement>
+>(({ className, ...props }, ref) => (
+  <h3
+    ref={ref}
+    className={cn(
+      'text-2xl font-semibold leading-none tracking-tight text-foreground',
+      className
+    )}
+    {...props}
+  />
+));
 CardTitle.displayName = 'CardTitle';
 
-// This component is for layout and needs no changes.
+// --- ADDED COMPONENT ---
+// Renders a paragraph with muted text, ideal for descriptions or subtitles.
+const CardDescription = forwardRef<
+  HTMLParagraphElement,
+  HTMLAttributes<HTMLParagraphElement>
+>(({ className, ...props }, ref) => (
+  <p
+    ref={ref}
+    className={cn('text-sm text-muted-foreground', className)}
+    {...props}
+  />
+));
+CardDescription.displayName = 'CardDescription';
+// --- END ---
+
 const CardContent = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
     <div ref={ref} className={cn('p-6 pt-0', className)} {...props} />
@@ -59,12 +73,18 @@ const CardFooter = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn("flex items-center p-6 pt-0", className)}
+      className={cn('flex items-center p-6 pt-0', className)}
       {...props}
     />
   )
 );
-CardFooter.displayName = "CardFooter";
+CardFooter.displayName = 'CardFooter';
 
-
-export { Card, CardHeader, CardFooter, CardTitle, CardContent };
+export {
+  Card,
+  CardHeader,
+  CardFooter,
+  CardTitle,
+  CardDescription, // <-- Added to exports
+  CardContent,
+};
