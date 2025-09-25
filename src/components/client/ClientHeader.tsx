@@ -51,6 +51,9 @@ export function ClientHeader({ user, isAdminView, viewingClient }: ClientHeaderP
     const confirmLogout = () => {
         setShowLogoutConfirm(true);
     };
+    
+    const displayUser = isAdminView ? viewingClient : user;
+    const displayName = displayUser.profile?.display_name || displayUser.email;
 
     return (
         <>
@@ -77,7 +80,7 @@ export function ClientHeader({ user, isAdminView, viewingClient }: ClientHeaderP
                                         items={[
                                             ...(isAdminView ? [{ label: 'Admin Dashboard', href: '/admin' }] : []),
                                             {
-                                                label: isAdminView ? `Client: ${viewingClient?.profile?.email}` : 'Dashboard',
+                                                label: isAdminView ? `Client: ${displayName}` : 'Dashboard',
                                                 current: true
                                             }
                                         ]}
@@ -97,11 +100,12 @@ export function ClientHeader({ user, isAdminView, viewingClient }: ClientHeaderP
                             )}
                             <ThemeSwitcher />
 
-                            <UserNav email={isAdminView ? viewingClient?.profile?.email : user.email}>
+                            <UserNav displayName={displayName}>
                                 <UserNavHeader
-                                    title={isAdminView ? 'Viewing as Admin' : 'Signed in as'}
-                                    email={isAdminView ? viewingClient?.profile?.email : user.email}
-                                    note={isAdminView ? `Admin: ${user.email}` : undefined}
+                                    title={isAdminView ? 'Viewing Client' : 'Signed in as'}
+                                    displayName={displayName}
+                                    email={displayUser.email}
+                                    note={isAdminView ? `Your Admin: ${user.profile?.display_name || user.email}` : undefined}
                                     noteVariant="primary"
                                 />
                                         <div className="py-1">

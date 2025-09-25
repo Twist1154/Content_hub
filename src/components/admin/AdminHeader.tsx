@@ -54,6 +54,8 @@ export function AdminHeader({user, title = 'Admin Dashboard', breadcrumbItems}: 
         {label: 'Admin Dashboard', current: true}
     ];
 
+    const displayName = user.profile?.display_name || user.email;
+
     return (
         <>
             <header className="bg-card text-card-foreground shadow-sm border-b border-border sticky top-0 z-40">
@@ -82,9 +84,10 @@ export function AdminHeader({user, title = 'Admin Dashboard', breadcrumbItems}: 
                         <div className="flex items-center gap-4">
                             <ThemeSwitcher/>
 
-                            <UserNav email={user.email}>
+                            <UserNav displayName={displayName}>
                                 <UserNavHeader
                                     title="Admin Account"
+                                    displayName={displayName}
                                     email={user.email}
                                     note={`Role: ${user.profile?.role || 'admin'}`}
                                     noteVariant="primary"

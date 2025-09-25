@@ -11,11 +11,11 @@ import { cn } from '@/lib/utils';
 
 // We create sub-components for a flexible API
 interface UserNavProps {
-    email: string;
+    displayName: string;
     children: React.ReactNode;
 }
 
-export function UserNav({ email, children }: UserNavProps) {
+export function UserNav({ displayName, children }: UserNavProps) {
     const [dropdownOpen, setDropdownOpen] = useState(false);
 
     return (
@@ -29,7 +29,7 @@ export function UserNav({ email, children }: UserNavProps) {
                         className="flex items-center gap-2"
                     >
                         <User className="w-4 h-4" />
-                        <span className="hidden sm:inline">{email}</span>
+                        <span className="hidden sm:inline">{displayName}</span>
                         <ChevronDown className={cn('w-4 h-4 transition-transform', dropdownOpen && 'rotate-180')} />
                     </Button>
                 </Tooltip>
@@ -51,11 +51,12 @@ export function UserNav({ email, children }: UserNavProps) {
 }
 
 // Helper components for building the dropdown menu content
-export function UserNavHeader({ title, email, note, noteVariant = 'default' }: { title: string, email: string, note?: string, noteVariant?: 'default' | 'primary' }) {
+export function UserNavHeader({ title, displayName, email, note, noteVariant = 'default' }: { title: string, displayName: string, email: string, note?: string, noteVariant?: 'default' | 'primary' }) {
     return (
         <div className="px-4 py-2 border-b border-border">
             <p className="text-sm font-medium text-popover-foreground">{title}</p>
-            <p className="text-sm text-muted-foreground truncate">{email}</p>
+            <p className="text-sm font-semibold text-popover-foreground truncate">{displayName}</p>
+            <p className="text-xs text-muted-foreground truncate">{email}</p>
             {note && <p className={cn('text-xs mt-1', noteVariant === 'primary' ? 'text-primary' : 'text-muted-foreground')}>{note}</p>}
         </div>
     );
