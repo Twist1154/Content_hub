@@ -4,6 +4,7 @@ import './globals.css';
 import { Providers } from './providers';
 import { Inter } from 'next/font/google';
 import { ToastProvider } from '@/components/ui/Toast';
+import Header from '@/components/header';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -37,6 +38,7 @@ export default function RootLayout({
       <body className="antialiased">
         <Providers>
           <ToastProvider>
+            <Header />
             <main>{children}</main>
           </ToastProvider>
         </Providers>

@@ -3,7 +3,7 @@
 
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import { LogOut } from 'lucide-react';
 
 interface ConfirmModalProps {

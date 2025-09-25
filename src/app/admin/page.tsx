@@ -4,7 +4,6 @@
 import {redirect} from 'next/navigation';
 import {getCurrentUser} from '@/lib/auth';
 import {AdminClientOverview} from '@/components/admin/AdminClientOverview';
-import {AdminHeader} from '@/components/admin/AdminHeader';
 import {Tooltip} from '@/components/ui/Tooltip';
 import {Database, Download, Shield, Users} from 'lucide-react';
 import Link from 'next/link';
@@ -39,11 +38,6 @@ export default async function AdminDashboard() {
     return (
         // THEME: Use theme variables for the background.
         <div className="min-h-screen bg-background">
-            <AdminHeader
-                user={user}
-                title="Marketing Admin Dashboard"
-            />
-
             <main className="container mx-auto px-4 py-8">
                 {/* THEME: Themed the link cards and extracted them to a small sub-component for cleanliness. */}
                 <div className="grid lg:grid-cols-4 gap-6 mb-8">

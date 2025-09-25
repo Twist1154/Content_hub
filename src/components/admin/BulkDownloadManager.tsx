@@ -1,4 +1,3 @@
-
 // components/admin/BulkDownloadManager.tsx
 'use client';
 
@@ -17,7 +16,7 @@ import type {ContentItem} from "@/types/content";
 import {ContentDetailModal} from "@/components/content/ContentDetailModal";
 import {formatFileSize} from "@/lib/content-utils";
 import {cn} from '@/lib/utils';
-import { useToast } from '@/components/ui/Toast';
+import { useToast } from '@/components/ui/toast';
 
 interface FilterOptions {
     startDate: string;

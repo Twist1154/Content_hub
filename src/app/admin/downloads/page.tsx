@@ -3,8 +3,9 @@
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
 import { BulkDownloadManager } from '@/components/admin/BulkDownloadManager';
-import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Tooltip } from '@/components/ui/Tooltip';
+//import { AdminHeader } from '@/components/admin/AdminHeader';
+//import { Tooltip } from '@/components/ui/Tooltip';
 import { Download, Shield } from 'lucide-react';
 
 export default async function AdminDownloadsPage() {
@@ -17,15 +18,6 @@ export default async function AdminDownloadsPage() {
     return (
         // THEME: Use theme variables for the background.
         <div className="min-h-screen bg-background">
-            <AdminHeader
-                user={user}
-                title="Bulk Downloads"
-                breadcrumbItems={[
-                                        { label: 'Admin Dashboard', href: '/admin' },
-                                        { label: 'Bulk Downloads', current: true }
-                                    ]}
-                                />
-
             <main className="container mx-auto px-4 py-8">
                 <div className="mb-8">
                     <div className="flex items-center gap-2 mb-2">

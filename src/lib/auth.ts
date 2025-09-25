@@ -1,9 +1,10 @@
+
 // src/lib/auth.ts
 'use server';
 
 import { createClient } from '@/utils/supabase/server';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { getAllClients as fetchAllClients } from '@/app/actions/get-clients-action';
+import { getAllUsers } from '@/app/actions/get-clients-action';
 import { registerUser } from '@/app/actions/auth-actions';
 
 export async function getCurrentUser() {
@@ -37,7 +38,7 @@ export async function getCurrentUser() {
 
 
 export async function getAllClients() {
-    return fetchAllClients();
+    return getAllUsers();
 }
 
 export async function signUp(email: string, password: string, role: 'client' | 'admin' = 'client') {
