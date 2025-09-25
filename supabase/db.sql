@@ -1,142 +1,81 @@
+--
+-- RLS Policies
+--
 
--- Create a table for public profiles
-create table if not exists profiles (
-  id uuid references auth.users on delete cascade not null primary key,
-  updated_at timestamptz,
-  email text unique,
-  role text,
-  display_name text,
-  constraint email_length check (char_length(email) >= 3 and char_length(email) <= 254)
-);
+-- 1. Enable RLS on all tables
+alter table public.profiles enable row level security;
+alter table public.stores enable row level security;
+alter table public.content enable row level security;
 
--- Set up Row Level Security (RLS)
--- See https://supabase.com/docs/guides/auth/row-level-security
-alter table profiles
-  enable row level security;
+-- 2. Create policies for the 'profiles' table
+drop policy if exists "Public profiles are viewable by everyone." on public.profiles;
+create policy "Public profiles are viewable by everyone."
+  on public.profiles for select
+  using ( true );
 
--- Policies for profiles
-create policy "Public profiles are viewable by everyone." on profiles
-  for select using (true);
+drop policy if exists "Users can insert their own profile." on public.profiles;
+create policy "Users can insert their own profile."
+  on public.profiles for insert
+  with check ( auth.uid() = id );
 
-create policy "Users can insert their own profile." on profiles
-  for insert with check ((select auth.uid()) = id);
+drop policy if exists "Users can update their own profile." on public.profiles;
+create policy "Users can update their own profile."
+  on public.profiles for update
+  using ( auth.uid() = id );
 
-create policy "Users can update own profile." on profiles
-  for update using ((select auth.uid()) = id);
-  
+-- 3. Create policies for the 'stores' table
+drop policy if exists "Stores are viewable by their owner and admins." on public.stores;
+create policy "Stores are viewable by their owner and admins."
+  on public.stores for select
+  using ( (auth.uid() = user_id) or (select role from public.profiles where id = auth.uid()) = 'admin' );
 
--- Create a table for stores
-create table if not exists stores (
-    id uuid default gen_random_uuid() primary key,
-    user_id uuid references auth.users on delete cascade not null,
-    created_at timestamptz with time zone default timezone('utc'::text, now()) not null,
-    name text,
-    brand_company text,
-    address text
-);
--- RLS for stores
-alter table stores enable row level security;
-create policy "Users can view their own stores." on stores
-    for select using ((select auth.uid()) = user_id);
-create policy "Users can insert their own stores." on stores
-    for insert with check ((select auth.uid()) = user_id);
-create policy "Users can update their own stores." on stores
-    for update using ((select auth.uid()) = user_id);
--- Admins can access all stores
-create policy "Admins can view all stores." on stores for select to authenticated
-    using ( (select auth.jwt() ->> 'user_metadata')::jsonb ->> 'role' = 'admin' );
+drop policy if exists "Users can insert their own stores." on public.stores;
+create policy "Users can insert their own stores."
+  on public.stores for insert
+  with check ( auth.uid() = user_id );
 
--- Create a table for content
-create table if not exists content (
-    id uuid default gen_random_uuid() primary key,
-    user_id uuid references auth.users on delete cascade not null,
-    store_id uuid references public.stores(id) on delete set null,
-    created_at timestamptz with time zone default timezone('utc'::text, now()) not null,
-    title text,
-    file_url text,
-    type text,
-    file_size bigint,
-    start_date date,
-    end_date date,
-    recurrence_type text,
-    recurrence_days text[]
-);
--- RLS for content
-alter table content enable row level security;
-create policy "Users can view their own content." on content
-    for select using ((select auth.uid()) = user_id);
-create policy "Users can insert their own content." on content
-    for insert with check ((select auth.uid()) = user_id);
-create policy "Users can update their own content." on content
-    for update using ((select auth.uid()) = userid);
-create policy "Users can delete their own content." on content
-    for delete using ((select auth.uid()) = user_id);
--- Admins can access all content
-create policy "Admins can view all content." on content for select to authenticated
-    using ( (select auth.jwt() ->> 'user_metadata')::jsonb ->> 'role' = 'admin' );
-create policy "Admins can delete all content." on content for delete to authenticated
-    using ( (select auth.jwt() ->> 'user_metadata')::jsonb ->> 'role' = 'admin' );
-create policy "Admins can update all content." on content for update to authenticated
-    using ( (select auth.jwt() ->> 'user_metadata')::jsonb ->> 'role' = 'admin' );
+drop policy if exists "Users can update their own stores." on public.stores;
+create policy "Users can update their own stores."
+  on public.stores for update
+  using ( auth.uid() = user_id );
+
+-- 4. Create policies for the 'content' table
+drop policy if exists "Content is viewable by its owner and admins." on public.content;
+create policy "Content is viewable by its owner and admins."
+  on public.content for select
+  using ( (auth.uid() = user_id) or ((select role from public.profiles where id = auth.uid()) = 'admin') );
+
+drop policy if exists "Users can insert their own content." on public.content;
+create policy "Users can insert their own content."
+  on public.content for insert
+  with check ( auth.uid() = user_id );
+
+drop policy if exists "Users can update their own content." on public.content;
+create policy "Users can update their own content."
+  on public.content for update
+  using ( auth.uid() = user_id );
+
+drop policy if exists "Users can delete their own content." on public.content;
+create policy "Users can delete their own content."
+  on public.content for delete
+  using ( auth.uid() = user_id );
+
+drop policy if exists "Admins can delete any content." on public.content;
+create policy "Admins can delete any content."
+  on public.content for delete
+  using ( (select role from public.profiles where id = auth.uid()) = 'admin' );
 
 
--- This trigger automatically creates a profile entry when a new user signs up.
-create or replace function public.handle_new_user()
-returns trigger
-language plpgsql
-security definer set search_path = public
-as $$
-begin
-  insert into public.profiles (id, email, role, display_name)
-  values (new.id, new.email, new.raw_user_meta_data ->> 'role', new.raw_user_meta_data ->> 'display_name');
-  
-  -- Also sync the role to app_metadata for use in RLS policies
-  perform (
-    select auth.update_user_by_id(
-      new.id,
-      jsonb_build_object('app_metadata', jsonb_build_object('role', new.raw_user_meta_data ->> 'role'))
-    )
-  );
+--
+-- DB Functions & Triggers
+--
 
-  return new;
-end;
-$$;
-
--- Connect the trigger to the user creation event in Supabase Auth
-drop trigger if exists on_auth_user_created on auth.users;
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute procedure public.handle_new_user();
-
--- Trigger to update profile when user metadata changes in auth.users
-create or replace function public.handle_user_update()
-returns trigger
-language plpgsql
-security definer set search_path = public
-as $$
-begin
-  update public.profiles
-  set 
-    display_name = new.raw_user_meta_data ->> 'display_name',
-    role = new.raw_user_meta_data ->> 'role',
-    updated_at = now()
-  where id = new.id;
-  return new;
-end;
-$$;
-
-drop trigger if exists on_auth_user_updated on auth.users;
-create trigger on_auth_user_updated
-  after update on auth.users
-  for each row
-  when (old.raw_user_meta_data is distinct from new.raw_user_meta_data)
-  execute procedure public.handle_user_update();
-
-
--- Create a function to get content counts for all users
-create or replace function public.get_user_content_counts()
+-- 1. Function to get content counts for all users
+drop function if exists public.get_user_content_counts();
+create function public.get_user_content_counts()
 returns table(user_id uuid, content_count bigint, latest_upload timestamptz)
 language sql
+security definer set search_path = public
 as $$
   select
     p.id as user_id,
@@ -151,3 +90,56 @@ as $$
   group by
     p.id;
 $$;
+
+
+-- 2. Function to handle new user creation
+drop function if exists public.handle_new_user();
+create function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  insert into public.profiles (id, email, role, display_name)
+  values (
+    new.id,
+    new.email,
+    new.raw_user_meta_data->>'role',
+    new.raw_user_meta_data->>'display_name'
+  );
+  return new;
+end;
+$$;
+
+
+-- 3. Trigger to call handle_new_user on new user sign-up
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
+
+
+-- 4. Function to sync profile changes to auth.users metadata
+-- This is useful for keeping the JWT in sync with the user's role
+drop function if exists public.sync_profile_to_auth_user();
+create or replace function public.sync_profile_to_auth_user()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  update auth.users
+  set
+    raw_app_meta_data = raw_app_meta_data || jsonb_build_object('role', new.role),
+    raw_user_meta_data = raw_user_meta_data || jsonb_build_object('display_name', new.display_name)
+  where
+    id = new.id;
+  return new;
+end;
+$$;
+
+-- 5. Trigger to call sync_profile_to_auth_user on profile update
+drop trigger if exists on_profile_updated on public.profiles;
+create trigger on_profile_updated
+  after update on public.profiles
+  for each row execute procedure public.sync_profile_to_auth_user();
