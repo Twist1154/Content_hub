@@ -52,8 +52,8 @@ export function ClientManagementModal({
             if (result.success) {
                 showNotification('success', result.message || 'Action completed successfully.');
                 onUpdate(); // Refresh user list
-                if (actionName === 'changeEmail') {
-                    onClose();
+                if (actionName === 'changeEmail' || actionName === 'switchRole') {
+                    onClose(); // Close modal on successful major changes
                 }
             } else {
                 showNotification('error', result.error || 'An unknown error occurred.');
@@ -246,7 +246,7 @@ export function ClientManagementModal({
                 onClose={() => setShowRoleConfirm(false)}
                 onConfirm={handleConfirmSwitchRole}
                 title={user.role === 'admin' ? 'Demote to Client' : 'Promote to Admin'}
-                description={`Are you sure you want to ${user.role === 'admin' ? 'demote' : 'promote'} ${user.email} ${user.role === 'admin' ? 'to client' : 'to admin'}?`}
+                description={`Are you sure you want to ${user.role === 'admin' ? 'demote' : 'promote'} ${user.email} ${user.role === 'admin' ? 'to a client' : 'to an admin'}?`}
                 confirmText={user.role === 'admin' ? 'Make Client' : 'Make Admin'}
             />
         </div>
