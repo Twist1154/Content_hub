@@ -15,8 +15,8 @@ import {
     sendPasswordReset,
 } from '@/app/actions/user-management-actions';
 import { switchUserRole } from '@/app/actions/auth-actions';
-import { getClientDataAsCsv } from '@/app/actions/download-data-action';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import { fetchContentForUser } from '@/app/actions/data-actions';
 
 interface ClientManagementModalProps {
     user: User | null,
@@ -52,8 +52,8 @@ export function ClientManagementModal({
             if (result.success) {
                 showNotification('success', result.message || 'Action completed successfully.');
                 onUpdate(); // Refresh user list
-                if (actionName === 'changeEmail') {
-                    onClose();
+                if (actionName === 'changeEmail' || actionName === 'switchRole') {
+                    onClose(); // Close modal on successful major changes
                 }
             } else {
                 showNotification('error', result.error || 'An unknown error occurred.');
@@ -76,8 +76,48 @@ export function ClientManagementModal({
     };
 
     const handleDownloadData = async () => {
-        const result = await getClientDataAsCsv(user.id, user.email);
-        if (!result.success) showNotification('error', result.error || 'Failed to download data');
+        setIsSubmitting(true);
+        setActiveAction('downloadData');
+        showNotification('info', 'Preparing download...');
+
+        try {
+            const contentResult = await fetchContentForUser(user.id, { useServiceRole: true });
+            if (!contentResult.success || !contentResult.content || contentResult.content.length === 0) {
+                throw new Error('No content found for this client.');
+            }
+
+            const fileUrls = contentResult.content.map(item => item.file_url);
+
+            const response = await fetch('/api/download-zip', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fileUrls }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: 'Failed to download files.' }));
+                throw new Error(errorData.error);
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const safeEmail = user.email.split('@')[0];
+            a.download = `hapohub-data-${safeEmail}-${format(new Date(), 'yyyy-MM-dd')}.zip`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+
+            showNotification('success', 'Your download has started.');
+
+        } catch (error: any) {
+            showNotification('error', error.message || 'Failed to prepare download.');
+        } finally {
+            setIsSubmitting(false);
+            setActiveAction(null);
+        }
     };
 
     return (
@@ -189,11 +229,14 @@ export function ClientManagementModal({
                         )}
                         <Button
                             variant="outline"
-                            onClick={handleDownloadData}>
-                            <Download className="w-4 h-4 mr-2"/>Download Data</Button>
+                            onClick={handleDownloadData}
+                            disabled={isSubmitting}>
+                            {isSubmitting && activeAction === 'downloadData' ? <LoadingSpinner size='sm' text="Zipping..." /> : <><Download className="w-4 h-4 mr-2"/>Download Data</>}
+                        </Button>
                         <Button
                             variant="destructive"
-                            onClick={() => onDeleteRequest(user)}>
+                            onClick={() => onDeleteRequest(user)}
+                            disabled={isSubmitting}>
                             <Trash2 className="w-4 h-4 mr-2"/>Delete Account</Button>
                     </div>
                 </CardContent>
@@ -203,7 +246,7 @@ export function ClientManagementModal({
                 onClose={() => setShowRoleConfirm(false)}
                 onConfirm={handleConfirmSwitchRole}
                 title={user.role === 'admin' ? 'Demote to Client' : 'Promote to Admin'}
-                description={`Are you sure you want to ${user.role === 'admin' ? 'demote' : 'promote'} ${user.email} ${user.role === 'admin' ? 'to client' : 'to admin'}?`}
+                description={`Are you sure you want to ${user.role === 'admin' ? 'demote' : 'promote'} ${user.email} ${user.role === 'admin' ? 'to a client' : 'to an admin'}?`}
                 confirmText={user.role === 'admin' ? 'Make Client' : 'Make Admin'}
             />
         </div>
