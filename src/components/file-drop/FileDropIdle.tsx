@@ -27,7 +27,7 @@ import {
 import { Card, CardContent } from "@/components/ui/Card";
 import { cn, formatBytes } from "@/lib/utils";
 import FileIcon from "../FileIcon";
-import { Logo } from "../logo";
+import { Logo } from "../Logo";
 
 const formSchema = z.object({
   emailTo: z.string().email("Invalid email address.").optional(),

@@ -28,7 +28,7 @@ import {LoadingSpinner} from '@/components/ui/LoadingSpinner';
 import {ContentDetailModal} from "@/components/content/ContentDetailModal";
 import {ContentCard} from "@/components/content/ContentCard";
 import {AdminContentCard} from "@/components/content/AdminContentCard";
-import {ContentItem} from "@/types/content";
+import {ContentItem, ContentType} from "@/types/content";
 import {formatFileSize, getStatusBadge, getTypeIcon} from "@/utils/contentUtils";
 import {ContentPreviewTooltip} from '@/components/content/ContentPreviewTooltip';
 import {cn} from '@/lib/utils';
