@@ -64,7 +64,7 @@
     "eslint-config-next": "^14.2.5",
     "genkit-cli": "1.17.0",
     "postcss": "^8.5.6",
-    "supabase": "^2.31.8",
+    "supabase": "^2.45.5",
     "tailwindcss": "^3.4.13",
     "typescript": "^5.6.2"
   }
