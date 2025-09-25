@@ -3,7 +3,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import HeroSlider from "@/components/hero-slider";
-import { Footer } from "@/components/Footer";
 
 // Reusable component for feature sections
 function FeatureSection({
@@ -195,7 +194,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-      <Footer />
     </main>
   );
 }
