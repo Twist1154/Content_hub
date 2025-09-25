@@ -1,4 +1,5 @@
 
+// src/hooks/usePasswordResetFlow.ts
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -19,16 +20,20 @@ export function usePasswordResetFlow() {
 
     // Effect for handling the initial token validation
     useEffect(() => {
+        let subscribed = true;
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            if (!subscribed) return;
+
             if (event === 'PASSWORD_RECOVERY') {
-                 if (session?.user) {
+                if (session?.user) {
                     setUserEmail(session.user.email || '');
                     setStatus('ready');
-                 } else {
-                     setStatus('error');
-                     addToast({ type: 'error', title: 'Invalid Link', message: 'This link is invalid or has expired. Please try again.' });
-                 }
+                } else {
+                    setStatus('error');
+                    addToast({ type: 'error', title: 'Invalid Link', message: 'The session is invalid. Please try again.' });
+                }
             } else if (event === 'SIGNED_IN') {
+                 // This handles invite links which also land here
                 try {
                     if (!session) throw new Error("Session is null after sign-in.");
 
@@ -39,29 +44,30 @@ export function usePasswordResetFlow() {
 
                     if (error && error.code === 'PGRST116') {
                         setIsNewUser(true);
-                        await supabase.from('profiles').insert({ id: user.id, email: user.email!, role: 'client' });
+                        // Profile does not exist, it will be created if they set a password.
                     } else if (error) {
                         throw error;
                     }
 
                     setStatus('ready');
                 } catch (err: any) {
-                    console.error('Validation Error:', err);
-                    addToast({ type: 'error', title: 'Invalid Link', message: 'This link is invalid or has expired. Please try again.' });
+                    console.error('Validation Error on SIGNED_IN:', err);
+                    addToast({ type: 'error', title: 'Invalid Link', message: 'This link is invalid or has expired.' });
                     setStatus('error');
                 }
             }
         });
 
-        // Handle the case where the user lands on the page without a valid token in the URL
+        // If no auth event fires after a few seconds, the link is likely bad.
         const timer = setTimeout(() => {
             if (status === 'validating') {
                 setStatus('error');
                 addToast({ type: 'error', title: 'Invalid Link', message: 'No valid session found. Please use the link from your email.' });
             }
-        }, 3000); // If no event after 3s, assume link is bad
+        }, 5000);
 
         return () => {
+            subscribed = false;
             subscription.unsubscribe();
             clearTimeout(timer);
         };
@@ -76,17 +82,29 @@ export function usePasswordResetFlow() {
 
         setStatus('submitting');
         try {
-            const { error } = await supabase.auth.updateUser({ password });
-            if (error) throw error;
+            const { data: { user }, error: updateUserError } = await supabase.auth.updateUser({ password });
+
+            if (updateUserError) throw updateUserError;
+            if (!user) throw new Error('Failed to update: no user found.');
+
+            if (isNewUser) {
+                // If it was a new user invite, their profile needs to be created.
+                const { error: insertError } = await supabase.from('profiles').insert({ id: user.id, email: user.email!, role: 'client' });
+                if (insertError) throw insertError;
+            }
 
             addToast({ type: 'success', title: 'Password Updated!', message: 'Redirecting you now...' });
             setStatus('success');
 
-            const { data: { user } } = await supabase.auth.getUser();
-            const { data: stores } = await supabase.from('stores').select('id').eq('user_id', user!.id);
+            const { data: stores, error: storesError } = await supabase.from('stores').select('id', { count: 'exact', head: true }).eq('user_id', user.id);
+            if(storesError) console.error("Could not check for stores, redirecting to dashboard.", storesError);
 
             setTimeout(() => {
-                router.push((!stores || stores.length === 0) ? '/auth/setup-store' : '/dashboard');
+                if (isNewUser) {
+                    router.push('/auth/setup-store');
+                } else {
+                    router.push('/dashboard');
+                }
             }, 1500);
 
         } catch (err: any) {
