@@ -16,8 +16,8 @@ export function useAuthForm(mode: AuthMode, userType: UserType = 'client') {
     const [loading, setLoading] = useState(false);
 
     const [formData, setFormData] = useState({
-        fullName: '',
-        username: '',
+        firstName: '',
+        lastName: '',
         email: '',
         phoneNumber: '',
         password: '',

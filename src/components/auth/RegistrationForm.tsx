@@ -1,3 +1,4 @@
+
 // components/auth/RegistrationForm.tsx
 'use client';
 
@@ -52,28 +53,28 @@ export function RegistrationForm({ userType = 'client' }: RegistrationFormProps)
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField label="Full Name *" icon={User} error={errors.fullName}>
+            <FormField label="First Name *" icon={User} error={errors.firstName}>
                 <Input
                   type="text"
-                  name="fullName"
-                  placeholder="Enter your full name"
-                  value={formData.fullName || ''}
-                  onChange={(e) => handleInputChange('fullName', e.target.value)}
-                  onBlur={() => handleBlur('fullName')}
+                  name="firstName"
+                  placeholder="Enter your first name"
+                  value={formData.firstName || ''}
+                  onChange={(e) => handleInputChange('firstName', e.target.value)}
+                  onBlur={() => handleBlur('firstName')}
                   required
-                  className={cn('pl-10', errors.fullName && 'border-destructive')}
+                  className={cn('pl-10', errors.firstName && 'border-destructive')}
               />
             </FormField>
-            <FormField label="Username *" icon={AtSign} error={errors.username}>
+            <FormField label="Last Name *" icon={User} error={errors.lastName}>
                 <Input
                   type="text"
-                  name="username"
-                  placeholder="Choose a username"
-                  value={formData.username || ''}
-                  onChange={(e) => handleInputChange('username', e.target.value)}
-                  onBlur={() => handleBlur('username')}
-                  required className={cn('pl-10',
-                  errors.username && 'border-destructive')}
+                  name="lastName"
+                  placeholder="Enter your last name"
+                  value={formData.lastName || ''}
+                  onChange={(e) => handleInputChange('lastName', e.target.value)}
+                  onBlur={() => handleBlur('lastName')}
+                  required
+                  className={cn('pl-10', errors.lastName && 'border-destructive')}
                 />
             </FormField>
               </div>

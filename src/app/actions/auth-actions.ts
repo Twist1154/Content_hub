@@ -10,6 +10,8 @@ const registerSchema = z.object({
     email: z.string().email(),
     password: z.string().min(6),
     role: z.enum(['client', 'admin']),
+    firstName: z.string().min(1),
+    lastName: z.string().min(1),
 });
 
 /**
@@ -20,8 +22,10 @@ export async function registerUser(prevState: any, formData: FormData) {
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
     const role = formData.get('role') as 'client' | 'admin';
+    const firstName = formData.get('firstName') as string;
+    const lastName = formData.get('lastName') as string;
 
-    const validatedFields = registerSchema.safeParse({ email, password, role });
+    const validatedFields = registerSchema.safeParse({ email, password, role, firstName, lastName });
 
     if (!validatedFields.success) {
         return {
@@ -33,11 +37,16 @@ export async function registerUser(prevState: any, formData: FormData) {
     // We must use the service role client to be able to set the user's role on creation.
     const supabase = await createClient({ useServiceRole: true });
 
+    const displayName = `${firstName} ${lastName}`;
+
     const { data, error } = await supabase.auth.admin.createUser({
         email,
         password,
         email_confirm: true, // Send a confirmation email
-        user_metadata: { role },
+        user_metadata: { 
+            role,
+            display_name: displayName,
+        },
         app_metadata: { role },
     });
 
