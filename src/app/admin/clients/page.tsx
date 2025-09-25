@@ -3,7 +3,6 @@
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
 import { AdminClientManagement } from '@/components/admin/AdminClientManagement';
-import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { Users, Shield } from 'lucide-react';
 
@@ -17,15 +16,6 @@ export default async function AdminClientsPage() {
     return (
         // THEME: Use theme variables for the background.
         <div className="min-h-screen bg-background">
-            <AdminHeader
-                user={user}
-                title="Client Management"
-                breadcrumbItems={[
-                                        { label: 'Admin Dashboard', href: '/admin' },
-                                        { label: 'Client Management', current: true }
-                                    ]}
-                                />
-
             <main className="container mx-auto px-4 py-8">
                 <div className="mb-8">
                     <div className="flex items-center gap-2 mb-2">
