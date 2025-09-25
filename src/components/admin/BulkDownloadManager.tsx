@@ -16,7 +16,7 @@ import type {ContentItem} from "@/types/content";
 import {ContentDetailModal} from "@/components/content/ContentDetailModal";
 import {formatFileSize} from "@/lib/content-utils";
 import {cn} from '@/lib/utils';
-import { useToast } from '@/components/ui/toast';
+import { useToast } from '@/components/ui/Toast';
 
 interface FilterOptions {
     startDate: string;
